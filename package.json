@@ -1,11 +1,11 @@
 {
   "name": "@org.metadatacenter/cedar-design-tokens",
-  "version": "0.1.0-dev.20260915.0000000",
-  "description": "CEDAR's design values \u2014 the font stack, the type scale, the brand palettes and the neutrals \u2014 as Sass variables and CSS custom properties",
+  "version": "0.1.0-dev.20260915.4e0a0032",
+  "description": "CEDAR's design values — the font stack, the type scale, the brand palettes and the neutrals — as Sass variables and CSS custom properties",
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
-    "url": "https://github.com/metadatacenter/cedar-design-tokens.git"
+    "url": "git+https://github.com/metadatacenter/cedar-design-tokens.git"
   },
   "engines": {
     "node": "^24.15.0"
