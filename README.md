@@ -58,12 +58,10 @@ renders inside a shadow root when it is embedded and `:root` matches the documen
 outside it.
 
 `custom-properties.css` is generated from the partial by `npm run build`, and `npm test` checks that
-it is: every literal the partial states has to appear in it, and nothing may be declared twice. It
+it is: every emitted name must have its own evaluated Sass value, including derived colours and palette contrast entries, and nothing may be declared twice. It
 is not a second source, which is why it is named for what it holds rather than for the module it
 comes from — `tokens.css` beside `_tokens.scss` also left Sass's package importer unable to say
-which of the two a consumer meant. Run the build after changing a value: a package installed from
-the registry builds itself through `prepare`, but one linked from a working copy does not, so a
-sibling checkout serves whatever it last compiled.
+which of the two a consumer meant. Run the build after changing a value: the registry tarball contains the compiled CSS, prepared before packing. A linked working copy serves whatever it last compiled.
 
 ## The Type Scale
 
@@ -105,6 +103,34 @@ The package is consumed at build time and nothing published references it at run
 routes to the CEDAR Nexus registry, which `.npmrc` configures, and a dev snapshot is what consumers
 resolve.
 
-A consumer's build resolves whatever snapshot Nexus holds when it starts, so a token change reaches
-a component in this order: publish the snapshot here, then raise the dependency there. A consumer
-built before the snapshot lands resolves the previous one and shows the previous values.
+Consumers pin an exact snapshot in `package.json` and their lockfiles. A token
+change reaches them by publishing a new version, updating those pins, and
+rebuilding each component. Publishing alone does not change an existing pin.
+
+## Component adapters and host styling
+
+The shared package defines build-time defaults. Consumers translate those values
+into their own styling systems: CEE's Material adapter, CED's CSS/Tailwind aliases,
+and CETP's `--cetp-*` defaults. Adapters must read tokens for shared roles; controls
+must not retain copies in TypeScript objects or local stylesheets.
+
+Host customization is explicit and tested:
+
+- CEE/CEF and CED's native controls retain the compact-control API documented in
+  [CEE's STYLING.md](https://github.com/metadatacenter/cedar-embeddable-editor/blob/develop/STYLING.md).
+- CETP retains its ten documented `--cetp-*` properties, including body size and
+  primary/on-primary colors. Its constraint table and search surface both consume
+  them; small and lead sizes use offsets derived from this package's scale.
+- Generated `--cedar-*` palette and type properties are the CSS representation of
+  these defaults, not a promise that setting one will theme all three components.
+  CEE's Material palette is compiled from Sass. A broader runtime theme API must
+  reach rendered controls before being documented as supported.
+
+Keep Material internals private. Do not remove existing host properties to achieve
+uniformity. Geometry remains component-owned except for the established compact
+control API. Hosts overriding colors must preserve status meaning and readable
+foreground/background combinations.
+
+Consumer browser tests exercise actual controls, not just property declarations.
+Package tests compare the complete name/value mapping and reject swapped sizes
+or missing derived and contrast entries.
