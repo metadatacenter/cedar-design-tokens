@@ -1,0 +1,226 @@
+// CEDAR's own design values.
+//
+// One source for the values that decide what a CEDAR component looks like: the
+// font stack, the type scale, the brand palettes and the neutrals. The embeddable
+// editor, the embeddable designer and the embeddable term picker all render in
+// one page and read as one product only if they agree on these, and for a while
+// they agreed by being copied — the editor held the original, the picker a
+// verbatim copy of it, the designer a hand translation into CSS custom
+// properties. Copies drift, and these had: the editor moved its advisory colour
+// from #856404 to #b45309 and the picker went on drawing the old one.
+//
+// Nothing here may reference `@angular/material`. That is the whole point of it:
+// these values are CEDAR's, and they should not be expressed in the vocabulary of
+// a framework that renames and removes that vocabulary every couple of releases.
+// Angular Material's theming API is on its third generation — `define-palette`
+// became `m2-define-palette` and the M2 helpers are on the way out entirely — and
+// each move would otherwise edit the brand. The editor's
+// `_cee-material-theme.scss` is the adapter that feeds these to whatever theming
+// API the installed Material version happens to offer, and it is the only file
+// that imports Material.
+//
+// What is not here: a value only one component has. The editor's own layout
+// constants — the trailing slot in a title row, the card's inline gutter, the
+// size of a toolbar control — stay in the editor, because a shared package that
+// carries them hands two other components measurements of a card they do not
+// draw.
+//
+// The names carry no component prefix. The module is used under an alias, so a
+// consumer writes `tokens.$font-size`, and the alias is where the scope belongs.
+
+@use 'sass:map';
+
+// ---------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------
+
+// Two spellings of one font stack, because they are consumed differently: this
+// one is a CSS value, used directly in `font-family` declarations.
+$font-family: 'CEE Roboto', 'Helvetica Neue', sans-serif;
+
+// ...and this one is a single string, which is what Material's typography config
+// takes. Keep the two in step; they are deliberately not derived from each other
+// because quoting them differently is what makes each emit correctly.
+$font-family-string: 'CEE Roboto, "Helvetica Neue", sans-serif';
+
+// The type scale, in px, and px is the point of it.
+//
+// These are web components in someone else's page, and `rem` resolves against
+// that page's root element — which a component neither sets nor can see. A host
+// with `html { font-size: 62.5% }`, a common reset idiom, renders every rem-sized
+// thing at 62.5% of the size it was drawn at. Type stated in rem is not the
+// component's type; it is a ratio applied to a number the embedder chose,
+// possibly by accident.
+//
+// So the steps are absolute, and they are steps rather than one size and a set of
+// multipliers, because that is what a scale is. Five of them, and a size between
+// two steps is not on the scale: the designer ran a step below these for a while
+// — 11px controls under 10px labels — and every seam where it met a component at
+// 14px showed. `$font-size` is the body, and Material's `body-1` and `subtitle-1`
+// are built from it in the editor's adapter, so a field's label and its value
+// agree.
+$font-size: 14px;
+
+/// Hints, and the version stamp under the template title.
+$font-size-small: 12px;
+
+/// The template description, one step above the body.
+$font-size-lead: 15px;
+
+/// A nested element's heading.
+$font-size-element-heading: 18px;
+
+/// A section break's heading — the largest thing in a form after its title.
+///
+/// Above the 18px a nested element's heading takes, so the two do not read as the
+/// same level.
+$font-size-heading: 20px;
+
+// ---------------------------------------------------------------------------
+// Brand palettes
+// ---------------------------------------------------------------------------
+//
+// Generated with http://mcg.mbitson.com/ from CEDAR's teal and rust. The 14-step
+// shape (50–900, A100–A700, plus a contrast map) is Material's convention, and
+// keeping it means the editor's adapter can hand these straight to Material
+// rather than translating. It is a convention, not a dependency — no Material
+// code is needed to read these maps.
+
+$brand-primary: (
+  50: #e2eff0,
+  100: #b7d6db,
+  200: #87bbc3,
+  300: #579faa,
+  400: #338b98,
+  500: #0f7686,
+  600: #0d6e7e,
+  700: #0b6373,
+  800: #085969,
+  900: #044656,
+  A100: #88e4ff,
+  A200: #55d8ff,
+  A400: #22ccff,
+  A700: #08c7ff,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  ),
+);
+
+$brand-accent: (
+  50: #f0e4e2,
+  100: #dbbcb7,
+  200: #c38f87,
+  300: #aa6257,
+  400: #984133,
+  500: #861f0f,
+  600: #7e1b0d,
+  700: #73170b,
+  800: #691208,
+  900: #560a04,
+  A100: #ff8d88,
+  A200: #ff5c55,
+  A400: #ff2b22,
+  A700: #ff1308,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #ffffff,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #ffffff,
+    A700: #ffffff,
+  ),
+);
+
+// ---------------------------------------------------------------------------
+// Resolved colors
+// ---------------------------------------------------------------------------
+//
+// Derived from the maps above rather than restated, so a palette edit cannot
+// leave these behind. The hues match what the editor publishes today: the
+// primary's default hue is 500, and the accent palette is declared with A200 as
+// its default.
+
+$color-primary: map.get($brand-primary, 500);
+$color-on-primary: map.get(map.get($brand-primary, contrast), 500);
+$color-accent: map.get($brand-accent, A200);
+
+// Material's red 500, pinned as a literal. CEDAR never chose a warn color — the
+// editor inherited Material's default — and reading it out of `mat.$red-palette`
+// made this one value depend on the framework for no benefit. Pinning it means
+// the upgrade cannot change it silently.
+$color-warn: #f44336;
+
+// Advisory, not an error, and one letter away from the colour that is one.
+// `warn` is Material's word for its danger palette; `warning` is the ordinary
+// English one, and they carry opposite severities.
+//
+// This is the colour of the editor's `.input-warning`, which exists because
+// Material's form field projects a hint *or* an error and never both. A
+// controlled-term field that has just discarded what the user typed has to say so
+// while a required field's own error is still showing, so the notice sits outside
+// that slot — and in a colour unlike the error red, or the two read as one
+// message.
+$color-warning: #b45309;
+
+// Brand colors used directly in component CSS rather than through a theme.
+$color-icon-hover: map.get($brand-primary, 500);
+$color-component-title: #0b3938;
+
+// ---------------------------------------------------------------------------
+// Neutrals
+// ---------------------------------------------------------------------------
+//
+// Surfaces, borders and text. These were not copied from the editor the way the
+// brand values were, because the editor states no neutral palette: its greys are
+// literals written where each is used. They were gathered from what it renders,
+// one value at a time, and the comment on each says where it was read from.
+
+// The border every editor input carries — source-panels, time-picker and
+// timezone-picker all state it, as does the editor's own stylesheet.
+$border-control: #777;
+
+// The rule under the editor header, tinted toward the brand teal rather than
+// neutral grey, which is what keeps a plain divider from reading as foreign.
+$border-rule: #d7e0df;
+
+// The lighter rule above its footer, for a separation that should carry less
+// weight.
+$border-rule-light: #e5ebea;
+
+// The resting background of a panel, from source-panels.
+$surface-panel: #f5f5f5;
+
+// A tinted surface, from the component header — the teal equivalent of the panel
+// grey.
+$surface-tinted: #e4f1f1;
+
+// Body text. Not an editor value in the sense the others are: the editor declares
+// no text colour and inherits Material's default foreground, so this is what it
+// renders rather than what it states. Written down because a component that takes
+// no Material would otherwise fall through to the user agent's black.
+$text-primary: rgba(0, 0, 0, 0.87);
+
+// Secondary text — a hint, a count, anything supporting the line above it. From
+// the time picker and the datetime input.
+$text-muted: #555;

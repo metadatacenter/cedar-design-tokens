@@ -1,0 +1,45 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the tokens
+        uses: actions/checkout@v4
+
+      # Pinned to the version in .nvmrc, which is the version every consuming
+      # repository runs.
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check the formatting
+        run: npm run format:check
+
+      # Compiles the partial and checks the result is the partial: every literal
+      # emitted, nothing declared twice, and the properties reaching a shadow root
+      # as well as a document.
+      - name: Run the tests
+        run: npm test

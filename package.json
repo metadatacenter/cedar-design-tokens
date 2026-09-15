@@ -1,0 +1,36 @@
+{
+  "name": "@org.metadatacenter/cedar-design-tokens",
+  "version": "0.1.0-dev.20260915.0000000",
+  "description": "CEDAR's design values \u2014 the font stack, the type scale, the brand palettes and the neutrals \u2014 as Sass variables and CSS custom properties",
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/metadatacenter/cedar-design-tokens.git"
+  },
+  "engines": {
+    "node": "^24.15.0"
+  },
+  "exports": {
+    "./tokens": {
+      "sass": "./_tokens.scss"
+    },
+    "./custom-properties.css": "./dist/custom-properties.css"
+  },
+  "files": [
+    "_tokens.scss",
+    "dist/custom-properties.css",
+    "license.txt",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css",
+    "prepare": "npm run build",
+    "test": "npm run build && node --test test/emitted-css.test.mjs",
+    "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",
+    "format:check": "prettier --check \"**/*.{scss,css,json,md,mjs}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "sass": "^1.93.2"
+  }
+}

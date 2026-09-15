@@ -1,0 +1,69 @@
+// The same values as custom properties, for a consumer that is not written in Sass.
+//
+// The designer's stylesheet is plain CSS — Tailwind's `@theme` reads custom
+// properties, not Sass variables — so it cannot `@use` the partial beside this
+// file. Rather than let it keep a hand translation, which is what drifted before,
+// this compiles the partial into the declarations it needs. The generated
+// `tokens.css` is therefore not a second source: it is the first one, emitted.
+//
+// `:host` as well as `:root`, because a CEDAR component renders inside a shadow
+// root when it is embedded and `:root` matches the document element, which is
+// outside it. With only the second selector every property below resolves to
+// nothing and the component renders unstyled.
+//
+// The names carry the `--cedar-` prefix the Sass variables drop. A custom
+// property has no module alias to be scoped by; it is global to whatever tree
+// declares it, and an unprefixed `--font-size` in an embedder's page is a
+// collision waiting to happen.
+
+@use 'sass:map';
+@use 'sass:meta';
+@use 'tokens';
+
+:root,
+:host {
+  // `meta.inspect` rather than plain interpolation, which drops the quotes around
+  // a family whose name has a space in it. Unquoted is legal CSS and every browser
+  // accepts it, but the declaration then no longer reads like the value it came
+  // from, and a family added later with a comma in its name would not survive.
+  --cedar-font-family: #{meta.inspect(tokens.$font-family)};
+
+  --cedar-font-size: #{tokens.$font-size};
+  --cedar-font-size-small: #{tokens.$font-size-small};
+  --cedar-font-size-lead: #{tokens.$font-size-lead};
+  --cedar-font-size-element-heading: #{tokens.$font-size-element-heading};
+  --cedar-font-size-heading: #{tokens.$font-size-heading};
+
+  // Every hue of both palettes, by the name the palette gives it. Emitted by
+  // iteration rather than listed, so a palette that gains a step gains a property
+  // without anyone editing this file. `contrast` is a nested map and not a colour,
+  // so it is emitted separately below.
+  @each $hue, $value in map.remove(tokens.$brand-primary, contrast) {
+    --cedar-primary-#{$hue}: #{$value};
+  }
+  @each $hue, $value in map.remove(tokens.$brand-accent, contrast) {
+    --cedar-accent-#{$hue}: #{$value};
+  }
+  @each $hue, $value in map.get(tokens.$brand-primary, contrast) {
+    --cedar-on-primary-#{$hue}: #{$value};
+  }
+  @each $hue, $value in map.get(tokens.$brand-accent, contrast) {
+    --cedar-on-accent-#{$hue}: #{$value};
+  }
+
+  --cedar-color-primary: #{tokens.$color-primary};
+  --cedar-color-on-primary: #{tokens.$color-on-primary};
+  --cedar-color-accent: #{tokens.$color-accent};
+  --cedar-color-warn: #{tokens.$color-warn};
+  --cedar-color-warning: #{tokens.$color-warning};
+  --cedar-color-icon-hover: #{tokens.$color-icon-hover};
+  --cedar-color-component-title: #{tokens.$color-component-title};
+
+  --cedar-border-control: #{tokens.$border-control};
+  --cedar-border-rule: #{tokens.$border-rule};
+  --cedar-border-rule-light: #{tokens.$border-rule-light};
+  --cedar-surface-panel: #{tokens.$surface-panel};
+  --cedar-surface-tinted: #{tokens.$surface-tinted};
+  --cedar-text-primary: #{tokens.$text-primary};
+  --cedar-text-muted: #{tokens.$text-muted};
+}
