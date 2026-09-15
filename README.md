@@ -6,11 +6,6 @@ neutrals. The [embeddable editor](https://github.com/metadatacenter/cedar-embedd
 [embeddable term picker](https://github.com/metadatacenter/cedar-embeddable-term-picker) appear
 together in one page, and they read as one product only if they agree on these.
 
-They used to agree by being copied. The editor held the original, the picker a verbatim copy of it,
-the designer a hand translation into CSS custom properties, and each copy carried a comment asking
-the next person to consider a package. Copies drift: the editor moved its advisory colour from
-`#856404` to `#b45309`, and the picker went on drawing the old one for a month.
-
 ## Using It
 
 The values are authored once, in Sass, and served in two forms because the consumers are written
@@ -57,11 +52,11 @@ prefix is on the name. The declarations land on `:root` **and** `:host`, because
 renders inside a shadow root when it is embedded and `:root` matches the document element, which is
 outside it.
 
-`custom-properties.css` is generated from the partial by `npm run build`, and `npm test` checks that
-it is: every emitted name must have its own evaluated Sass value, including derived colours and palette contrast entries, and nothing may be declared twice. It
-is not a second source, which is why it is named for what it holds rather than for the module it
-comes from — `tokens.css` beside `_tokens.scss` also left Sass's package importer unable to say
-which of the two a consumer meant. Run the build after changing a value: the registry tarball contains the compiled CSS, prepared before packing. A linked working copy serves whatever it last compiled.
+`custom-properties.css` is generated from the partial by `npm run build`. `npm test` checks
+that every emitted name has its own evaluated Sass value, including derived colours and palette
+contrast entries, and that nothing is declared twice. Run the build after changing a value:
+the registry tarball contains the compiled CSS, prepared before packing. A linked working copy
+serves whatever it last compiled.
 
 ## The Type Scale
 
@@ -80,10 +75,8 @@ px, not rem, and that is the point of it. These are web components in someone el
 with `html { font-size: 62.5% }`, a common reset idiom, would render every rem-sized thing at 62.5%
 of the size it was drawn at.
 
-A size between two steps is not on the scale. The designer ran a step below these for a while, 11px
-controls under 10px labels, and every seam where it met a component at 14px showed. A glyph is not
-prose and is off the scale: a count numeral sized to fit its pill, or an icon font, keeps its own
-size.
+A size between two steps is not on the scale. A glyph is not prose and is off the scale:
+a count numeral sized to fit its pill, or an icon font, keeps its own size.
 
 ## What Does Not Belong Here
 
