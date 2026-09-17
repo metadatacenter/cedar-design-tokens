@@ -155,3 +155,86 @@ the component's unencapsulated font registrar: browsers do not register font
 faces inside shadow roots. The export contains no selectors or network URLs.
 The font family remains `CEE Roboto`; consumers no longer keep copies of the
 font source. Each built bundle still embeds the fonts it needs.
+
+## Monitor adoption
+
+Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
+component repository's new and existing style findings, advisory spacing/geometry findings,
+resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
+one repository; `--all` includes existing findings; `--json` supports dashboards.
+`--strict` fails on new color/typography findings or missing baselines. No network,
+Nexus credential or frontend build is needed. The retiring AngularJS application
+shells are deliberately excluded; their styles are not migration targets.
+
+This is a source heuristic, not an adoption percentage or an accessibility audit.
+It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored new
+files. Vendor/assets, generated/ignored files, fixtures and the Material icon
+font are excluded. Inline HTML/TypeScript styles, utility classes and runtime
+computed styles are outside this first check. A matching dependency version
+means agreement with the token checkout's version, not proof that unpublished
+source changes have reached Nexus or the served bundle. Use `cedarcli check
+components` to check served component freshness.
+
+Each frontend owns `.design-tokens-baseline.json`. Entries identify the file,
+rule, property and normalized value, with an occurrence allowance. Moving lines
+does not create noise; adding another copy or replacing a literal does. Moving a
+literal to another file requires review. Existing findings are debt candidates,
+not a claim that every literal must be replaced.
+
+- Prefer a semantic token; don't select a role just because its current hex matches.
+- After fixing findings, run `cedarcli check design-tokens --repo <repo>
+--prune-baseline`. This can only decrease allowances. Commit the smaller baseline.
+- For an intentional value, add its reported ID to the baseline's `exceptions`
+  object with a concrete reason, such as an external vocabulary's fixed swatch.
+  Exceptions match that exact declaration, not an entire file or rule.
+- `--init-baseline` creates the initial inventory and refuses to replace one.
+  Don't delete and regenerate a baseline to make CI green.
+
+The consumer CI workflows call this repository's reusable `adoption.yml` workflow
+and upload `adoption.json`, even when the strict gate fails. Pull requests compare
+against the **base revision's** baseline and exceptions, so expanding them in the
+same PR cannot conceal new drift. Initial rollout, where the base has no baseline,
+uses the new inventory and emits a review notice. A later intentional exception
+must be reviewed and merged separately before the styling change it permits.
+Changes to the scanner need tests and a review of their effect on existing findings.
+
+Rollout order: merge the checker/reusable workflow in this repository first, then
+the consumer baselines/workflows and CLI command. Consumers reference `develop`;
+branch protection must require the adoption job if it is to block merging.
+Publishing an npm package is not needed for this source check.
+
+### Common styling choices
+
+| Intent             | Sass token / CSS property                                                |
+| ------------------ | ------------------------------------------------------------------------ |
+| Body text          | `tokens.$font-size` / `--cedar-font-size`                                |
+| Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                              |
+| Validation error   | `tokens.$color-error` / `--cedar-color-error`                            |
+| Advisory notice    | `color-warning` foreground and `surface-advisory` background             |
+| Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                              |
+| Designer input     | Shared authoring adapter; embedded CEF uses `density="authoring"`        |
+| Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks |
+
+For example:
+
+```css
+.hint {
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size-small);
+  margin-top: var(--cedar-space-1);
+}
+```
+
+Review a styling PR for the intended role, preserved host overrides and a check
+of focus, errors, read-only behavior and narrow hosts. Component-specific geometry
+can stay local. New values used across components belong here with a semantic name.
+
+### Compare the real components
+
+CED's `browser/fixtures/style-comparison.html` renders CEE, CEF, CED and CEFD
+from local distribution bundles with the same sample fields. It offers both entry
+densities, narrow hosts, read-only entry/field design and inherited host overrides.
+Tab through controls and clear required values or enter invalid email values to
+inspect focus and validation. CED itself remains editable; it has no equivalent
+host read-only property. No disabled state is simulated with a cosmetic overlay.
+See the frontend runbook for building/staging the two bundles and opening the page.

@@ -41,5 +41,8 @@ jobs:
       # Compiles the partial and checks the result is the partial: every literal
       # emitted, nothing declared twice, and the properties reaching a shadow root
       # as well as a document.
+      - name: Test the adoption checker
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
+
       - name: Run the tests
         run: npm test
