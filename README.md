@@ -163,8 +163,8 @@ component repository's new and existing style findings, advisory spacing/geometr
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
 one repository; `--all` includes existing findings; `--json` supports dashboards.
 `--strict` fails on new color/typography findings or missing baselines. No network,
-Nexus credential or frontend build is needed. The retiring AngularJS application
-shells are deliberately excluded; their styles are not migration targets.
+Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
+shells remain excluded; their styles are not migration targets.
 
 This is a source heuristic, not an adoption percentage or an accessibility audit.
 It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored new

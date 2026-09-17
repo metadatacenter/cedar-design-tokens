@@ -103,6 +103,14 @@ class AdoptionTest(unittest.TestCase):
         self.run_report(initialize=True)
         self.assertEqual('new', self.run_report(ref='HEAD')['findings'][0]['status'])
 
+    def test_default_scan_includes_modern_workspace(self):
+        self.repo.rename(self.root / 'cedar-workspace')
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(0, check.main(['--root', str(self.root), '--json']))
+        result = json.loads(output.getvalue())
+        self.assertEqual(['cedar-workspace'], [r['repo'] for r in result['reports']])
+        self.assertTrue(result['reports'][0]['findings'])
+
     def test_cli_exit_codes_and_json(self):
         def invoke(*args):
             with contextlib.redirect_stdout(io.StringIO()) as output:

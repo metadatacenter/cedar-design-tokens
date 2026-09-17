@@ -12,7 +12,7 @@ import sys
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
 REPOS = ('cedar-embeddable-editor', 'cedar-embeddable-designer',
-         'cedar-embeddable-term-picker')
+         'cedar-embeddable-term-picker', 'cedar-workspace')
 EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
             'assets', 'fixtures', '__tests__'}
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
