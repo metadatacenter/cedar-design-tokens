@@ -127,3 +127,31 @@ foreground/background combinations.
 Consumer browser tests exercise actual controls, not just property declarations.
 Package tests compare the complete name/value mapping and reject swapped sizes
 or missing derived and contrast entries.
+
+## Control defaults, authoring density and spacing
+
+The `control-*-default` tokens describe the 36px compact control. The
+`control-*-authoring` tokens describe the explicit authoring profile: 32px high,
+12px text, 18px line height and 2px corners. Both use `color-error` for invalid
+text and borders; `color-warning` and `surface-advisory` describe advisory notices.
+`color-warn` remains available for legacy palette consumers. `surface-authoring`
+and `text-authoring` describe settings panels.
+
+These defaults intentionally do **not** declare public `--cedar-control-height`,
+`--cedar-control-radius` or other host override properties. The component adapters
+read a host override first, then the selected profile default. Embedding CEF in
+an authoring surface uses `density="authoring"`; standalone CEE/CEF retain the
+compact profile unless explicitly configured otherwise.
+
+The optional spacing scale is `space-1/2/3/4/6`: 4/8/12/16/24px. Apply it to
+ordinary padding, margins and gaps; icon sizes, widths, toolbar geometry and
+responsive card gutters remain component-owned.
+
+## Embedded fonts
+
+`@use '@org.metadatacenter/cedar-design-tokens/fonts'` emits the self-contained
+Roboto 300/400/500 font faces shared by the editor and designer. Include it in
+the component's unencapsulated font registrar: browsers do not register font
+faces inside shadow roots. The export contains no selectors or network URLs.
+The font family remains `CEE Roboto`; consumers no longer keep copies of the
+font source. Each built bundle still embeds the fonts it needs.
