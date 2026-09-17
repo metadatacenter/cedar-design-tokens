@@ -17,6 +17,12 @@
     "./custom-properties.css": "./dist/custom-properties.css",
     "./fonts": {
       "sass": "./_fonts.scss"
+    },
+    "./fonts/regular": {
+      "sass": "./fonts/_roboto-400.scss"
+    },
+    "./fonts/medium": {
+      "sass": "./fonts/_roboto-500.scss"
     }
   },
   "files": [

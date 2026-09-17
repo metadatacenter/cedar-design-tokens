@@ -28,6 +28,11 @@
   // from, and a family added later with a comma in its name would not survive.
   --cedar-font-family: #{meta.inspect(tokens.$font-family)};
 
+  --cedar-font-weight-regular: #{tokens.$font-weight-regular};
+  --cedar-font-weight-medium: #{tokens.$font-weight-medium};
+  --cedar-font-family-monospace: #{meta.inspect(tokens.$font-family-monospace)};
+  --cedar-font-size-display: #{tokens.$font-size-display};
+
   --cedar-font-size: #{tokens.$font-size};
   --cedar-font-size-small: #{tokens.$font-size-small};
   --cedar-font-size-lead: #{tokens.$font-size-lead};

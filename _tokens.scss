@@ -246,3 +246,9 @@ $space-2: 8px;
 $space-3: 12px;
 $space-4: 16px;
 $space-6: 24px;
+
+// Typography roles shared by application hosts and embeddable controls.
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
+$font-size-display: 34px;

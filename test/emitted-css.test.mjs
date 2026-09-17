@@ -100,3 +100,17 @@ test('shared font export is self-contained and contains only font faces', () => 
     /\S/,
   );
 });
+
+test('individual font exports provide exactly their declared weight', () => {
+  const metadata = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  for (const [name, weight] of [
+    ['regular', 400],
+    ['medium', 500],
+  ]) {
+    const fonts = sass.compile(join(root, metadata.exports[`./fonts/${name}`].sass)).css;
+    assert.equal((fonts.match(/@font-face/g) || []).length, 7);
+    assert.equal((fonts.match(new RegExp(`font-weight: ${weight};`, 'g')) || []).length, 7);
+    assert.equal((fonts.match(/data:font\/woff2;base64,/g) || []).length, 7);
+    assert.doesNotMatch(fonts, /url\(https?:/);
+  }
+});

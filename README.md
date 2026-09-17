@@ -60,7 +60,7 @@ serves whatever it last compiled.
 
 ## The Type Scale
 
-Five steps, in px:
+Six roles, in px:
 
 | Variable                     | Size | What it is for                                      |
 | ---------------------------- | ---- | --------------------------------------------------- |
@@ -69,14 +69,25 @@ Five steps, in px:
 | `$font-size-lead`            | 15px | A template description, one step above the body     |
 | `$font-size-element-heading` | 18px | A nested element's heading                          |
 | `$font-size-heading`         | 20px | A section break's heading                           |
+| `$font-size-display`         | 34px | OpenView's artifact title                           |
 
 px, not rem, and that is the point of it. These are web components in someone else's page, and
 `rem` resolves against that page's root element — which a component neither sets nor can see. A host
 with `html { font-size: 62.5% }`, a common reset idiom, would render every rem-sized thing at 62.5%
 of the size it was drawn at.
 
-A size between two steps is not on the scale. A glyph is not prose and is off the scale:
-a count numeral sized to fit its pill, or an icon font, keeps its own size.
+Small labels and count badges use the 12px floor; enlarge their containers to fit.
+Icon glyphs retain their own geometry. Interface emphasis uses `$font-weight-medium`
+(500), with `$font-weight-regular` (400) for body text. Authored rich-text formatting
+is separate. `$font-family-monospace` supplies the common system monospace stack
+for logs and identifiers.
+
+The `fonts/regular` and `fonts/medium` Sass exports each include just one embedded
+Roboto weight. A host supplying both can load CEE's `cedar-embeddable-editor.host-fonts.js`
+variant to avoid duplicate text font data; standalone CEE still embeds its fonts.
+Both use the same `CEE Roboto` family name. Consumers on older token snapshots may
+use `var(--cedar-font-weight-medium, 500)` and the equivalent regular/display/mono
+fallbacks until their immutable package pins are advanced.
 
 ## What Does Not Belong Here
 
