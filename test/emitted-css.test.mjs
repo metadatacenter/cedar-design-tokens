@@ -92,5 +92,11 @@ test('shared font export is self-contained and contains only font faces', () => 
   assert.equal((fonts.match(/@font-face/g) || []).length, 21);
   assert.equal((fonts.match(/data:font\/woff2;base64,/g) || []).length, 21);
   assert.doesNotMatch(fonts, /url\(https?:/);
-  assert.doesNotMatch(fonts.replace(/@font-face\s*\{[^}]*\}/g, '').replace(/\/\*[\s\S]*?\*\//g, '').trim(), /\S/);
+  assert.doesNotMatch(
+    fonts
+      .replace(/@font-face\s*\{[^}]*\}/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim(),
+    /\S/,
+  );
 });
