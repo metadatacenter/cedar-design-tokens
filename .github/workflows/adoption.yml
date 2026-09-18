@@ -1,0 +1,41 @@
+name: Design token adoption
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  adoption:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: consumer
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: metadatacenter/cedar-design-tokens
+          ref: develop
+          path: cedar-design-tokens
+      - name: Report adoption and prevent new drift
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          args=()
+          if [ -n "$BASE_SHA" ]; then
+            if git -C consumer cat-file -e "$BASE_SHA:.design-tokens-baseline.json"; then
+              args+=(--baseline-ref "$BASE_SHA")
+            else
+              echo '::notice::Initial rollout: review the new adoption baseline in this PR.'
+            fi
+          fi
+          python3 cedar-design-tokens/tools/check_adoption.py --root . --repo consumer "${args[@]}" --json > adoption.json
+          python3 cedar-design-tokens/tools/check_adoption.py --root . --repo consumer "${args[@]}" --strict
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-token-adoption
+          path: adoption.json

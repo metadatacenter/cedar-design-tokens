@@ -224,3 +224,31 @@ $text-primary: rgba(0, 0, 0, 0.87);
 // Secondary text — a hint, a count, anything supporting the line above it. From
 // the time picker and the datetime input.
 $text-muted: #555;
+
+// Shared control defaults. Public host overrides deliberately have different names.
+$control-height-default: 36px;
+$control-line-height-default: 21px;
+$control-radius-default: 4px;
+$control-border-default: rgba(0, 0, 0, 0.38);
+$control-height-authoring: 32px;
+$control-font-size-authoring: $font-size-small;
+$control-line-height-authoring: 18px;
+$control-radius-authoring: 2px;
+$control-border-authoring: #ccc;
+$textarea-min-rows-default: 2;
+$color-error: #b42318;
+$color-on-error: #fff;
+$surface-advisory: #fff8e5;
+$surface-authoring: #f4f6f6;
+$text-authoring: #444;
+$space-1: 4px;
+$space-2: 8px;
+$space-3: 12px;
+$space-4: 16px;
+$space-6: 24px;
+
+// Typography roles shared by application hosts and embeddable controls.
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
+$font-size-display: 34px;

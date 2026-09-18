@@ -28,6 +28,11 @@
   // from, and a family added later with a comma in its name would not survive.
   --cedar-font-family: #{meta.inspect(tokens.$font-family)};
 
+  --cedar-font-weight-regular: #{tokens.$font-weight-regular};
+  --cedar-font-weight-medium: #{tokens.$font-weight-medium};
+  --cedar-font-family-monospace: #{meta.inspect(tokens.$font-family-monospace)};
+  --cedar-font-size-display: #{tokens.$font-size-display};
+
   --cedar-font-size: #{tokens.$font-size};
   --cedar-font-size-small: #{tokens.$font-size-small};
   --cedar-font-size-lead: #{tokens.$font-size-lead};
@@ -66,4 +71,25 @@
   --cedar-surface-tinted: #{tokens.$surface-tinted};
   --cedar-text-primary: #{tokens.$text-primary};
   --cedar-text-muted: #{tokens.$text-muted};
+
+  --cedar-control-height-default: #{tokens.$control-height-default};
+  --cedar-control-line-height-default: #{tokens.$control-line-height-default};
+  --cedar-control-radius-default: #{tokens.$control-radius-default};
+  --cedar-control-border-default: #{tokens.$control-border-default};
+  --cedar-control-height-authoring: #{tokens.$control-height-authoring};
+  --cedar-control-font-size-authoring: #{tokens.$control-font-size-authoring};
+  --cedar-control-line-height-authoring: #{tokens.$control-line-height-authoring};
+  --cedar-control-radius-authoring: #{tokens.$control-radius-authoring};
+  --cedar-control-border-authoring: #{tokens.$control-border-authoring};
+  --cedar-textarea-min-rows-default: #{tokens.$textarea-min-rows-default};
+  --cedar-color-error: #{tokens.$color-error};
+  --cedar-color-on-error: #{tokens.$color-on-error};
+  --cedar-surface-advisory: #{tokens.$surface-advisory};
+  --cedar-surface-authoring: #{tokens.$surface-authoring};
+  --cedar-text-authoring: #{tokens.$text-authoring};
+  --cedar-space-1: #{tokens.$space-1};
+  --cedar-space-2: #{tokens.$space-2};
+  --cedar-space-3: #{tokens.$space-3};
+  --cedar-space-4: #{tokens.$space-4};
+  --cedar-space-6: #{tokens.$space-6};
 }

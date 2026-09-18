@@ -1,0 +1,130 @@
+import contextlib
+import io
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+import check_adoption as check
+
+
+class AdoptionTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.repo = self.root / 'consumer'
+        self.repo.mkdir()
+        subprocess.run(['git', 'init', '-q', str(self.repo)], check=True)
+        (self.repo / 'src').mkdir()
+        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: '1'}}))
+        (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {
+            'node_modules/' + check.PACKAGE: {'version': '1'}}}))
+        self.style = self.repo / 'src/style.scss'
+        self.style.write_text('.a { color: #fff; font-size: 14px; padding: 8px; }')
+
+    def run_report(self, **kwargs):
+        return check.report(self.repo, '1', **kwargs)
+
+    def test_detects_fallbacks_and_shorthand_but_not_token_references(self):
+        rows = list(check.findings('x.scss', '.a { color: var(--x, #fff); border: 1px solid rgb(0,0,0); font: 12px Roboto; padding: tokens.$space-2; color: var(--cedar-color-primary); }'))
+        self.assertEqual(['color', 'color', 'typography'], [r['rule'] for r in rows])
+
+    def test_comments_and_data_urls_are_not_findings_and_lines_survive(self):
+        rows = list(check.findings('x.css', '/* color: red;\n */\n.a { background: url("data:red;black");\ncolor: #fff; }'))
+        self.assertEqual(1, len(rows))
+        self.assertEqual(4, rows[0]['line'])
+
+    def test_named_color_tokens_are_not_color_literals(self):
+        self.assertEqual([], list(check.findings('x.scss',
+            'a { color: $cedar-teal; background: var(--theme-white); color: tokens.$color-error; }')))
+
+    def test_malformed_baseline_structure_is_diagnosed(self):
+        for data in ([], {'schema': 1, 'findings': {'x': None}},
+                     {'schema': 1, 'findings': {}, 'exceptions': []}):
+            (self.repo / check.BASELINE).write_text(json.dumps(data))
+            with self.assertRaises(ValueError):
+                self.run_report()
+
+    def test_baseline_does_not_depend_on_lines_and_counts_duplicates(self):
+        self.run_report(initialize=True)
+        self.style.write_text('\n\n' + self.style.read_text() + '\n.b { color: #fff; }')
+        result = self.run_report()
+        self.assertEqual(1, sum(r['status'] == 'new' for r in result['findings']))
+
+    def test_new_value_fails_even_if_total_count_is_unchanged(self):
+        self.run_report(initialize=True)
+        self.style.write_text('.a { color: #123; }')
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
+    def test_pruning_only_decreases_allowances(self):
+        self.run_report(initialize=True)
+        self.style.write_text('.a { color: #123; }')
+        result = self.run_report(prune=True)
+        self.assertEqual('new', result['findings'][0]['status'])
+        self.assertEqual({}, json.loads((self.repo / check.BASELINE).read_text())['findings'])
+        with self.assertRaises(ValueError):
+            self.run_report(initialize=True)
+
+    def test_vendor_build_and_ignored_files_are_excluded(self):
+        (self.repo / '.gitignore').write_text('src/generated.css\n')
+        for name in ('src/vendor/lib.css', 'src/generated.css', 'dist/out.css', 'app/bower_components/x/x.css'):
+            path = self.repo / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('x { color: red; }')
+        self.assertEqual([Path('src/style.scss')], list(check.source_files(self.repo)))
+
+    def test_dependency_and_lock_are_compared_separately(self):
+        self.assertEqual('matches checkout', self.run_report()['versionStatus'])
+        (self.repo / 'package-lock.json').unlink()
+        self.assertEqual('differs from checkout/lock', self.run_report()['versionStatus'])
+
+    def test_reasoned_exceptions_apply_to_exact_finding(self):
+        self.run_report(initialize=True)
+        self.style.write_text('a { color: red; color: blue; }')
+        result = self.run_report()
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['exceptions'] = {result['findings'][0]['id']: 'External vocabulary swatch must retain its supplied color'}
+        path.write_text(json.dumps(baseline))
+        self.assertEqual(['exception', 'new'], [r['status'] for r in self.run_report()['findings']])
+        baseline['exceptions'][result['findings'][0]['id']] = ''
+        path.write_text(json.dumps(baseline))
+        with self.assertRaises(ValueError):
+            self.run_report()
+
+    def test_trusted_revision_prevents_baseline_expansion_in_pr(self):
+        self.run_report(initialize=True)
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-qm', 'baseline'], check=True)
+        self.style.write_text('a { color: purple; }')
+        (self.repo / check.BASELINE).unlink()
+        self.run_report(initialize=True)
+        self.assertEqual('new', self.run_report(ref='HEAD')['findings'][0]['status'])
+
+    def test_default_scan_includes_modern_workspace(self):
+        self.repo.rename(self.root / 'cedar-workspace')
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(0, check.main(['--root', str(self.root), '--json']))
+        result = json.loads(output.getvalue())
+        self.assertEqual(['cedar-workspace'], [r['repo'] for r in result['reports']])
+        self.assertTrue(result['reports'][0]['findings'])
+
+    def test_cli_exit_codes_and_json(self):
+        def invoke(*args):
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                code = check.main(['--root', str(self.root), '--repo', 'consumer', '--json', *args])
+            return code, json.loads(output.getvalue())
+        self.assertEqual(1, invoke('--strict')[0])
+        self.assertEqual(0, invoke('--init-baseline', '--strict')[0])
+        self.style.write_text(self.style.read_text() + 'b { margin: 12px; }')
+        self.assertEqual(0, invoke('--strict')[0])
+        self.style.write_text(self.style.read_text() + 'b { color: red; }')
+        self.assertEqual(1, invoke('--strict')[0])
+        (self.repo / check.BASELINE).write_text('invalid')
+        self.assertEqual(2, invoke()[0])
+
+
+if __name__ == '__main__':
+    unittest.main()

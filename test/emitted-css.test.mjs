@@ -78,3 +78,39 @@ test('a missing derived value or contrast entry is detected', () => {
 test('the properties reach a shadow root as well as a document', () => {
   assert.match(css, /:root,\s*\n?:host\s*\{/);
 });
+
+test('defaults do not shadow the public compact-control override names', () => {
+  for (const key of ['height', 'font-size', 'line-height', 'radius', 'border', 'focus', 'error']) {
+    assert.doesNotMatch(css, new RegExp(`--cedar-control-${key}\\s*:`));
+  }
+  assert.match(css, /--cedar-control-height-default: 36px/);
+  assert.match(css, /--cedar-control-height-authoring: 32px/);
+});
+
+test('shared font export is self-contained and contains only font faces', () => {
+  const fonts = sass.compile(join(root, '_fonts.scss')).css;
+  assert.equal((fonts.match(/@font-face/g) || []).length, 21);
+  assert.equal((fonts.match(/data:font\/woff2;base64,/g) || []).length, 21);
+  assert.doesNotMatch(fonts, /url\(https?:/);
+  assert.doesNotMatch(
+    fonts
+      .replace(/@font-face\s*\{[^}]*\}/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .trim(),
+    /\S/,
+  );
+});
+
+test('individual font exports provide exactly their declared weight', () => {
+  const metadata = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  for (const [name, weight] of [
+    ['regular', 400],
+    ['medium', 500],
+  ]) {
+    const fonts = sass.compile(join(root, metadata.exports[`./fonts/${name}`].sass)).css;
+    assert.equal((fonts.match(/@font-face/g) || []).length, 7);
+    assert.equal((fonts.match(new RegExp(`font-weight: ${weight};`, 'g')) || []).length, 7);
+    assert.equal((fonts.match(/data:font\/woff2;base64,/g) || []).length, 7);
+    assert.doesNotMatch(fonts, /url\(https?:/);
+  }
+});
