@@ -70,7 +70,13 @@ jobs:
         working-directory: consumer/${{ matrix.directory }}
         run: |
           npm ci
-          npm install --no-save --package-lock=false "$GITHUB_WORKSPACE"/tokens/candidate/*.tgz
+          # Tokens have no runtime dependencies. Replace only that leaf package;
+          # npm install would re-resolve unrelated Angular peers and registry aliases.
+          node -e 'const p=require(process.env.GITHUB_WORKSPACE+"/tokens/package.json"); for(const k of ["dependencies","optionalDependencies","peerDependencies"]) if(Object.keys(p[k]||{}).length) throw Error("Candidate now needs dependency resolution: "+k)'
+          rm -rf node_modules/@org.metadatacenter/cedar-design-tokens
+          mkdir -p node_modules/@org.metadatacenter/cedar-design-tokens
+          tar -xzf "$GITHUB_WORKSPACE"/tokens/candidate/*.tgz --strip-components=1 -C node_modules/@org.metadatacenter/cedar-design-tokens
+          git diff --exit-code -- package.json package-lock.json
           node "$GITHUB_WORKSPACE/tokens/tools/verify-candidate.mjs" "$GITHUB_WORKSPACE/tokens"
       - name: Record exact inputs
         run: |
