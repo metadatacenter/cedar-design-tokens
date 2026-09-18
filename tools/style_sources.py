@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
-STYLE_PROPERTIES = r'(?:color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height)'
+STYLE_PROPERTIES = r'(?:color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
 UTILITY = re.compile(r'^(?:!?)(?:(?:[\w-]+|\[[^]]+\]):)*(?:bg|text|font|leading|tracking|rounded|shadow|ring|border|p[trblxyse]?|m[trblxyse]?|gap(?:-[xy])?|space-[xy]|h|min-h|z)-(.+)$')
 
 def masked(text):
@@ -42,6 +42,16 @@ def sources(path, source):
             yield '\n' * (source[:offset].count('\n') + template[:match.start()].count('\n')) + '{' + match[1] + ':' + value + ';}'
         for match in re.finditer(r'\[(?:ngStyle|style)\]\s*=\s*(["\'])(.*?)\1', template, re.S):
             yield '\n' * (source[:offset].count('\n') + template[:match.start()].count('\n')) + '{dynamic-style:uninspectable-binding;}'
+        # Bound class names and literal names inside ngClass/class expressions must
+        # receive the same scrutiny as static classes. Ordinary semantic names pass.
+        for match in re.finditer(r'\[class\.([^] ]+)\]', template):
+            if UTILITY.match(match[1]):
+                yield '\n' * (source[:offset].count('\n') + template[:match.start()].count('\n')) + '{utility-style:' + match[1] + ';}'
+        for match in re.finditer(r'\[(?:ngClass|class)\]\s*=\s*(["\'])(.*?)\1', template, re.S):
+            for literal in re.finditer(LITERAL, match[2]):
+                for utility in literal[0][1:-1].split():
+                    if UTILITY.match(utility) and not re.search(r'\[(?:var\(--cedar-[\w-]+\)|--cedar-[\w-]+)\]', utility):
+                        yield '\n' * (source[:offset].count('\n') + template[:match.start()].count('\n')) + '{utility-style:' + utility + ';}'
         for match in re.finditer(r'\bclass\s*=\s*(["\'])(.*?)\1', template, re.S):
             for utility in match[2].split():
                 if UTILITY.match(utility) and not re.search(r'\[(?:var\(--cedar-[\w-]+\)|--cedar-[\w-]+)\]', utility):

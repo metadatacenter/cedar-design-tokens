@@ -323,6 +323,8 @@ $empty-state-padding: calc(2 * #{$space-6}) #{$space-6};
 
 $motion-duration-fast: 120ms;
 $motion-duration-normal: 200ms;
+// Continuous progress indicators use a calm full rotation rather than interaction timing.
+$motion-duration-spinner: 2s;
 $motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 $motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
 $layer-sticky: 10;

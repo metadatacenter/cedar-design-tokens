@@ -183,7 +183,7 @@ class AdoptionTest(unittest.TestCase):
             if 'dist' in path.parts:
                 raise FileNotFoundError('Clean checkouts have no dist')
             return read(path, *args, **kwargs)
-        self.style.write_text('a { color: var(--cedar-text-primary); }')
+        self.style.write_text('a { color: var(--cedar-text-primary); background: var(--cedar-primary-50); border-color: var(--cedar-on-accent-A200); }')
         with patch.object(Path, 'read_text', without_dist):
             self.assertEqual([], list(check.scan_styles(self.repo, 2)))
 

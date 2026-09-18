@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as sass from 'sass';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const roles = new Set(
@@ -33,4 +34,26 @@ for (const name of names) {
 }
 test('recipes emit nothing until used', () => {
   assert.equal(sass.compileString("@use 'patterns';", { loadPaths: [process.cwd()] }).css, '');
+});
+
+test('offline checker recognizes exactly the generated roles and host overrides', () => {
+  const known = JSON.parse(
+    execFileSync(
+      'python3',
+      [
+        '-c',
+        'import sys,json; sys.path.insert(0,"tools"); from check_adoption import known_css_properties; print(json.dumps(sorted(known_css_properties())))',
+      ],
+      { encoding: 'utf8' },
+    ),
+  );
+  const hosts = JSON.parse(readFileSync('tools/host-properties.json', 'utf8'));
+  assert.deepEqual(
+    known,
+    [
+      ...new Set(
+        [...roles].map((r) => r.replace('--cedar-', '')).concat(Object.keys(hosts).map((r) => r.replace('cedar-', ''))),
+      ),
+    ].sort(),
+  );
 });

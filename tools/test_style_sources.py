@@ -36,3 +36,9 @@ class EmbeddedStylesTest(unittest.TestCase):
 
     def test_comments_and_semantic_tokens_pass(self):
         self.assertEqual([], self.rules('x.html', '<!-- <div style="color:red"> --> <div style="color:var(--cedar-color-primary)"></div>'))
+
+    def test_bound_utility_classes_and_motion_are_inspected(self):
+        for attribute in ['[class.bg-red-500]="active"', "[ngClass]=\"{'p-4': active}\"", "[class]=\"active ? 'shadow-lg' : 'semantic'\""]:
+            self.assertEqual('utility-style', self.rules('x.html', '<div '+attribute+'></div>')[0]['rule'])
+        self.assertEqual(2, len(self.rules('x.scss', 'a { transition: color 150ms; animation-duration: .2s; }')))
+        self.assertEqual([], self.rules('x.scss', 'a { transition: color var(--cedar-motion-duration-fast); }'))

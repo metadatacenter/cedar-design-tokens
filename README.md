@@ -352,7 +352,9 @@ hide new drift. Policy 2 also gates spacing, control geometry, layers and embedd
 
 ### Motion and overlay layers
 
-Use the fast and normal duration roles with the shared easing curves. Include
+Use the fast and normal duration roles with the shared easing curves. Continuous
+progress indicators use the spinner duration role. Literal transition/animation
+durations and style utility classes in Angular bindings are gated as well. Include
 `motion.reduced-motion` once per application/shadow root, or import `motion.css`.
 The reduced-motion recipe finishes animations promptly rather than removing them,
 so completion-driven behavior still runs. Component code must separately respect

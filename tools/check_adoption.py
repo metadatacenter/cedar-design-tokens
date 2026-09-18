@@ -90,6 +90,8 @@ def findings(path, source, policy=1):
         elif re.fullmatch(r'(?:margin|padding)(?:-[\w-]+)?|(?:row-|column-)?gap', prop):
             if DIMENSION.search(value):
                 rule = 'spacing'
+        elif prop in ('transition', 'animation', 'transition-duration', 'animation-duration', 'transition-delay', 'animation-delay') and any(float(n) for n in re.findall(r'(?<![\w.-])(\d*\.?\d+)(?:ms|s)\b', value)):
+            rule = 'geometry'
         elif prop in ('height', 'min-height', 'border-radius', 'box-shadow', 'text-shadow', 'z-index', 'transition-duration', 'animation-duration') and (DIMENSION.search(value) or (prop == 'z-index' and re.fullmatch(r'-?\d+', value))):
             rule = 'geometry'
         if rule:
@@ -101,9 +103,20 @@ def findings(path, source, policy=1):
 
 
 
-def scan_styles(repo, policy=1, ref=None):
+def known_css_properties():
     known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'tokens.entry.scss').read_text()))
+    # Palette properties are emitted by the entry point's four Sass map loops.
+    token_source = (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text()
+    for palette in ('primary', 'accent'):
+        body = re.search(r'\$brand-' + palette + r':\s*\((.*?)^\);', token_source, re.S | re.M)[1]
+        for hue in re.findall(r'^\s+(A?\d+):', body, re.M):
+            known.update((f'{palette}-{hue}', f'on-{palette}-{hue}'))
     known.update(name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text()))
+    return known
+
+
+def scan_styles(repo, policy=1, ref=None):
+    known = known_css_properties()
     for path in source_files(repo, policy, ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
         for snippet in sources(path, source):
@@ -173,7 +186,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
             if item['count'] > baseline['findings'].get(key, {}).get('count', 0):
                 raise ValueError(f'Baseline allowance increased: {key}')
         if current.get('exceptions', {}) != baseline.get('exceptions', {}):
-            raise ValueError('Exception changes require a separately approved policy change')
+            raise ValueError('Feature changes cannot add or alter style exceptions; use shared semantic roles')
     rows = list(scan_styles(repo, policy))
     counts = Counter(row['id'] for row in rows)
     if initialize or prune:
