@@ -43,3 +43,9 @@ class IconsTest(unittest.TestCase):
             findings = list(scan(root))
             self.assertEqual(len(findings), 1)
             self.assertEqual(findings[0]['file'], 'cedar-monitoring-src/src/app/example.html')
+
+    def test_icon_font_dependencies_cannot_hide_in_build_configuration(self):
+        for source in ['{"dependencies":{"@fortawesome/fontawesome-free":"1.0.0"}}',
+                       '{"styles":["material-icons/iconfont/material-icons.css"]}',
+                       '{"dependencies":{"lucide-angular":"1.0.0"}}']:
+            self.assertIn('local-icon-source', self.check(source))

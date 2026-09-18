@@ -20,6 +20,8 @@ def violations(path, source):
         adapter = str(path) in ADAPTERS and '/cedar-design-tokens/icons' in source and not re.search(r'<(?:path|circle|rect|line|polyline|polygon|ellipse)\b', svg)
         if not brand and not adapter:
             yield match.start(), 'inline-svg', 'Render through the shared icon adapter'
+    for match in re.finditer(r'''["'](?:@fortawesome/|lucide-|material-icons(?:/|["']))''', source):
+        yield match.start(), 'local-icon-source', 'Icon dependencies belong in cedar-design-tokens'
     for match in re.finditer(r'<fa-icon\b', source):
         yield match.start(), 'icon-font', 'Use the shared CEDAR icon adapter'
     for match in re.finditer(r'<mat-icon\b([^>]*)>', source):
@@ -42,7 +44,8 @@ def scan(repo):
     for name in sorted(set(paths)):
         path = Path(name)
         relative = Path(*path.parts[1:]) if path.parts and path.parts[0].endswith('-src') else path
-        if not relative.parts or relative.parts[0] not in (('src', 'app') if modern_host else ('src',)) or path.suffix not in ('.html', '.ts', '.scss', '.css'):
+        config = len(relative.parts) == 1 and relative.name in ('package.json', 'angular.json')
+        if not config and (not relative.parts or relative.parts[0] not in (('src', 'app') if modern_host else ('src',)) or path.suffix not in ('.html', '.ts', '.scss', '.css')):
             continue
         if {'assets', 'fixtures', '__tests__'}.intersection(path.parts) or '.spec.' in name or not (repo / path).is_file():
             continue
