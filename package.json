@@ -1,6 +1,6 @@
 {
   "name": "@org.metadatacenter/cedar-design-tokens",
-  "version": "0.1.0-dev.20260918.9107186e",
+  "version": "0.1.0-dev.20260918.219b1a29",
   "description": "Shared CEDAR design primitives: typography, palettes, controls, spacing, fonts and Lucide icons",
   "license": "BSD-2-Clause",
   "repository": {

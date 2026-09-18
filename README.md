@@ -331,3 +331,21 @@ Retain a label or icon alongside status color. `text-destructive` is for actions
 not a replacement for an error message. Read-only surfaces remain distinct from
 native disabled behavior. CETP derives its selection tint from the documented
 host primary override using the shared percentage.
+
+## Forms and table density
+
+Use `form-label-gap`, `form-help-gap`, `form-field-gap` and `form-section-gap`
+for repeated form rhythm. Help and error text share the small type role and an
+18px line box. Validation timing and accessible descriptions remain component
+responsibilities.
+
+Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
+use 40px rows with 4px/8px padding. These profiles fit their corresponding controls
+plus both vertical gutters, an invariant checked by package tests. Rows grow for
+wrapped content. Column widths, scrolling limits and responsive layout stay local.
+
+The adoption gate also scans the nested frontends in OpenView, Monitoring and
+Bridging, and the Template Designer host. Their initial baselines inventory
+existing literal colors and typography; they are not exemptions for new values.
+CI reads the trusted base revision, so increasing a baseline in a change cannot
+hide new drift. Spacing and geometry remain advisory; icon drift is never waived.
