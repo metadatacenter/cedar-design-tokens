@@ -330,3 +330,7 @@ $layer-menu: 100;
 $layer-modal: 1000;
 $layer-overlay: 1100;
 $layer-tooltip: 1200;
+
+$font-size-artifact-title: clamp(19px, 3cqi, 26px);
+$color-artifact-title: #173f3e;
+$line-height-artifact-title: 1.25;
