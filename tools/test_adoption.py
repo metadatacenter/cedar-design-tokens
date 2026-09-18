@@ -27,6 +27,21 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_nested_frontend_is_scanned_under_a_generic_ci_checkout_name(self):
+        nested = self.repo / 'cedar-monitoring-src'
+        nested.mkdir()
+        for name in ('src', 'package.json', 'package-lock.json'):
+            (self.repo / name).rename(nested / name)
+        (self.repo / 'package.json').write_text('{"name":"wrapper"}')
+        result = self.run_report(initialize=True)
+        self.assertTrue(result['dependencyValid'])
+        self.assertEqual(1, result['files'])
+        self.assertTrue(all(row['file'].startswith('cedar-monitoring-src/src/') for row in result['findings']))
+        (nested / 'package.json').write_text(json.dumps({'dependencies': {check.PACKAGE: '^1.0.0'}}))
+        self.assertFalse(self.run_report()['dependencyValid'])
+        (nested / 'src/style.scss').write_text('a { color: #123456; }')
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
     def test_detects_fallbacks_and_shorthand_but_not_token_references(self):
         rows = list(check.findings('x.scss', '.a { color: var(--x, #fff); border: 1px solid rgb(0,0,0); font: 12px Roboto; padding: tokens.$space-2; color: var(--cedar-color-primary); }'))
         self.assertEqual(['color', 'color', 'typography'], [r['rule'] for r in rows])

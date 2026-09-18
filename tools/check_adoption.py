@@ -13,7 +13,8 @@ from check_icons import scan as icon_findings
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
 REPOS = ('cedar-embeddable-editor', 'cedar-embeddable-designer',
-         'cedar-embeddable-term-picker', 'cedar-workspace')
+         'cedar-embeddable-term-picker', 'cedar-workspace', 'cedar-openview',
+         'cedar-monitoring', 'cedar-bridging', 'cedar-template-designer')
 EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
             'assets', 'fixtures', '__tests__'}
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
@@ -54,7 +55,8 @@ def source_files(repo):
     names = git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split('\0')
     for name in sorted(set(names)):
         path = Path(name)
-        if (path.parts and path.parts[0] in ('src', 'app')
+        parts = path.parts[1:] if path.parts and path.parts[0].endswith('-src') else path.parts
+        if (parts and parts[0] in ('src', 'app')
                 and path.suffix in ('.scss', '.css', '.less')
                 and not EXCLUDED.intersection(path.parts)
                 and not path.name.startswith('styles-Material-Icons')
@@ -137,10 +139,14 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         row['status'] = ('exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
-    package = json.loads((repo / 'package.json').read_text())
+    nested = sorted(repo.glob('*-src/package.json'))
+    if len(nested) > 1:
+        raise ValueError('Multiple frontend manifests; select an unambiguous consumer')
+    package_root = nested[0].parent if nested else repo
+    package = json.loads((package_root / 'package.json').read_text())
     pin = next((package.get(section, {}).get(PACKAGE) for section in
                 ('dependencies', 'devDependencies', 'peerDependencies') if PACKAGE in package.get(section, {})), None)
-    lockpath = repo / 'package-lock.json'
+    lockpath = package_root / 'package-lock.json'
     locked = None
     if lockpath.exists():
         lock = json.loads(lockpath.read_text())
