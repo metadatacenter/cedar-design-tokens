@@ -1,0 +1,10 @@
+{
+  "cedar-control-height": "CEE/CEF and CED embedding contract: host control height override",
+  "cedar-control-font-size": "CEE/CEF and CED embedding contract: host control typography override",
+  "cedar-control-line-height": "CEE/CEF and CED embedding contract: host control line height override",
+  "cedar-control-radius": "CEE/CEF and CED embedding contract: host control corner override",
+  "cedar-control-border": "CEE/CEF and CED embedding contract: host control border override",
+  "cedar-control-focus": "CEE/CEF and CED embedding contract: host focus color override",
+  "cedar-control-error": "CEE/CEF and CED embedding contract: host invalid state override",
+  "cedar-textarea-min-rows": "CEE/CEF embedding contract: minimum textarea rows"
+}
