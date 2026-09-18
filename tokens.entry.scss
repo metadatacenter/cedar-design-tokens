@@ -138,4 +138,19 @@
   --cedar-status-info-text: #{tokens.$status-info-text};
   --cedar-status-info-surface: #{tokens.$status-info-surface};
   --cedar-selection-tint-percentage: #{tokens.$selection-tint-percentage};
+  --cedar-form-label-gap: #{tokens.$form-label-gap};
+  --cedar-form-help-gap: #{tokens.$form-help-gap};
+  --cedar-form-field-gap: #{tokens.$form-field-gap};
+  --cedar-form-section-gap: #{tokens.$form-section-gap};
+  --cedar-form-help-size: #{tokens.$form-help-size};
+  --cedar-form-help-line-height: #{tokens.$form-help-line-height};
+  --cedar-table-cell-padding-block: #{tokens.$table-cell-padding-block};
+  --cedar-table-cell-padding-inline: #{tokens.$table-cell-padding-inline};
+  --cedar-table-cell-padding-block-authoring: #{tokens.$table-cell-padding-block-authoring};
+  --cedar-table-cell-padding-inline-authoring: #{tokens.$table-cell-padding-inline-authoring};
+  --cedar-table-row-height: #{tokens.$table-row-height};
+  --cedar-table-row-height-authoring: #{tokens.$table-row-height-authoring};
+  --cedar-table-header-weight: #{tokens.$table-header-weight};
+  --cedar-table-divider: #{tokens.$table-divider};
+  --cedar-empty-state-padding: #{tokens.$empty-state-padding};
 }
