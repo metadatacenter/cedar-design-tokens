@@ -272,3 +272,17 @@ $action-primary-hover-surface: map.get($brand-primary, 700);
 $action-primary-pressed-surface: map.get($brand-primary, 800);
 $control-invalid-border: $color-error;
 $control-readonly-surface: $surface-panel;
+
+$dialog-radius: $control-radius-default;
+$dialog-padding: $space-6;
+$dialog-action-gap: $space-3;
+$dialog-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+$dialog-backdrop: rgba(0, 0, 0, 0.4);
+$menu-radius: $control-radius-default;
+$menu-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
+$menu-padding: $space-1;
+$menu-item-height: $control-height-default;
+$menu-item-padding-block: $space-2;
+$menu-item-padding-inline: $space-3;
+$overlay-surface: $color-on-primary;
+$overlay-border: $border-rule;

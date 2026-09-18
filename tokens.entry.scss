@@ -108,4 +108,17 @@
   --cedar-action-primary-pressed-surface: #{tokens.$action-primary-pressed-surface};
   --cedar-control-invalid-border: #{tokens.$control-invalid-border};
   --cedar-control-readonly-surface: #{tokens.$control-readonly-surface};
+  --cedar-dialog-radius: #{tokens.$dialog-radius};
+  --cedar-dialog-padding: #{tokens.$dialog-padding};
+  --cedar-dialog-action-gap: #{tokens.$dialog-action-gap};
+  --cedar-dialog-shadow: #{tokens.$dialog-shadow};
+  --cedar-dialog-backdrop: #{tokens.$dialog-backdrop};
+  --cedar-menu-radius: #{tokens.$menu-radius};
+  --cedar-menu-shadow: #{tokens.$menu-shadow};
+  --cedar-menu-padding: #{tokens.$menu-padding};
+  --cedar-menu-item-height: #{tokens.$menu-item-height};
+  --cedar-menu-item-padding-block: #{tokens.$menu-item-padding-block};
+  --cedar-menu-item-padding-inline: #{tokens.$menu-item-padding-inline};
+  --cedar-overlay-surface: #{tokens.$overlay-surface};
+  --cedar-overlay-border: #{tokens.$overlay-border};
 }
