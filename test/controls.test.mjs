@@ -34,3 +34,22 @@ test('table density leaves room for its matching controls and both cell gutters'
     );
   }
 });
+
+test('overlay layers are ordered within a host stacking context', () => {
+  const css = sass.compileString(
+    "@use 'tokens'; a { sticky: tokens.$layer-sticky; menu: tokens.$layer-menu; modal: tokens.$layer-modal; overlay: tokens.$layer-overlay; tooltip: tokens.$layer-tooltip; }",
+    { loadPaths: [process.cwd()] },
+  ).css;
+  const levels = [...css.matchAll(/: (\d+);/g)].map((m) => Number(m[1]));
+  assert.equal(levels.length, 5);
+  assert.ok(levels.every((n, i) => i === 0 || n > levels[i - 1]));
+});
+test('reduced motion preserves animation completion and covers pseudo elements', () => {
+  const css = sass.compileString("@use 'motion'; @include motion.reduced-motion;", { loadPaths: [process.cwd()] }).css;
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.match(css, /\*::before/);
+  assert.match(css, /\*::after/);
+  assert.match(css, /animation-duration: 0.01ms !important/);
+  assert.match(css, /animation-iteration-count: 1 !important/);
+  assert.match(css, /transition-duration: 0.01ms !important/);
+});

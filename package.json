@@ -30,7 +30,11 @@
     },
     "./controls": {
       "sass": "./_controls.scss"
-    }
+    },
+    "./motion": {
+      "sass": "./_motion.scss"
+    },
+    "./motion.css": "./dist/motion.css"
   },
   "files": [
     "_tokens.scss",
@@ -42,10 +46,12 @@
     "dist/icons.js",
     "dist/icons.d.ts",
     "icons/",
-    "_controls.scss"
+    "_controls.scss",
+    "_motion.scss",
+    "dist/motion.css"
   ],
   "scripts": {
-    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs",
+    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css",
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",

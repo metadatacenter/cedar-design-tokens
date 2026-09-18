@@ -320,3 +320,13 @@ $table-row-height-authoring: 40px;
 $table-header-weight: $font-weight-medium;
 $table-divider: $border-rule-light;
 $empty-state-padding: calc(2 * #{$space-6}) #{$space-6};
+
+$motion-duration-fast: 120ms;
+$motion-duration-normal: 200ms;
+$motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+$motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+$layer-sticky: 10;
+$layer-menu: 100;
+$layer-modal: 1000;
+$layer-overlay: 1100;
+$layer-tooltip: 1200;

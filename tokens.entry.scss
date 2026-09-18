@@ -153,4 +153,13 @@
   --cedar-table-header-weight: #{tokens.$table-header-weight};
   --cedar-table-divider: #{tokens.$table-divider};
   --cedar-empty-state-padding: #{tokens.$empty-state-padding};
+  --cedar-motion-duration-fast: #{tokens.$motion-duration-fast};
+  --cedar-motion-duration-normal: #{tokens.$motion-duration-normal};
+  --cedar-motion-ease-standard: #{tokens.$motion-ease-standard};
+  --cedar-motion-ease-enter: #{tokens.$motion-ease-enter};
+  --cedar-layer-sticky: #{tokens.$layer-sticky};
+  --cedar-layer-menu: #{tokens.$layer-menu};
+  --cedar-layer-modal: #{tokens.$layer-modal};
+  --cedar-layer-overlay: #{tokens.$layer-overlay};
+  --cedar-layer-tooltip: #{tokens.$layer-tooltip};
 }

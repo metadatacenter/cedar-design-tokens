@@ -349,3 +349,16 @@ Bridging, and the Template Designer host. Their initial baselines inventory
 existing literal colors and typography; they are not exemptions for new values.
 CI reads the trusted base revision, so increasing a baseline in a change cannot
 hide new drift. Spacing and geometry remain advisory; icon drift is never waived.
+
+### Motion and overlay layers
+
+Use the fast and normal duration roles with the shared easing curves. Include
+`motion.reduced-motion` once per application/shadow root, or import `motion.css`.
+The reduced-motion recipe finishes animations promptly rather than removing them,
+so completion-driven behavior still runs. Component code must separately respect
+the preference for animations driven by JavaScript.
+
+Sticky content, menus, modals, overlays and tooltips have ordered layer roles.
+They apply within each host's stacking context; they cannot escape a shadow host
+or outrank the browser's native dialog top layer. Keep backdrop and modal siblings
+in DOM order at the same modal layer.
