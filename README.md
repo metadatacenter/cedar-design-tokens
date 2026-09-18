@@ -170,10 +170,11 @@ font source. Each built bundle still embeds the fonts it needs.
 ## Monitor adoption
 
 Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
-component repository's new and existing style findings, advisory spacing/geometry findings,
+component repository's new and existing gated style findings,
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
 one repository; `--all` includes existing findings; `--json` supports dashboards.
-`--strict` fails on new color/typography findings, missing baselines, or a missing,
+`--strict` fails on new paint, typography, spacing, control geometry, layer, motion
+or utility-style findings, unknown shared properties, missing baselines, or a missing,
 ranged or lockfile-mismatched token dependency. It does not require every consumer
 to match the token checkout's version before that version has been published. No network,
 Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
@@ -182,8 +183,11 @@ shells remain excluded; their styles are not migration targets.
 This is a source heuristic, not an adoption percentage or an accessibility audit.
 It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored new
 files. Vendor/assets, generated/ignored files, fixtures and the Material icon
-font are excluded. Inline HTML/TypeScript styles, utility classes and runtime
-computed styles are outside this first check. A matching dependency version
+font are excluded. Policy 2 also inspects Angular component styles/templates,
+HTML inline styles, style bindings and utility classes in static or bound classes.
+It rejects dynamic paint/style bindings that cannot be inspected. Arbitrary
+JavaScript-generated styles are not fully analyzed; browser contracts remain
+necessary alongside this source heuristic. A matching dependency version
 means agreement with the token checkout's version, not proof that unpublished
 source changes have reached Nexus or the served bundle. Use `cedarcli check
 components` to check served component freshness.
@@ -197,9 +201,10 @@ not a claim that every literal must be replaced.
 - Prefer a semantic token; don't select a role just because its current hex matches.
 - After fixing findings, run `cedarcli check design-tokens --repo <repo>
 --prune-baseline`. This can only decrease allowances. Commit the smaller baseline.
-- For an intentional value, add its reported ID to the baseline's `exceptions`
-  object with a concrete reason, such as an external vocabulary's fixed swatch.
-  Exceptions match that exact declaration, not an entire file or rule.
+- Add intentional shared values as semantic roles in this package. CI rejects
+  new or altered exceptions against its trusted base; existing exceptions match
+  exact declarations, never entire files or rules. Unknown roles and icon drift
+  cannot be waived.
 - `--init-baseline` creates the initial inventory and refuses to replace one.
   Don't delete and regenerate a baseline to make CI green.
 
@@ -392,3 +397,12 @@ toolbars, tabs, table cells and empty states. For example:
 Recipes emit no global selectors and use the same semantic roles as CEE. Consumers
 retain layout constraints and behavior. See [UI contracts](UI-CONTRACTS.md) for the
 interaction requirements, baseline procedure and the suites that enforce them.
+
+## Candidate consumer CI
+
+The `Consumer contracts` workflow checks all eight modern consumers on token pushes
+and pull requests. It records the consumer revision and candidate tarball hash,
+replaces only the dependency-free token package in a locked consumer install,
+and verifies every published file byte for byte. All consumers build; CEE, CED,
+CETP and Workspace also compare their existing screenshots in the pinned ARM64
+Playwright environment. It never publishes or updates consumer baselines.
