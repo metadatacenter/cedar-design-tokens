@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 from check_icons import scan as icon_findings
+from style_sources import sources
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -50,21 +51,23 @@ def git(repo, *args):
     return subprocess.check_output(['git', '-C', str(repo), *args], text=True)
 
 
-def source_files(repo):
+def source_files(repo, policy=1, ref=None):
     # Includes new local files but never ignored build products or dependencies.
-    names = git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split('\0')
+    names = (git(repo, 'ls-tree', '-rz', '--name-only', ref) if ref else git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard')).split('\0')
     for name in sorted(set(names)):
         path = Path(name)
         parts = path.parts[1:] if path.parts and path.parts[0].endswith('-src') else path.parts
         if (parts and parts[0] in ('src', 'app')
-                and path.suffix in ('.scss', '.css', '.less')
+                and (path.suffix in ('.scss', '.css', '.less') or
+                     (policy >= 2 and path.suffix in ('.html', '.ts') and '.spec.' not in name
+                      and (parts[0] == 'src' or json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-template-designer')))
                 and not EXCLUDED.intersection(path.parts)
                 and not path.name.startswith('styles-Material-Icons')
-                and (repo / path).is_file()):
+                and (ref or (repo / path).is_file())):
             yield path
 
 
-def findings(path, source):
+def findings(path, source, policy=1):
     # Preserve newlines so diagnostics retain original source locations.
     clean = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
     clean = re.sub(r'''(["'])(?:\\.|(?!\1).)*?\1''',
@@ -75,7 +78,11 @@ def findings(path, source):
         # Don't interpret text/URLs as color names (including embedded font payloads).
         inspected = re.sub(r'url\([^)]*\)|[\'"][^\'"]*[\'"]', '', value)
         rule = None
-        if COLOR.search(inspected):
+        if value == 'uninspectable-binding':
+            rule = 'dynamic-style'
+        elif prop == 'utility-style':
+            rule = 'utility-style'
+        elif COLOR.search(inspected):
             rule = 'color'
         elif prop in ('font', 'font-family', 'font-size', 'font-weight', 'font-stretch', 'line-height', 'letter-spacing'):
             if literal_typography(prop, value):
@@ -83,15 +90,44 @@ def findings(path, source):
         elif re.fullmatch(r'(?:margin|padding)(?:-[\w-]+)?|(?:row-|column-)?gap', prop):
             if DIMENSION.search(value):
                 rule = 'spacing'
-        elif prop in ('height', 'min-height', 'border-radius') and DIMENSION.search(value):
+        elif prop in ('height', 'min-height', 'border-radius', 'box-shadow', 'text-shadow', 'z-index', 'transition-duration', 'animation-duration') and (DIMENSION.search(value) or (prop == 'z-index' and re.fullmatch(r'-?\d+', value))):
             rule = 'geometry'
         if rule:
             identity = f'{path}|{rule}|{prop}|{value}'
             yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
                    'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
                    'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if rule in ('color', 'typography') else 'advisory'}
+                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography') else 'advisory'}
 
+
+
+def scan_styles(repo, policy=1, ref=None):
+    known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'dist/custom-properties.css').read_text()))
+    for path in source_files(repo, policy, ref):
+        source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
+        for snippet in sources(path, source):
+            yield from findings(path, snippet, policy)
+        if policy >= 2:
+            for match in re.finditer(r'var\(\s*--cedar-([\w-]+)', source):
+                if match[1] not in known:
+                    value = '--cedar-' + match[1]
+                    yield {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': source[:match.start()].count('\n') + 1,
+                           'rule': 'unknown-token', 'property': 'var', 'value': value, 'severity': 'gate'}
+
+
+def upgrade_policy(repo):
+    """One-time expansion records only debt already committed at HEAD, never working edits."""
+    baseline, exists = read_baseline(repo)
+    if not exists or baseline.get('policy', 1) != 1:
+        raise ValueError('Upgrade requires an existing policy-1 baseline')
+    if git(repo, 'status', '--porcelain').strip():
+        raise ValueError('Commit or isolate changes before upgrading the style policy')
+    rows = list(scan_styles(repo, 2))
+    baseline['policy'] = 2
+    baseline['findings'] = {row['id']: dict({k: row[k] for k in ('file', 'rule', 'property', 'value')},
+                                         count=sum(r['id'] == row['id'] for r in rows)) for row in rows if row['rule'] != 'unknown-token'}
+    (repo / BASELINE).write_text(json.dumps(baseline, indent=2) + '\n')
 
 def read_baseline(repo, ref=None):
     if ref:
@@ -120,7 +156,24 @@ def read_baseline(repo, ref=None):
 
 def report(repo, expected, ref=None, initialize=False, prune=False):
     baseline, exists = read_baseline(repo, ref)
-    rows = [row for path in source_files(repo) for row in findings(path, (repo / path).read_text())]
+    current, _ = read_baseline(repo)
+    policy = current.get('policy', 1)
+    if ref and policy < baseline.get('policy', 1):
+        raise ValueError('Style policy cannot be downgraded')
+    if policy not in (1, 2):
+        raise ValueError('Unknown style policy')
+    if ref and policy > baseline.get('policy', 1):
+        # Only pre-existing source at the trusted base may receive migration allowances.
+        historical = list(scan_styles(repo, policy, ref))
+        baseline['findings'] = {row['id']: dict(row, count=sum(r['id'] == row['id'] for r in historical))
+                                for row in historical if row['rule'] != 'unknown-token'}
+    if ref:
+        for key, item in current['findings'].items():
+            if item['count'] > baseline['findings'].get(key, {}).get('count', 0):
+                raise ValueError(f'Baseline allowance increased: {key}')
+        if current.get('exceptions', {}) != baseline.get('exceptions', {}):
+            raise ValueError('Exception changes require a separately approved policy change')
+    rows = list(scan_styles(repo, policy))
     counts = Counter(row['id'] for row in rows)
     if initialize or prune:
         if initialize and exists:
@@ -136,7 +189,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] == 'unknown-token' else 'exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
@@ -157,7 +210,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
-            'files': len(list(source_files(repo))), 'findings': rows + list(icon_findings(repo)),
+            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 
@@ -165,11 +218,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
-    parser.add_argument('--strict', action='store_true', help='Fail on new color/typography findings, missing baselines or invalid dependency pins')
+    parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
     parser.add_argument('--json', action='store_true', help='Machine-readable report')
     parser.add_argument('--all', action='store_true', help='Show existing findings as well as new ones')
     parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base)')
     action = parser.add_mutually_exclusive_group()
+    action.add_argument('--upgrade-policy', action='store_true', help='Record existing committed debt and enable complete style gates')
     action.add_argument('--init-baseline', action='store_true', help='Create a baseline once; never replace one')
     action.add_argument('--prune-baseline', action='store_true', help='Remove resolved debt; never increase allowances')
     args = parser.parse_args(argv)
@@ -184,6 +238,8 @@ def main(argv=None):
         if not repo.exists() and not args.repo:
             continue
         try:
+            if args.upgrade_policy:
+                upgrade_policy(repo)
             reports.append(report(repo, expected, args.baseline_ref, args.init_baseline, args.prune_baseline))
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             errors.append(f'{name}: {error}')
@@ -193,7 +249,7 @@ def main(argv=None):
     if args.json:
         print(json.dumps(output, indent=2))
     else:
-        print('Design-token adoption (source heuristics; spacing/geometry are advisory)')
+        print('Design-token adoption (policy 2 gates embedded styles, utilities, spacing and geometry)')
         for result in reports:
             rows = result['findings']
             new = sum(r['status'] == 'new' and r['severity'] == 'gate' for r in rows)

@@ -160,7 +160,46 @@ class AdoptionTest(unittest.TestCase):
         self.style.write_text('a { color: purple; }')
         (self.repo / check.BASELINE).unlink()
         self.run_report(initialize=True)
-        self.assertEqual('new', self.run_report(ref='HEAD')['findings'][0]['status'])
+        with self.assertRaisesRegex(ValueError, 'allowance increased'):
+            self.run_report(ref='HEAD')
+
+    def commit(self):
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-qm', 'fixture'], check=True)
+
+    def test_policy_upgrade_only_accepts_historical_debt(self):
+        (self.repo / 'src/component.ts').write_text('@Component({styles: [`a { height: 37px; }`]})')
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.assertTrue(all(r['status'] == 'existing' for r in self.run_report(ref='HEAD')['findings']))
+        self.style.write_text('a { gap: 99px; }')
+        self.assertTrue(any(r['status'] == 'new' for r in self.run_report(ref='HEAD')['findings']))
+
+    def test_unknown_tokens_cannot_be_excepted_or_baselined(self):
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('a { color: var(--cedar-typo); }')
+        row = self.run_report()['findings'][0]
+        self.assertEqual('unknown-token', row['rule'])
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        baseline['exceptions'][row['id']] = 'An invalid token should never be permitted'
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
+    def test_unused_budget_increase_is_rejected(self):
+        self.run_report(initialize=True)
+        self.commit()
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        next(iter(baseline['findings'].values()))['count'] += 1
+        path.write_text(json.dumps(baseline))
+        self.style.write_text('a {}')
+        with self.assertRaisesRegex(ValueError, 'allowance increased'):
+            self.run_report(ref='HEAD')
 
     def test_default_scan_includes_modern_workspace(self):
         self.repo.rename(self.root / 'cedar-workspace')
