@@ -1,7 +1,7 @@
 {
   "name": "@org.metadatacenter/cedar-design-tokens",
   "version": "0.1.0-dev.20260917.156f7425",
-  "description": "Shared CEDAR typography, palettes, semantic roles, control profiles, spacing and embedded fonts",
+  "description": "Shared CEDAR design primitives: typography, palettes, controls, spacing, fonts and Lucide icons",
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
@@ -23,6 +23,10 @@
     },
     "./fonts/medium": {
       "sass": "./fonts/_roboto-500.scss"
+    },
+    "./icons": {
+      "types": "./dist/icons.d.ts",
+      "default": "./dist/icons.js"
     }
   },
   "files": [
@@ -31,17 +35,22 @@
     "license.txt",
     "README.md",
     "_fonts.scss",
-    "fonts/"
+    "fonts/",
+    "dist/icons.js",
+    "dist/icons.d.ts",
+    "icons/"
   ],
   "scripts": {
-    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css",
+    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs",
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",
     "format:check": "prettier --check \"**/*.{scss,css,json,md,mjs}\""
   },
   "devDependencies": {
+    "lucide-static": "1.47.0",
     "prettier": "^3.6.2",
     "sass": "^1.93.2"
-  }
+  },
+  "type": "module"
 }

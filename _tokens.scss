@@ -252,3 +252,9 @@ $font-weight-regular: 400;
 $font-weight-medium: 500;
 $font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
 $font-size-display: 34px;
+
+// Shared SVG icon geometry; independent of the surrounding text size.
+$icon-size-small: 16px;
+$icon-size-default: 20px;
+$icon-size-large: 24px;
+$icon-stroke-width: 2;

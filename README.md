@@ -260,3 +260,28 @@ Tab through controls and clear required values or enter invalid email values to
 inspect focus and validation. CED itself remains editable; it has no equivalent
 host read-only property. No disabled state is simulated with a cosmetic overlay.
 See the frontend runbook for building/staging the two bundles and opening the page.
+
+## Shared iconography
+
+The existing package also owns CEDAR's icon vocabulary. Import `getIcon`,
+`iconSvg`, `iconStyle` and the `IconName` type from
+`@org.metadatacenter/cedar-design-tokens/icons`. This export has no framework
+or font dependency. Thin framework adapters render its SVG; applications must
+not maintain their own geometry or import Lucide directly.
+
+`icons/manifest.json` maps CEDAR meanings to a curated, exactly pinned Lucide
+release. For example, `populate`, `artifact-instance`, `permissions` and
+`field-controlled` describe actions and data types rather than upstream filenames.
+Explicit aliases support existing callers. Unknown names throw instead of silently
+rendering a misleading fallback. Add new meanings here with a test and update
+consumers through an immutable package release.
+
+Use the shared small/default/large icon sizes (16/20/24px) and 2-unit stroke.
+SVGs inherit `currentColor`, are decorative and are hidden from assistive
+technology. Give the enclosing icon-only button a descriptive accessible name;
+never use an icon or tooltip as its only accessible name. Logos and authored
+content remain separate from interface iconography.
+
+The build copies only approved SVG geometry and preserves Lucide's license in
+`icons/LICENSE`. Tests compare every icon with the pinned source, verify aliases,
+reject unknown names and check SVG accessibility, color and sizing contracts.
