@@ -311,3 +311,12 @@ must still block activation. Use native `disabled` where appropriate.
 The focus and invalid recipes accept colors so existing documented embedding
 overrides can remain authoritative. Invalid styling uses `aria-invalid`, not
 `:invalid`, to avoid marking an untouched required field as an error.
+
+## Dialog and menu surfaces
+
+`dialog-*` and `menu-*` describe shared surfaces, not application-specific widths.
+Native dialogs, designer popups and Material adapters consume the same corners,
+shadows, backdrop and spacing. Menu items use the shared compact control height.
+Keep viewport constraints, focus trapping, dismissal and focus restoration in the
+component; tokens do not implement those behaviors. The template designer host
+stages the same generated properties alongside its icon module.
