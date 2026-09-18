@@ -320,3 +320,14 @@ shadows, backdrop and spacing. Menu items use the shared compact control height.
 Keep viewport constraints, focus trapping, dismissal and focus restoration in the
 component; tokens do not implement those behaviors. The template designer host
 stages the same generated properties alongside its icon module.
+
+## Semantic color roles
+
+Use `surface-selected`/`text-selected` for selection and `surface-row-hover` for
+hover, so a pointer does not make an unselected row look selected. Status pairs
+(`status-error`, `status-warning`, `status-success`, `status-info`, each with
+`-text` and `-surface`) are tested for normal-text contrast of at least 4.5:1.
+Retain a label or icon alongside status color. `text-destructive` is for actions,
+not a replacement for an error message. Read-only surfaces remain distinct from
+native disabled behavior. CETP derives its selection tint from the documented
+host primary override using the shared percentage.
