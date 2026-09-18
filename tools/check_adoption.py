@@ -17,8 +17,31 @@ EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
             'assets', 'fixtures', '__tests__'}
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
 DECL = re.compile(r'(?:^|[;{}])\s*([\w$-]+)\s*:\s*([^;{}]+)', re.M)
-COLOR = re.compile(r'#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|color)\s*\(|(?<![\w$@.-])(?:white|black|red|blue|gray|grey|orange|yellow|green|teal|purple|pink|hotpink)(?![\w-])', re.I)
+COLOR = re.compile(r'#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\(|(?<![\w$@.-])(?:white|black|red|blue|gray|grey|orange|yellow|green|teal|purple|pink|hotpink)(?![\w-])', re.I)
 DIMENSION = re.compile(r'(?<![\w.-])(?:\d*\.)?\d+(?:px|rem|em)\b')
+EXACT_VERSION = re.compile(r'\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?')
+TOKEN_LITERALS = dict(re.findall(r'^\$([\w-]+):\s*([^;]+);',
+                                (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text(), re.M))
+
+
+def literal_typography(prop, value):
+    # Remove references, retaining var() fallbacks so literal defaults still gate.
+    def compatibility(match):
+        name, fallback = match.groups()
+        canonical = TOKEN_LITERALS.get(name)
+        return '' if canonical and ' '.join(fallback.split()) == ' '.join(canonical.split()) else match[0]
+    value = re.sub(r'var\(\s*--cedar-([\w-]+)\s*,\s*([^()]+)\)', compatibility, value)
+    inspected = re.sub(r'var\(\s*--[\w-]+\s*\)', '', value)
+    inspected = re.sub(r'var\(\s*--[\w-]+\s*,', '(', inspected)
+    inspected = re.sub(r'(?:[\w-]+\.)?\$[\w-]+|@[\w-]+', '', inspected)
+    if re.search(r'(?<![\w.-])(?:\d*\.)?\d+(?:[a-z%]+)?', inspected, re.I):
+        return True
+    if prop in ('font-weight', 'font-size', 'font-stretch'):
+        return bool(re.search(r'\b(?:bold|bolder|lighter|small|medium|large|larger|smaller|condensed|expanded)\b', inspected))
+    if prop in ('font', 'font-family'):
+        inspected = re.sub(r'!important|\b(?:inherit|initial|unset|revert|revert-layer|normal)\b', '', inspected)
+        return bool(re.search(r'[a-zA-Z]', inspected))
+    return False
 
 
 def git(repo, *args):
@@ -51,10 +74,8 @@ def findings(path, source):
         rule = None
         if COLOR.search(inspected):
             rule = 'color'
-        elif prop in ('font', 'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing'):
-            if DIMENSION.search(value) or re.fullmatch(r'\d+(?:\.\d+)?(?:\s*!important)?', value):
-                rule = 'typography'
-            elif prop == 'font-family' and not re.search(r'var\(|\$|@|^(inherit|initial|unset)$', value):
+        elif prop in ('font', 'font-family', 'font-size', 'font-weight', 'font-stretch', 'line-height', 'letter-spacing'):
+            if literal_typography(prop, value):
                 rule = 'typography'
         elif re.fullmatch(r'(?:margin|padding)(?:-[\w-]+)?|(?:row-|column-)?gap', prop):
             if DIMENSION.search(value):
@@ -124,7 +145,9 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         lock = json.loads(lockpath.read_text())
         locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
         locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
+    dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
     return {'repo': repo.name, 'baseline': exists, 'pin': pin, 'locked': locked,
+            'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
             'files': len(list(source_files(repo))), 'findings': rows,
@@ -135,7 +158,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
-    parser.add_argument('--strict', action='store_true', help='Fail on new color/typography findings or missing baselines')
+    parser.add_argument('--strict', action='store_true', help='Fail on new color/typography findings, missing baselines or invalid dependency pins')
     parser.add_argument('--json', action='store_true', help='Machine-readable report')
     parser.add_argument('--all', action='store_true', help='Show existing findings as well as new ones')
     parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base)')
@@ -173,13 +196,15 @@ def main(argv=None):
             print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
+            if not result['dependencyValid']:
+                print('  INVALID token dependency; use an exact version with a matching lockfile')
             for row in rows:
                 if args.all or row['status'] == 'new':
                     print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']})")
         for error in errors:
             print(error, file=sys.stderr)
     return 2 if errors else int(args.strict and any(
-        not r['baseline'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports))
+        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports))
 
 
 if __name__ == '__main__':

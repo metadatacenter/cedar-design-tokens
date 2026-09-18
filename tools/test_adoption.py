@@ -18,14 +18,14 @@ class AdoptionTest(unittest.TestCase):
         self.repo.mkdir()
         subprocess.run(['git', 'init', '-q', str(self.repo)], check=True)
         (self.repo / 'src').mkdir()
-        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: '1'}}))
+        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: '1.0.0'}}))
         (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {
-            'node_modules/' + check.PACKAGE: {'version': '1'}}}))
+            'node_modules/' + check.PACKAGE: {'version': '1.0.0'}}}))
         self.style = self.repo / 'src/style.scss'
         self.style.write_text('.a { color: #fff; font-size: 14px; padding: 8px; }')
 
     def run_report(self, **kwargs):
-        return check.report(self.repo, '1', **kwargs)
+        return check.report(self.repo, '1.0.0', **kwargs)
 
     def test_detects_fallbacks_and_shorthand_but_not_token_references(self):
         rows = list(check.findings('x.scss', '.a { color: var(--x, #fff); border: 1px solid rgb(0,0,0); font: 12px Roboto; padding: tokens.$space-2; color: var(--cedar-color-primary); }'))
@@ -39,6 +39,38 @@ class AdoptionTest(unittest.TestCase):
     def test_named_color_tokens_are_not_color_literals(self):
         self.assertEqual([], list(check.findings('x.scss',
             'a { color: $cedar-teal; background: var(--theme-white); color: tokens.$color-error; }')))
+
+    def test_typography_cannot_hide_in_keywords_units_shorthand_or_fallbacks(self):
+        for declaration in ('font-weight: bold', 'font-size: medium', 'font-size: 110%',
+                            'font-size: 3vw', 'font: var(--cedar-font-size)/1.5 var(--cedar-font-family)',
+                            'font: menu', 'font-family: var(--custom, Arial)',
+                            'font-weight: var(--cedar-font-weight-medium, 600)',
+                            'font-weight: var(--custom, 500)', 'line-height: calc(1em + 2px)'):
+            with self.subTest(declaration=declaration):
+                self.assertEqual(['typography'], [r['rule'] for r in check.findings('x.css', f'a {{ {declaration}; }}')])
+
+    def test_shared_references_and_matching_compatibility_fallbacks_are_allowed(self):
+        for declaration in ('font: inherit', 'line-height: normal', 'font-family: tokens.$font-family',
+                            'font: var(--cedar-font-size)/var(--cedar-control-line-height-default) var(--cedar-font-family)',
+                            'font-weight: var(--cedar-font-weight-medium, 500)',
+                            'font-family: var(--cedar-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace)'):
+            with self.subTest(declaration=declaration):
+                self.assertEqual([], list(check.findings('x.css', f'a {{ {declaration}; }}')))
+
+    def test_modern_color_functions_are_gated_including_fallbacks(self):
+        for color in ('lab(50% 0 0)', 'lch(50% 10 20)', 'oklab(.5 0 0)', 'hwb(90 0% 0%)'):
+            self.assertEqual(['color'], [r['rule'] for r in check.findings('x.css', f'a {{ color: var(--custom, {color}); }}')])
+
+    def test_strict_requires_exact_matching_dependency_but_not_latest_checkout(self):
+        self.run_report(initialize=True)
+        for pin, locked, expected in ((None, None, 1), ('^1.0.0', '1.0.0', 1),
+                                      ('1.0.0', '2.0.0', 1), ('1.0.0', None, 1),
+                                      ('1.0.0', '1.0.0', 0)):
+            (self.repo / 'package.json').write_text(json.dumps({'dependencies': {check.PACKAGE: pin}}))
+            (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {
+                'node_modules/' + check.PACKAGE: {'version': locked}}}))
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(expected, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
 
     def test_malformed_baseline_structure_is_diagnosed(self):
         for data in ([], {'schema': 1, 'findings': {'x': None}},

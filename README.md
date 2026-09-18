@@ -173,7 +173,9 @@ Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
 component repository's new and existing style findings, advisory spacing/geometry findings,
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
 one repository; `--all` includes existing findings; `--json` supports dashboards.
-`--strict` fails on new color/typography findings or missing baselines. No network,
+`--strict` fails on new color/typography findings, missing baselines, or a missing,
+ranged or lockfile-mismatched token dependency. It does not require every consumer
+to match the token checkout's version before that version has been published. No network,
 Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
 shells remain excluded; their styles are not migration targets.
 
@@ -208,6 +210,15 @@ same PR cannot conceal new drift. Initial rollout, where the base has no baselin
 uses the new inventory and emits a review notice. A later intentional exception
 must be reviewed and merged separately before the styling change it permits.
 Changes to the scanner need tests and a review of their effect on existing findings.
+
+Typography checks include keyword weights and sizes, percentage/viewport units,
+font shorthand and literal fallbacks. A compatibility fallback on a shared token
+is allowed only when it exactly matches that token's canonical Sass value; an
+arbitrary local fallback is still checked. Modern CSS color functions (`lab`,
+`lch`, `oklab`, `oklch`, `hwb`) are checked alongside hex, RGB and HSL colors.
+Push runs compare baselines against the previous pushed revision, just as pull
+requests compare against their base. Adding allowances beside new styles cannot
+silence the gate in the same push.
 
 Rollout order: merge the checker/reusable workflow in this repository first, then
 the consumer baselines/workflows and CLI command. Consumers reference `develop`;
