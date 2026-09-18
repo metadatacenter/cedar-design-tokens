@@ -258,3 +258,17 @@ $icon-size-small: 16px;
 $icon-size-default: 20px;
 $icon-size-large: 24px;
 $icon-stroke-width: 2;
+
+// Shared interaction roles. Public embedding overrides remain component-owned.
+$focus-ring-color: $color-primary;
+$focus-ring-width: 2px;
+$focus-ring-offset: 2px;
+$control-disabled-opacity: 0.45;
+$action-hover-surface: $surface-tinted;
+$action-pressed-surface: map.get($brand-primary, 100);
+$action-primary-surface: $color-primary;
+$action-primary-text: $color-on-primary;
+$action-primary-hover-surface: map.get($brand-primary, 700);
+$action-primary-pressed-surface: map.get($brand-primary, 800);
+$control-invalid-border: $color-error;
+$control-readonly-surface: $surface-panel;

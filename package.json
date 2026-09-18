@@ -27,6 +27,9 @@
     "./icons": {
       "types": "./dist/icons.d.ts",
       "default": "./dist/icons.js"
+    },
+    "./controls": {
+      "sass": "./_controls.scss"
     }
   },
   "files": [
@@ -38,7 +41,8 @@
     "fonts/",
     "dist/icons.js",
     "dist/icons.d.ts",
-    "icons/"
+    "icons/",
+    "_controls.scss"
   ],
   "scripts": {
     "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs",

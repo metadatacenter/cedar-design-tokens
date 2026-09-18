@@ -299,3 +299,15 @@ The modern Angular OpenView, Monitoring and Bridging applications also consume
 this registry. Their CI runs `tools/check_icons.py --repo .` against the nested
 `*-src/src` application trees. This check has no baseline or exemption file;
 AngularJS and generated distributions remain outside its scope.
+
+## Interaction recipes
+
+The `controls` Sass export provides opt-in `focus-ring`, `action-states`,
+`primary-action` and `input-states` mixins. Applications supply selectors; the
+package supplies shared state values. Include primary styles after ordinary
+action styles. `aria-disabled` styling does not disable behavior: the component
+must still block activation. Use native `disabled` where appropriate.
+
+The focus and invalid recipes accept colors so existing documented embedding
+overrides can remain authoritative. Invalid styling uses `aria-invalid`, not
+`:invalid`, to avoid marking an untouched required field as an error.

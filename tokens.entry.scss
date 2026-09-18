@@ -96,4 +96,16 @@
   --cedar-space-3: #{tokens.$space-3};
   --cedar-space-4: #{tokens.$space-4};
   --cedar-space-6: #{tokens.$space-6};
+  --cedar-focus-ring-color: #{tokens.$focus-ring-color};
+  --cedar-focus-ring-width: #{tokens.$focus-ring-width};
+  --cedar-focus-ring-offset: #{tokens.$focus-ring-offset};
+  --cedar-control-disabled-opacity: #{tokens.$control-disabled-opacity};
+  --cedar-action-hover-surface: #{tokens.$action-hover-surface};
+  --cedar-action-pressed-surface: #{tokens.$action-pressed-surface};
+  --cedar-action-primary-surface: #{tokens.$action-primary-surface};
+  --cedar-action-primary-text: #{tokens.$action-primary-text};
+  --cedar-action-primary-hover-surface: #{tokens.$action-primary-hover-surface};
+  --cedar-action-primary-pressed-surface: #{tokens.$action-primary-pressed-surface};
+  --cedar-control-invalid-border: #{tokens.$control-invalid-border};
+  --cedar-control-readonly-surface: #{tokens.$control-readonly-surface};
 }
