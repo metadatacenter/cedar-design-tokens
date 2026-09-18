@@ -285,3 +285,12 @@ content remain separate from interface iconography.
 The build copies only approved SVG geometry and preserves Lucide's license in
 `icons/LICENSE`. Tests compare every icon with the pinned source, verify aliases,
 reject unknown names and check SVG accessibility, color and sizing contracts.
+
+The adoption gate also checks iconography in modern first-party HTML, TypeScript
+and stylesheets. It rejects local SVG geometry, icon-font markup, direct icon-set
+imports, unknown static semantic names and text glyphs used as controls. The thin
+registry adapters and the exact CEDAR brand asset are recognized explicitly.
+Icon violations cannot be added to a baseline or waived by its exceptions.
+Dynamic icon names are validated at runtime and covered by adapter and browser
+tests. Framework-owned native control internals and user-authored content are
+outside this source guard.

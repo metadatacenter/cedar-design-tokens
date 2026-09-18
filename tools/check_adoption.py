@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from check_icons import scan as icon_findings
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -150,7 +151,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
-            'files': len(list(source_files(repo))), 'findings': rows,
+            'files': len(list(source_files(repo))), 'findings': rows + list(icon_findings(repo)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 

@@ -72,6 +72,18 @@ class AdoptionTest(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 self.assertEqual(expected, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
 
+    def test_icon_drift_cannot_be_baselined_or_excepted(self):
+        self.run_report(initialize=True)
+        (self.repo / 'src/control.html').write_text('<mat-icon>help</mat-icon>')
+        icon = next(row for row in self.run_report()['findings'] if row['rule'] == 'iconography')
+        baseline = json.loads((self.repo / check.BASELINE).read_text())
+        baseline['findings'][icon['id']] = {**icon, 'count': 100}
+        baseline['exceptions'] = {icon['id']: 'Attempt to bypass the shared icon contract'}
+        (self.repo / check.BASELINE).write_text(json.dumps(baseline))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+        self.assertEqual('new', next(row for row in self.run_report()['findings'] if row['rule'] == 'iconography')['status'])
+
     def test_malformed_baseline_structure_is_diagnosed(self):
         for data in ([], {'schema': 1, 'findings': {'x': None}},
                      {'schema': 1, 'findings': {}, 'exceptions': []}):
