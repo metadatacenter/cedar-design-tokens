@@ -29,7 +29,7 @@ def violations(path, source):
         name = re.search(r'(?<![\w\[])\b(?:name|key|cedarIcon)="([^"{}]+)"', match[0])
         if name and name[1] not in NAMES:
             yield match.start(), 'unknown-icon', name[1]
-    for match in re.finditer(r'[×✕▾▸▴]', source):
+    for match in re.finditer(r'[×✕▾▸▴＋✓]', source):
         yield match.start(), 'text-icon', 'Use a shared semantic SVG instead of a text glyph'
 
 
