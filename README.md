@@ -362,3 +362,14 @@ Sticky content, menus, modals, overlays and tooltips have ordered layer roles.
 They apply within each host's stacking context; they cannot escape a shadow host
 or outrank the browser's native dialog top layer. Keep backdrop and modal siblings
 in DOM order at the same modal layer.
+
+### Visual reference
+
+CEE's approved editable and read-only rendering is the reference for the modern
+CEDAR UI. Shared values should be extracted from that reference without changing
+its appearance. Authoring needs additional controls and arrangements, but does
+not establish a separate visual language of gradients, elevated cards or oversized
+branding. The artifact-title size, color and line-height roles preserve CEE's
+existing fluid title exactly. CED's real-component browser comparisons exercise
+that relationship against CEE in both display modes; CEE's screenshot baselines
+remain the reference, not snapshots to update to accommodate another component.
