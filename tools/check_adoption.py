@@ -102,7 +102,7 @@ def findings(path, source, policy=1):
 
 
 def scan_styles(repo, policy=1, ref=None):
-    known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'dist/custom-properties.css').read_text()))
+    known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'tokens.entry.scss').read_text()))
     known.update(name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text()))
     for path in source_files(repo, policy, ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()

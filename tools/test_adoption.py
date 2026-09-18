@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import check_adoption as check
 
@@ -175,6 +176,16 @@ class AdoptionTest(unittest.TestCase):
         self.assertTrue(all(r['status'] == 'existing' for r in self.run_report(ref='HEAD')['findings']))
         self.style.write_text('a { gap: 99px; }')
         self.assertTrue(any(r['status'] == 'new' for r in self.run_report(ref='HEAD')['findings']))
+
+    def test_policy_scan_needs_no_generated_output(self):
+        read = Path.read_text
+        def without_dist(path, *args, **kwargs):
+            if 'dist' in path.parts:
+                raise FileNotFoundError('Clean checkouts have no dist')
+            return read(path, *args, **kwargs)
+        self.style.write_text('a { color: var(--cedar-text-primary); }')
+        with patch.object(Path, 'read_text', without_dist):
+            self.assertEqual([], list(check.scan_styles(self.repo, 2)))
 
     def test_unknown_tokens_cannot_be_excepted_or_baselined(self):
         self.run_report(initialize=True)
