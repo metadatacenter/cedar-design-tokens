@@ -121,4 +121,21 @@
   --cedar-menu-item-padding-inline: #{tokens.$menu-item-padding-inline};
   --cedar-overlay-surface: #{tokens.$overlay-surface};
   --cedar-overlay-border: #{tokens.$overlay-border};
+  --cedar-surface-canvas: #{tokens.$surface-canvas};
+  --cedar-surface-raised: #{tokens.$surface-raised};
+  --cedar-surface-row-hover: #{tokens.$surface-row-hover};
+  --cedar-surface-selected: #{tokens.$surface-selected};
+  --cedar-text-selected: #{tokens.$text-selected};
+  --cedar-border-selected: #{tokens.$border-selected};
+  --cedar-text-readonly: #{tokens.$text-readonly};
+  --cedar-text-destructive: #{tokens.$text-destructive};
+  --cedar-status-error-text: #{tokens.$status-error-text};
+  --cedar-status-error-surface: #{tokens.$status-error-surface};
+  --cedar-status-warning-text: #{tokens.$status-warning-text};
+  --cedar-status-warning-surface: #{tokens.$status-warning-surface};
+  --cedar-status-success-text: #{tokens.$status-success-text};
+  --cedar-status-success-surface: #{tokens.$status-success-surface};
+  --cedar-status-info-text: #{tokens.$status-info-text};
+  --cedar-status-info-surface: #{tokens.$status-info-surface};
+  --cedar-selection-tint-percentage: #{tokens.$selection-tint-percentage};
 }
