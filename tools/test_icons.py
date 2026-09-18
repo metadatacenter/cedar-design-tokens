@@ -1,6 +1,8 @@
 import unittest
 from pathlib import Path
-from check_icons import violations
+from check_icons import violations, scan
+import tempfile
+import subprocess
 
 class IconsTest(unittest.TestCase):
     def check(self, source, path='src/app/example.html'):
@@ -29,3 +31,15 @@ class IconsTest(unittest.TestCase):
 
     def test_comments_are_not_icons(self):
         self.assertEqual(self.check('<!-- <mat-icon>×</mat-icon> -->'), [])
+
+    def test_nested_angular_apps_are_scanned_without_legacy_or_build_outputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            for name in ['cedar-monitoring-src/src/app/example.html', 'app/legacy.html', 'cedar-monitoring-dist/index.html']:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('<fa-icon></fa-icon>')
+            findings = list(scan(root))
+            self.assertEqual(len(findings), 1)
+            self.assertEqual(findings[0]['file'], 'cedar-monitoring-src/src/app/example.html')

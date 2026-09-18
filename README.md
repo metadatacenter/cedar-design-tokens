@@ -294,3 +294,8 @@ Icon violations cannot be added to a baseline or waived by its exceptions.
 Dynamic icon names are validated at runtime and covered by adapter and browser
 tests. Framework-owned native control internals and user-authored content are
 outside this source guard.
+
+The modern Angular OpenView, Monitoring and Bridging applications also consume
+this registry. Their CI runs `tools/check_icons.py --repo .` against the nested
+`*-src/src` application trees. This check has no baseline or exemption file;
+AngularJS and generated distributions remain outside its scope.

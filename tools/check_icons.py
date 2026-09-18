@@ -20,6 +20,8 @@ def violations(path, source):
         adapter = str(path) in ADAPTERS and '/cedar-design-tokens/icons' in source and not re.search(r'<(?:path|circle|rect|line|polyline|polygon|ellipse)\b', svg)
         if not brand and not adapter:
             yield match.start(), 'inline-svg', 'Render through the shared icon adapter'
+    for match in re.finditer(r'<fa-icon\b', source):
+        yield match.start(), 'icon-font', 'Use the shared CEDAR icon adapter'
     for match in re.finditer(r'<mat-icon\b([^>]*)>', source):
         if not re.search(r'\bcedarIcon\b', match[1]):
             yield match.start(), 'icon-font', 'mat-icon must use cedarIcon'
@@ -34,16 +36,31 @@ def violations(path, source):
 
 
 def scan(repo):
+    manifest = repo / 'package.json'
+    modern_host = manifest.is_file() and json.loads(manifest.read_text()).get('name') == 'cedar-template-designer'
     paths = subprocess.check_output(['git', '-C', str(repo), 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], text=True).split('\0')
     for name in sorted(set(paths)):
         path = Path(name)
-        if not path.parts or path.parts[0] != 'src' or path.suffix not in ('.html', '.ts', '.scss', '.css'):
+        relative = Path(*path.parts[1:]) if path.parts and path.parts[0].endswith('-src') else path
+        if not relative.parts or relative.parts[0] not in (('src', 'app') if modern_host else ('src',)) or path.suffix not in ('.html', '.ts', '.scss', '.css'):
             continue
         if {'assets', 'fixtures', '__tests__'}.intersection(path.parts) or '.spec.' in name or not (repo / path).is_file():
             continue
         source = (repo / path).read_text()
-        for position, rule, message in violations(path, source):
+        for position, rule, message in violations(relative, source):
             yield {'file': name, 'line': source[:position].count('\n') + 1,
                    'rule': 'iconography', 'property': rule, 'value': message,
                    'id': hashlib.sha256(f'{name}|{rule}|{message}'.encode()).hexdigest()[:20],
                    'severity': 'gate', 'status': 'new'}
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo', type=Path, required=True)
+    args = parser.parse_args()
+    findings = list(scan(args.repo.resolve()))
+    for finding in findings:
+        print(f"{finding['file']}:{finding['line']}: {finding['property']}: {finding['value']}")
+    print(f"Shared icon check: {len(findings)} violation(s)")
+    raise SystemExit(bool(findings))
