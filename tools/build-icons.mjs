@@ -20,7 +20,8 @@ await mkdir(new URL('dist/', root), { recursive: true });
 await writeFile(
   new URL('dist/icons.js', root),
   `// Generated from lucide-static ${upstream.version}; see icons/LICENSE.\n` +
-    `const definitions = ${JSON.stringify(icons)};\n` +
+    `const definitions = ${JSON.stringify(Object.fromEntries(Object.keys(manifest).map((name) => [name, icons[name]])))};\n` +
+    `for (const [alias, name] of Object.entries(${JSON.stringify(aliases)})) definitions[alias] = definitions[name];\n` +
     `for (const icon of Object.values(definitions)) Object.freeze(icon);\n` +
     `export const icons = Object.freeze(definitions);\n` +
     `export const iconNames = Object.freeze(Object.keys(icons));\n` +
