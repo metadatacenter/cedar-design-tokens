@@ -34,7 +34,10 @@
     "./motion": {
       "sass": "./_motion.scss"
     },
-    "./motion.css": "./dist/motion.css"
+    "./motion.css": "./dist/motion.css",
+    "./patterns": {
+      "sass": "./_patterns.scss"
+    }
   },
   "files": [
     "_tokens.scss",
@@ -48,7 +51,9 @@
     "icons/",
     "_controls.scss",
     "_motion.scss",
-    "dist/motion.css"
+    "dist/motion.css",
+    "_patterns.scss",
+    "UI-CONTRACTS.md"
   ],
   "scripts": {
     "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css",

@@ -348,7 +348,7 @@ The adoption gate also scans the nested frontends in OpenView, Monitoring and
 Bridging, and the Template Designer host. Their initial baselines inventory
 existing literal colors and typography; they are not exemptions for new values.
 CI reads the trusted base revision, so increasing a baseline in a change cannot
-hide new drift. Spacing and geometry remain advisory; icon drift is never waived.
+hide new drift. Policy 2 also gates spacing, control geometry, layers and embedded styles; icon drift is never waived.
 
 ### Motion and overlay layers
 
@@ -373,3 +373,20 @@ branding. The artifact-title size, color and line-height roles preserve CEE's
 existing fluid title exactly. CED's real-component browser comparisons exercise
 that relationship against CEE in both display modes; CEE's screenshot baselines
 remain the reference, not snapshots to update to accommodate another component.
+
+## Shared UI patterns
+
+Use `@use '@org.metadatacenter/cedar-design-tokens/patterns';` for opt-in Sass
+recipes: artifact titles, dialog surfaces/actions, menus/items, field labels/help/errors,
+toolbars, tabs, table cells and empty states. For example:
+
+```scss
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+.permissions-dialog {
+  @include patterns.dialog-surface;
+}
+```
+
+Recipes emit no global selectors and use the same semantic roles as CEE. Consumers
+retain layout constraints and behavior. See [UI contracts](UI-CONTRACTS.md) for the
+interaction requirements, baseline procedure and the suites that enforce them.

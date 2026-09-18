@@ -1,0 +1,93 @@
+// Framework-neutral visual contracts. Consumers own their DOM and application state.
+// CSS roles deliberately remain overridable at a host boundary.
+@mixin artifact-title {
+  font-size: var(--cedar-font-size-artifact-title);
+  color: var(--cedar-color-artifact-title);
+  line-height: var(--cedar-line-height-artifact-title);
+  font-weight: var(--cedar-font-weight-medium);
+}
+
+@mixin dialog-surface {
+  border: 1px solid var(--cedar-overlay-border);
+  border-radius: var(--cedar-dialog-radius);
+  padding: var(--cedar-dialog-padding);
+  color: var(--cedar-text-primary);
+  background: var(--cedar-overlay-surface);
+  box-shadow: var(--cedar-dialog-shadow);
+  &::backdrop {
+    background: var(--cedar-dialog-backdrop);
+  }
+}
+
+@mixin dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cedar-dialog-action-gap);
+}
+
+@mixin menu-surface {
+  z-index: var(--cedar-layer-menu);
+  background: var(--cedar-overlay-surface);
+  border: 1px solid var(--cedar-overlay-border);
+  border-radius: var(--cedar-menu-radius);
+  box-shadow: var(--cedar-menu-shadow);
+  padding: var(--cedar-menu-padding);
+}
+
+@mixin menu-item {
+  min-height: var(--cedar-menu-item-height);
+  padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
+  text-align: left;
+}
+
+@mixin field-label {
+  display: block;
+  margin: 0 0 var(--cedar-form-label-gap);
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size-small);
+  font-weight: var(--cedar-font-weight-medium);
+}
+
+@mixin field-help {
+  margin-top: var(--cedar-form-help-gap);
+  font-size: var(--cedar-font-size-small);
+  color: var(--cedar-text-muted);
+}
+
+@mixin field-error {
+  @include field-help;
+  color: var(--cedar-status-error-text);
+}
+
+@mixin toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-4);
+  padding: var(--cedar-space-4);
+  background: var(--cedar-surface-raised);
+  border-bottom: 1px solid var(--cedar-border-rule);
+}
+
+@mixin tabs {
+  display: flex;
+  border-bottom: 1px solid var(--cedar-border-rule);
+  > [role='tab'] {
+    border-radius: 0;
+  }
+  > [aria-selected='true'] {
+    border-bottom: 2px solid var(--cedar-color-primary);
+    margin-bottom: -1px;
+  }
+}
+
+@mixin table-cell {
+  padding: var(--cedar-table-cell-padding-block) var(--cedar-table-cell-padding-inline);
+  border-bottom: 1px solid var(--cedar-table-divider);
+}
+
+@mixin empty-state {
+  padding: var(--cedar-empty-state-padding);
+  text-align: center;
+  color: var(--cedar-text-muted);
+}
