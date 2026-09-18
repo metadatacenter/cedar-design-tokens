@@ -1,0 +1,89 @@
+name: Consumer contracts
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: consumers-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  consumer:
+    name: ${{ matrix.repo }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - repo: cedar-embeddable-editor
+            directory: .
+            command: npm run build:production && npm run test:unit:ci && npm run test:visual:prebuilt
+          - repo: cedar-embeddable-designer
+            directory: .
+            command: npm test && npm run dist && npm run test:visual
+          - repo: cedar-embeddable-term-picker
+            directory: .
+            command: npm test && npm run build:production && npm run test:visual
+          - repo: cedar-workspace
+            directory: .
+            command: npm test && npm run build && npm run test:visual
+          - repo: cedar-openview
+            directory: cedar-openview-src
+            command: npm run build
+          - repo: cedar-monitoring
+            directory: cedar-monitoring-src
+            command: npm run build
+          - repo: cedar-bridging
+            directory: cedar-bridging-src
+            command: npm run build
+          - repo: cedar-template-designer
+            directory: .
+            command: npm run prepare:components && npm test
+    steps:
+      - name: Check out candidate tokens
+        uses: actions/checkout@v4
+        with:
+          path: tokens
+      - name: Check out consumer
+        uses: actions/checkout@v4
+        with:
+          repository: metadatacenter/${{ matrix.repo }}
+          ref: develop
+          path: consumer
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - name: Build and pack the candidate without publishing
+        working-directory: tokens
+        run: |
+          npm ci
+          mkdir candidate
+          npm pack --pack-destination candidate
+      - name: Install candidate over the locked consumer dependencies
+        working-directory: consumer/${{ matrix.directory }}
+        run: |
+          npm ci
+          npm install --no-save --package-lock=false "$GITHUB_WORKSPACE"/tokens/candidate/*.tgz
+          node "$GITHUB_WORKSPACE/tokens/tools/verify-candidate.mjs" "$GITHUB_WORKSPACE/tokens"
+      - name: Record exact inputs
+        run: |
+          git -C tokens rev-parse HEAD
+          git -C consumer rev-parse HEAD
+          sha256sum tokens/candidate/*.tgz
+      - name: Build and test the consumer with candidate tokens
+        working-directory: consumer/${{ matrix.directory }}
+        run: ${{ matrix.command }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ${{ matrix.repo }}-diagnostics
+          path: |
+            consumer/browser/test-results/
+            consumer/visual/test-results/
