@@ -20,7 +20,8 @@ def sources(path, source):
         yield source
         for match in re.finditer(r'@apply\s+([^;]+);', source):
             for extracted in sources(Path('utilities.html'), '<div class="' + match[1] + '"></div>'):
-                yield '\n' * source[:match.start()].count('\n') + extracted
+                if '{resize:forbidden-utility;}' in extracted:
+                    yield '\n' * source[:match.start()].count('\n') + extracted
         return
     source = re.sub(r'<!--.*?-->|/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', lambda m: masked(m[0]), source, flags=re.S)
     templates = [(0, source)] if Path(path).suffix == '.html' else []

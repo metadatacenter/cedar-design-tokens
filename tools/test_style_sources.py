@@ -24,6 +24,7 @@ class EmbeddedStylesTest(unittest.TestCase):
             'x.ts', "@Component({styles: ['textarea { resize: vertical; }']})")))
         self.assertTrue(any(row['rule'] == 'manual-resize' for row in self.rules(
             'x.css', 'textarea { @apply resize-y; }')))
+        self.assertEqual([], self.rules('x.scss', '.existing { @apply text-sm p-3; }'))
         self.assertEqual([], self.rules('x.html', '<textarea class="resize-none" style="resize:none"></textarea>'))
 
     def test_component_styles_and_template_preserve_locations(self):
