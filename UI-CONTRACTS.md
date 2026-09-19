@@ -64,3 +64,18 @@ There are currently no prose exceptions. An exception requires a deliberate upda
 to this shared contract and its adoption gate; do not enable it locally. The adoption
 check rejects missing declarations and spellcheck opt-ins, including bindings. These
 findings cannot be grandfathered into visual/style baselines.
+
+## Card navigation
+
+In vertical authoring-card collections, unmodified Up/Down moves keyboard focus and
+selection to the previous/next visible card in document order and brings its header
+into view. Clicking non-interactive card chrome gives that card keyboard focus.
+Cards expose an accessible name and `aria-keyshortcuts="ArrowUp ArrowDown"`.
+Navigation stops at the ends; it never wraps, reorders, edits, saves or changes a
+card's expanded settings. Element cards participate; collapsed descendants do not.
+
+Arrow navigation applies when the card itself owns focus. Inputs, textareas,
+selects, tabs, menus, pickers and dialogs retain their own keyboard behavior.
+Modified shortcuts and IME composition are not intercepted. This is an interaction
+contract, not a CSS token or a document-wide keyboard handler. CED's card-navigation
+browser tests enforce it at desktop and narrow widths and across nested elements.
