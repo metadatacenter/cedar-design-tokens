@@ -28,6 +28,27 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_manual_resize_is_always_forbidden_even_in_baselines_and_exceptions(self):
+        self.style.write_text('textarea { resize: vertical; }')
+        self.run_report(initialize=True)
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        key = next(iter(baseline['findings']))
+        baseline['exceptions'] = {key: 'An obsolete exception must not permit resizing'}
+        baseline_path.write_text(json.dumps(baseline))
+        row = self.run_report()['findings'][0]
+        self.assertEqual(('manual-resize', 'gate', 'new'),
+                         (row['rule'], row['severity'], row['status']))
+
+    def test_only_none_is_allowed_for_resize(self):
+        for value in ('both', 'vertical', 'horizontal', 'block', 'inline',
+                      'initial', 'inherit', 'unset', 'revert', 'var(--resize)', '$resize'):
+            with self.subTest(value=value):
+                rows = list(check.findings('x.scss', 'textarea { resize: ' + value + '; }'))
+                self.assertEqual(['manual-resize'], [row['rule'] for row in rows])
+        for value in ('none', 'none !important', 'NONE'):
+            self.assertEqual([], list(check.findings('x.css', 'textarea { resize: ' + value + '; }')))
+
     def test_nested_frontend_is_scanned_under_a_generic_ci_checkout_name(self):
         nested = self.repo / 'cedar-monitoring-src'
         nested.mkdir()

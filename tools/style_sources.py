@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
-STYLE_PROPERTIES = r'(?:color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
+STYLE_PROPERTIES = r'(?:resize|color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
 UTILITY = re.compile(r'^(?:!?)(?:(?:[\w-]+|\[[^]]+\]):)*(?:bg|text|font|leading|tracking|rounded|shadow|ring|border|p[trblxyse]?|m[trblxyse]?|gap(?:-[xy])?|space-[xy]|h|min-h|z)-(.+)$')
 
 def masked(text):
@@ -18,6 +18,9 @@ def sources(path, source):
     """Yield CSS snippets with original line offsets, plus forbidden dynamic declarations."""
     if Path(path).suffix in ('.scss', '.css', '.less'):
         yield source
+        for match in re.finditer(r'@apply\s+([^;]+);', source):
+            for extracted in sources(Path('utilities.html'), '<div class="' + match[1] + '"></div>'):
+                yield '\n' * source[:match.start()].count('\n') + extracted
         return
     source = re.sub(r'<!--.*?-->|/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', lambda m: masked(m[0]), source, flags=re.S)
     templates = [(0, source)] if Path(path).suffix == '.html' else []
@@ -31,6 +34,14 @@ def sources(path, source):
                 else:
                     templates.append((offset, text))
     for offset, template in templates:
+        # Check resize utilities in literal and bound class attributes only.
+        for attribute in re.finditer(r"""(?:\[?(?:class|ngClass)\]?\s*=\s*(["'])(.*?)\1|\[class\.([^] ]+)\])""", template, re.S):
+            classes = attribute[2] if attribute[2] is not None else attribute[3]
+            for match in re.finditer(r'(?<![\w-])(?:(?:[\w-]+|\[[^]]+\]):)*!?(?:resize(?:-[\w]+)?|\[resize:[^]]+\])!?', classes):
+                utility = match[0]
+                if re.search(r'resize-none!?$', utility) or re.search(r'\[resize:none\]!?$', utility):
+                    continue
+                yield '\n' * (source[:offset].count('\n') + template[:attribute.start()].count('\n')) + '{resize:forbidden-utility;}'
         for match in re.finditer(r'(?<![\w\[-])style\s*=\s*(["\'])(.*?)\1', template, re.S):
             yield '\n' * (source[:offset].count('\n') + template[:match.start(2)].count('\n')) + '{' + match[2] + '}'
         for match in re.finditer(r'\[style\.('+STYLE_PROPERTIES+r')(?:\.(px|rem|em|%))?\]\s*=\s*(["\'])(.*?)\3', template, re.S):

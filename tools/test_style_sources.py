@@ -7,6 +7,25 @@ class EmbeddedStylesTest(unittest.TestCase):
     def rules(self, path, source):
         return [r for css in sources(Path(path), source) for r in findings(path, css, 2)]
 
+    def test_manual_resize_is_forbidden_in_templates_and_components(self):
+        for source in (
+            '<textarea style="resize:both"></textarea>',
+            '<textarea [style.resize]="mode"></textarea>',
+            """<textarea [style.resize]="'vertical'"></textarea>""",
+            '<textarea class="resize"></textarea>',
+            '<textarea class="md:resize-y"></textarea>',
+            '<textarea [class.resize-x]="enabled"></textarea>',
+            """<textarea [ngClass]="{'resize-y': enabled}"></textarea>""",
+            '<textarea class="[resize:var(--size)]"></textarea>',
+        ):
+            with self.subTest(source=source):
+                self.assertTrue(any(row['rule'] == 'manual-resize' for row in self.rules('x.html', source)))
+        self.assertTrue(any(row['rule'] == 'manual-resize' for row in self.rules(
+            'x.ts', "@Component({styles: ['textarea { resize: vertical; }']})")))
+        self.assertTrue(any(row['rule'] == 'manual-resize' for row in self.rules(
+            'x.css', 'textarea { @apply resize-y; }')))
+        self.assertEqual([], self.rules('x.html', '<textarea class="resize-none" style="resize:none"></textarea>'))
+
     def test_component_styles_and_template_preserve_locations(self):
         source = '''// color: red;
 @Component({styles: [`a { padding: 7px; }`],

@@ -43,3 +43,11 @@ unexplained exception. Inline dynamic paint bindings should become inspectable
 semantic classes. Existing exceptions cannot be silently added to a feature PR.
 
 Reviewer ownership and repository approval rules are intentionally unchanged.
+
+## Field resizing
+
+Manual field resizing is forbidden across modern CEDAR surfaces, including embedded
+shadow roots. Textareas must set `resize: none`. Automatic sizing to fit content
+and scrolling remain supported. Other resize values, dynamic resize bindings and
+resizing utility classes fail the adoption gate and cannot be grandfathered through
+a baseline or exception.

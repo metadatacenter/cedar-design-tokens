@@ -78,7 +78,9 @@ def findings(path, source, policy=1):
         # Don't interpret text/URLs as color names (including embedded font payloads).
         inspected = re.sub(r'url\([^)]*\)|[\'"][^\'"]*[\'"]', '', value)
         rule = None
-        if value == 'uninspectable-binding':
+        if prop.lower() == 'resize' and re.sub(r'\s*!important$', '', value, flags=re.I).lower() != 'none':
+            rule = 'manual-resize'
+        elif value == 'uninspectable-binding':
             rule = 'dynamic-style'
         elif prop == 'utility-style':
             rule = 'utility-style'
@@ -99,7 +101,7 @@ def findings(path, source, policy=1):
             yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
                    'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
                    'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography') else 'advisory'}
+                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize') else 'advisory'}
 
 
 
@@ -203,7 +205,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] == 'unknown-token' else 'exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] in ('unknown-token', 'manual-resize') else 'exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
