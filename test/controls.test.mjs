@@ -21,13 +21,16 @@ test('input recipes preserve host focus and error overrides and avoid premature 
   assert.doesNotMatch(css, /:invalid\b/);
 });
 
-test('table density leaves room for its matching controls and both cell gutters', () => {
+test('table density keeps compact action rows at 28px and ordinary controls unclipped', () => {
   const css = sass.compileString(
     `@use 'tokens'; a { default-row: tokens.$table-row-height; authoring-row: tokens.$table-row-height-authoring; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$table-cell-padding-block; authoring-padding: tokens.$table-cell-padding-block-authoring; }`,
     { loadPaths: [process.cwd()] },
   ).css;
   const values = new Map([...css.matchAll(/([\w-]+): (\d+)px/g)].map((m) => [m[1], Number(m[2])]));
-  for (const profile of ['default', 'authoring']) {
+  assert.equal(values.get('authoring-row'), 28);
+  assert.equal(values.get('authoring-padding'), 2);
+  assert.ok(values.get('authoring-row') >= 24 + 2 * values.get('authoring-padding'));
+  for (const profile of ['default']) {
     assert.ok(
       values.get(`${profile}-row`) >= values.get(`${profile}-control`) + 2 * values.get(`${profile}-padding`),
       `${profile} row clips its controls`,

@@ -345,9 +345,9 @@ for repeated form rhythm. Help and error text share the small type role and an
 responsibilities.
 
 Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
-use 40px rows with 4px/8px padding. These profiles fit their corresponding controls
-plus both vertical gutters, an invariant checked by package tests. Rows grow for
-wrapped content. Column widths, scrolling limits and responsive layout stay local.
+use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
+grow for wrapped values or larger controls. The ordinary profile fits its controls
+plus both vertical gutters, an invariant checked by package tests. Column widths, scrolling limits and responsive layout stay local.
 
 The adoption gate also scans the nested frontends in OpenView, Monitoring and
 Bridging, and the Template Designer host. Their initial baselines inventory
