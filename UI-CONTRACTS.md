@@ -51,3 +51,16 @@ shadow roots. Textareas must set `resize: none`. Automatic sizing to fit content
 and scrolling remain supported. Other resize values, dynamic resize bindings and
 resizing utility classes fail the adoption gate and cannot be grandfathered through
 a baseline or exception.
+
+## Browser spellchecking
+
+Modern CEDAR controls explicitly set `spellcheck="false"`. Browser spelling marks
+are inappropriate for scientific names, controlled terms, identifiers and artifact
+metadata. This behavior applies to inputs, textareas and editable content, including
+controls inside shadow roots and dialogs. Application documents also default to off.
+This is an HTML behavior contract, not a CSS token. CEDAR validation is unchanged.
+
+There are currently no prose exceptions. An exception requires a deliberate update
+to this shared contract and its adoption gate; do not enable it locally. The adoption
+check rejects missing declarations and spellcheck opt-ins, including bindings. These
+findings cannot be grandfathered into visual/style baselines.

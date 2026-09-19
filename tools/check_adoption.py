@@ -10,6 +10,7 @@ import subprocess
 import sys
 from check_icons import scan as icon_findings
 from style_sources import sources
+from check_spellcheck import findings as spellcheck_findings
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -119,8 +120,11 @@ def known_css_properties():
 
 def scan_styles(repo, policy=1, ref=None):
     known = known_css_properties()
-    for path in source_files(repo, policy, ref):
+    for path in source_files(repo, max(policy, 2), ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
+        yield from spellcheck_findings(path, source)
+        if policy < 2 and path.suffix in ('.html', '.ts'):
+            continue
         for snippet in sources(path, source):
             yield from findings(path, snippet, policy)
         if policy >= 2:
@@ -205,7 +209,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] in ('unknown-token', 'manual-resize') else 'exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] in ('unknown-token', 'manual-resize', 'spellcheck') else 'exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))

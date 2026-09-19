@@ -40,6 +40,19 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual(('manual-resize', 'gate', 'new'),
                          (row['rule'], row['severity'], row['status']))
 
+    def test_spellcheck_is_not_baselinable(self):
+        (self.repo / 'src/control.html').write_text('<input>')
+        self.run_report(initialize=True)
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        baseline['policy'] = 2
+        for row in check.scan_styles(self.repo, 2):
+            baseline['findings'][row['id']] = dict(row, count=1)
+        baseline_path.write_text(json.dumps(baseline))
+        rows = self.run_report()['findings']
+        row = next(row for row in rows if row['rule'] == 'spellcheck')
+        self.assertEqual((row['severity'], row['status']), ('gate', 'new'))
+
     def test_only_none_is_allowed_for_resize(self):
         for value in ('both', 'vertical', 'horizontal', 'block', 'inline',
                       'initial', 'inherit', 'unset', 'revert', 'var(--resize)', '$resize'):
