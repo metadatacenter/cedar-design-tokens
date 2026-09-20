@@ -232,15 +232,15 @@ Publishing an npm package is not needed for this source check.
 
 ### Common styling choices
 
-| Intent             | Sass token / CSS property                                                |
-| ------------------ | ------------------------------------------------------------------------ |
-| Body text          | `tokens.$font-size` / `--cedar-font-size`                                |
-| Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                              |
-| Validation error   | `tokens.$color-error` / `--cedar-color-error`                            |
-| Advisory notice    | `color-warning` foreground and `surface-advisory` background             |
-| Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                              |
-| Designer input     | Standard CEE adapter (14px text, 36px controls); inherited host overrides win        |
-| Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks |
+| Intent             | Sass token / CSS property                                                     |
+| ------------------ | ----------------------------------------------------------------------------- |
+| Body text          | `tokens.$font-size` / `--cedar-font-size`                                     |
+| Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                                   |
+| Validation error   | `tokens.$color-error` / `--cedar-color-error`                                 |
+| Advisory notice    | `color-warning` foreground and `surface-advisory` background                  |
+| Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                                   |
+| Designer input     | Standard CEE adapter (14px text, 36px controls); inherited host overrides win |
+| Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks      |
 
 For example:
 

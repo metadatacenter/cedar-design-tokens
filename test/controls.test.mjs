@@ -57,7 +57,6 @@ test('reduced motion preserves animation completion and covers pseudo elements',
   assert.match(css, /transition-duration: 0.01ms !important/);
 });
 
-
 test('choice recipes share typography and grow beyond a minimum row height', () => {
   const css = compile('.choice { @include controls.choice-text; @include controls.choice-row; }');
   assert.match(css, /--cedar-choice-row-height, 28px/);
