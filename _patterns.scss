@@ -91,3 +91,56 @@
   text-align: center;
   color: var(--cedar-text-muted);
 }
+
+// Shared collapsible validation notices for designer and metadata authoring.
+@mixin validation-summary {
+  color: var(--cedar-status-error-text);
+  background: var(--cedar-status-error-surface);
+  padding: var(--cedar-space-2) var(--cedar-space-4);
+  font-size: var(--cedar-font-size);
+  line-height: var(--cedar-control-line-height-default);
+  max-height: 25vh;
+  overflow: auto;
+  flex: none;
+  summary {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--cedar-space-2);
+    cursor: pointer;
+    list-style: none;
+    text-align: center;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .validation-disclosure {
+    flex: none;
+  }
+  &:not([open]) .validation-disclosure {
+    transform: rotate(-90deg);
+  }
+  ul {
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: var(--cedar-space-2) auto 0;
+    padding-inline-start: var(--cedar-space-6);
+    text-align: left;
+    list-style: disc;
+  }
+  li {
+    padding-block: var(--cedar-space-1);
+  }
+  button {
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: underline;
+  }
+  &.validation-summary--warning {
+    color: var(--cedar-status-warning-text);
+    background: var(--cedar-status-warning-surface);
+  }
+}

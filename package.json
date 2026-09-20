@@ -37,7 +37,9 @@
     "./motion.css": "./dist/motion.css",
     "./patterns": {
       "sass": "./_patterns.scss"
-    }
+    },
+    "./validation-summary.css": "./dist/validation-summary.css",
+    "./icons.svg": "./dist/icons.svg"
   },
   "files": [
     "_tokens.scss",
@@ -53,10 +55,12 @@
     "_motion.scss",
     "dist/motion.css",
     "_patterns.scss",
-    "UI-CONTRACTS.md"
+    "UI-CONTRACTS.md",
+    "dist/validation-summary.css",
+    "dist/icons.svg"
   ],
   "scripts": {
-    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css",
+    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css && sass --no-source-map --style=expanded validation-summary.entry.scss dist/validation-summary.css",
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",

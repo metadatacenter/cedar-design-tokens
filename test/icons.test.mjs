@@ -53,3 +53,11 @@ test('the packaged icons retain upstream license attribution', async () => {
     await readFile(new URL('../node_modules/lucide-static/LICENSE', import.meta.url), 'utf8'),
   );
 });
+
+test('SVG sprite exposes the same shared icon geometry for legacy hosts', async () => {
+  const sprite = await readFile(new URL('../dist/icons.svg', import.meta.url), 'utf8');
+  for (const name of Object.keys(manifest)) {
+    assert.ok(sprite.includes('id="' + name + '"'));
+    assert.ok(sprite.includes(getIcon(name).body));
+  }
+});

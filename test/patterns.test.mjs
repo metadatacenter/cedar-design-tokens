@@ -8,6 +8,7 @@ const roles = new Set(
   [...readFileSync('dist/custom-properties.css', 'utf8').matchAll(/(--cedar-[\w-]+)\s*:/g)].map((m) => m[1]),
 );
 const names = [
+  'validation-summary',
   'artifact-title',
   'dialog-surface',
   'dialog-actions',

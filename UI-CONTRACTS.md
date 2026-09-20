@@ -88,3 +88,18 @@ Editable checkbox, radio and list options and their default-value controls share
 from ordinary-control density or layer utility text colors over the shared role.
 The CED real-CEF browser suite compares both renderers for every choice type;
 CEE visual baselines cover selected, disabled, read-only and wrapped states.
+
+## Validation summaries
+
+Use `patterns.validation-summary` for a collapsible validation notice in an authoring editor.
+Center the summary's disclosure icon, warning icon and text as one group. Expanded issues form
+an indented, left-aligned list below it. Errors use the shared error foreground and surface;
+`validation-summary--warning` uses the orange warning roles. Warnings never disable saving.
+CED currently has only validation errors. The metadata host treats missing required values,
+missing collection properties and unmet minimum occurrences as incomplete-data warnings;
+invalid supplied values are errors. Host code owns that classification and the save gate.
+
+Hosts without Sass can load `custom-properties.css` and `validation-summary.css`, then use
+`.cedar-validation-summary`. The compiled stylesheet includes the shared regular font;
+`icons.svg` exposes the same icon registry as SVG symbols for those hosts. Main consumes
+these assets through its declared design-token dependency and stages them with `copy:tokens`.

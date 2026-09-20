@@ -1,0 +1,13 @@
+@use 'patterns';
+@use 'fonts/roboto-400';
+
+.cedar-validation-summary {
+  @include patterns.validation-summary;
+  font-family: var(--cedar-font-family);
+
+  summary > svg {
+    width: var(--cedar-icon-size-small);
+    height: var(--cedar-icon-size-small);
+    flex: none;
+  }
+}
