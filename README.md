@@ -239,7 +239,7 @@ Publishing an npm package is not needed for this source check.
 | Validation error   | `tokens.$color-error` / `--cedar-color-error`                            |
 | Advisory notice    | `color-warning` foreground and `surface-advisory` background             |
 | Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                              |
-| Designer input     | Shared authoring adapter; embedded CEF uses `density="authoring"`        |
+| Designer input     | Standard CEE adapter (14px text, 36px controls); inherited host overrides win        |
 | Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks |
 
 For example:
@@ -413,3 +413,21 @@ replaces only the dependency-free token package in a locked consumer install,
 and verifies every published file byte for byte. All consumers build; CEE, CED,
 CETP and Workspace also compare their existing screenshots in the pinned ARM64
 Playwright environment. It never publishes or updates consumer baselines.
+
+### Choice rows
+
+Checkbox, radio, single-select and multi-select fields use the `choice-*` roles
+for editable options and defaults: 14px regular text, 24px line height, 0.25px
+letter spacing, primary text color and a 28px minimum row height. Long labels
+may grow; a row height is a minimum, not clipping. Dropdown options use 2px block
+padding. Disabled/read-only states retain their state-specific treatment.
+
+Use `controls.choice-text` and `controls.choice-row` in native option editors.
+CEE applies these recipes inside its Material adapter and uses the row-height
+role for radio/checkbox state layers and radio clear buttons. CED must not add
+utility typography or inter-row gaps that override this contract. Existing
+`--cedar-control-font-size` and `--cedar-control-line-height` host overrides take
+precedence; the shared `--cedar-choice-*` properties customize choice roles.
+
+Verify option-editor/default parity for checkbox, radio and both list types,
+including dropdown rows, long labels, host typography overrides and narrow hosts.

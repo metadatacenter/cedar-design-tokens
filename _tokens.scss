@@ -249,6 +249,16 @@ $space-6: 24px;
 
 // Typography roles shared by application hosts and embeddable controls.
 $font-weight-regular: 400;
+
+// Editable choices: shared by CED option authors and CEE checkbox/radio/list values.
+$choice-row-height: 28px;
+$choice-font-size: $font-size;
+$choice-line-height: 24px;
+$choice-font-weight: $font-weight-regular;
+$choice-letter-spacing: 0.25px;
+$choice-text-color: $text-primary;
+$choice-padding-block: calc($space-1 / 2);
+
 $font-weight-medium: 500;
 $font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
 $font-size-display: 34px;

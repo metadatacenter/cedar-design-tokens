@@ -49,3 +49,17 @@
     cursor: default;
   }
 }
+
+// The option author and the selectable/default value share one readable text role.
+// Existing host control typography overrides remain supported.
+@mixin choice-text {
+  font-family: var(--cedar-font-family, #{tokens.$font-family});
+  font-size: var(--cedar-control-font-size, var(--cedar-choice-font-size, #{tokens.$choice-font-size}));
+  line-height: var(--cedar-control-line-height, var(--cedar-choice-line-height, #{tokens.$choice-line-height}));
+  font-weight: var(--cedar-choice-font-weight, #{tokens.$choice-font-weight});
+  letter-spacing: var(--cedar-choice-letter-spacing, #{tokens.$choice-letter-spacing});
+  color: var(--cedar-choice-text-color, #{tokens.$choice-text-color});
+}
+@mixin choice-row {
+  min-height: var(--cedar-choice-row-height, #{tokens.$choice-row-height});
+}

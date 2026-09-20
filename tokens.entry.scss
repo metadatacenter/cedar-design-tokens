@@ -72,6 +72,14 @@
   --cedar-text-primary: #{tokens.$text-primary};
   --cedar-text-muted: #{tokens.$text-muted};
 
+  --cedar-choice-row-height: #{tokens.$choice-row-height};
+  --cedar-choice-font-size: #{tokens.$choice-font-size};
+  --cedar-choice-line-height: #{tokens.$choice-line-height};
+  --cedar-choice-font-weight: #{tokens.$choice-font-weight};
+  --cedar-choice-letter-spacing: #{tokens.$choice-letter-spacing};
+  --cedar-choice-text-color: #{tokens.$choice-text-color};
+  --cedar-choice-padding-block: #{tokens.$choice-padding-block};
+
   --cedar-control-height-default: #{tokens.$control-height-default};
   --cedar-control-line-height-default: #{tokens.$control-line-height-default};
   --cedar-control-radius-default: #{tokens.$control-radius-default};

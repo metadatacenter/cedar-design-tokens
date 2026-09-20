@@ -79,3 +79,12 @@ selects, tabs, menus, pickers and dialogs retain their own keyboard behavior.
 Modified shortcuts and IME composition are not intercepted. This is an interaction
 contract, not a CSS token or a document-wide keyboard handler. CED's card-navigation
 browser tests enforce it at desktop and narrow widths and across nested elements.
+
+## Choice editors and default values
+
+Editable checkbox, radio and list options and their default-value controls share
+`controls.choice-text` and the `choice-row-height` role. Minimum row height is
+28px; wrapped labels grow. Consumers must not derive this height independently
+from ordinary-control density or layer utility text colors over the shared role.
+The CED real-CEF browser suite compares both renderers for every choice type;
+CEE visual baselines cover selected, disabled, read-only and wrapped states.

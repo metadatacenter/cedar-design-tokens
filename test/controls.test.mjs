@@ -56,3 +56,14 @@ test('reduced motion preserves animation completion and covers pseudo elements',
   assert.match(css, /animation-iteration-count: 1 !important/);
   assert.match(css, /transition-duration: 0.01ms !important/);
 });
+
+
+test('choice recipes share typography and grow beyond a minimum row height', () => {
+  const css = compile('.choice { @include controls.choice-text; @include controls.choice-row; }');
+  assert.match(css, /--cedar-choice-row-height, 28px/);
+  assert.match(css, /--cedar-control-font-size, var\(--cedar-choice-font-size, 14px\)/);
+  assert.match(css, /--cedar-control-line-height, var\(--cedar-choice-line-height, 24px\)/);
+  assert.match(css, /--cedar-choice-font-weight, 400/);
+  assert.match(css, /--cedar-choice-letter-spacing, 0.25px/);
+  assert.doesNotMatch(css, /(?:^|[;{}])\s*height:/m);
+});
