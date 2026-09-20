@@ -235,6 +235,43 @@ class AdoptionTest(unittest.TestCase):
         path.write_text(json.dumps(baseline))
         self.assertEqual('new', self.run_report()['findings'][0]['status'])
 
+    def test_framework_variables_and_undefined_alias_targets_are_rejected(self):
+        self.style.write_text('a { color: var(--color-gray-400); --local: var(--missing, var(--cedar-text-muted)); }')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual({'--color-gray-400', '--missing'}, {r['value'] for r in rows})
+        self.assertTrue(all(r['rule'] == 'unknown-variable' for r in rows))
+
+    def test_local_aliases_and_documented_host_overrides_are_supported(self):
+        self.style.write_text(':root { --local: var(--cedar-text-muted); --alias: var(--local); } '
+                              'a { color: var(--alias); height: var(--cedar-control-height); '
+                              'grid-template-columns: var(--runtime-columns, 1fr); }')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_numeric_aliases_cannot_hide_literal_typography_or_spacing(self):
+        self.style.write_text(':root { --size: 13px; --alias: var(--size); } '
+                              'a { font-size: var(--alias); padding: var(--size); }')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual({'typography', 'spacing'}, {r['rule'] for r in rows})
+
+    def test_inline_style_variables_are_checked_and_comments_are_ignored(self):
+        self.style.write_text('/* color: var(--ignored); */')
+        (self.repo / 'src/view.html').write_text('<div style="color: var(--external)"></div>')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual(['--external'], [r['value'] for r in rows])
+
+    def test_unknown_variables_cannot_be_baselined(self):
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('a { color: var(--external); }')
+        row = self.run_report()['findings'][0]
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        baseline['exceptions'][row['id']] = 'Must not allow undeclared variables'
+        baseline_path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
     def test_unused_budget_increase_is_rejected(self):
         self.run_report(initialize=True)
         self.commit()

@@ -355,6 +355,13 @@ existing literal colors and typography; they are not exemptions for new values.
 CI reads the trusted base revision, so increasing a baseline in a change cannot
 hide new drift. Policy 2 also gates spacing, control geometry, layers and embedded styles; icon drift is never waived.
 
+Styling `var()` references must name a published CEDAR token, a documented host
+property, or a locally declared alias. Framework variables are not implicit
+contracts. Local aliases are checked at their declaration and in the context of
+the consuming property, so an alias cannot hide a literal font size or spacing.
+Undeclared styling variables cannot be baselined or excepted. Runtime layout
+properties (for example a computed grid column definition) remain local.
+
 ### Motion and overlay layers
 
 Use the fast and normal duration roles with the shared easing curves. Continuous

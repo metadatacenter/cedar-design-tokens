@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 from check_icons import scan as icon_findings
-from style_sources import sources
+from style_sources import sources, STYLE_PROPERTIES
 from check_spellcheck import findings as spellcheck_findings
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
@@ -120,19 +120,68 @@ def known_css_properties():
 
 def scan_styles(repo, policy=1, ref=None):
     known = known_css_properties()
+    authored = []
     for path in source_files(repo, max(policy, 2), ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
+        authored.append((path, source, [COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), snippet)
+                                       for snippet in sources(path, source)]))
+    # Local aliases remain valid: their declarations are inspected by the same
+    # literal-value rules. Framework defaults are not implicit token contracts.
+    local = {match[1] for _, _, snippets in authored for snippet in snippets
+             for match in DECL.finditer(snippet) if match[1].startswith('--')}
+    definitions = {}
+    for path, _, snippets in authored:
+        for snippet in snippets:
+            for match in DECL.finditer(snippet):
+                if match[1].startswith('--'):
+                    definitions.setdefault(match[1], []).append((path, match[2], snippet[:match.start(1)].count('\n') + 1))
+    checked_aliases = set()
+
+    def inspect_alias(name, prop, visited):
+        if name in visited:
+            return
+        for path, value, line in definitions.get(name, []):
+            key = (str(path), name, prop, value)
+            if key in checked_aliases:
+                continue
+            checked_aliases.add(key)
+            # Literal colors are already checked at their declaration. Inspect
+            # numeric aliases in the context of the property consuming them.
+            if not list(findings(path, f'{{{name}:{value};}}', policy)):
+                for row in findings(path, f'{{{prop}:{value};}}', policy):
+                    row['line'] = line
+                    yield row
+            for reference in re.findall(r'var\(\s*(--[\w-]+)', value):
+                yield from inspect_alias(reference, prop, visited | {name})
+
+    for path, source, snippets in authored:
         yield from spellcheck_findings(path, source)
         if policy < 2 and path.suffix in ('.html', '.ts'):
             continue
-        for snippet in sources(path, source):
+        for snippet in snippets:
             yield from findings(path, snippet, policy)
+            if policy < 2:
+                continue
+            for declaration in DECL.finditer(snippet):
+                prop, value = declaration.groups()
+                if not (prop.startswith('--') or re.fullmatch(STYLE_PROPERTIES, prop)):
+                    continue
+                for match in re.finditer(r'var\(\s*(--[\w-]+)', value):
+                    name = match[1]
+                    if name in local and not prop.startswith('--'):
+                        yield from inspect_alias(name, prop, set())
+                    if name.startswith('--cedar-') or name in local:
+                        continue
+                    yield {'id': hashlib.sha256(f'{path}|unknown-variable|{name}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': snippet[:declaration.start(1)].count('\n') + 1,
+                           'rule': 'unknown-variable', 'property': prop, 'value': name, 'severity': 'gate'}
         if policy >= 2:
-            for match in re.finditer(r'var\(\s*--cedar-([\w-]+)', source):
+            clean = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
+            for match in re.finditer(r'var\(\s*--cedar-([\w-]+)', clean):
                 if match[1] not in known:
                     value = '--cedar-' + match[1]
                     yield {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
-                           'file': str(path), 'line': source[:match.start()].count('\n') + 1,
+                           'file': str(path), 'line': clean[:match.start()].count('\n') + 1,
                            'rule': 'unknown-token', 'property': 'var', 'value': value, 'severity': 'gate'}
 
 
@@ -209,7 +258,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] in ('unknown-token', 'manual-resize', 'spellcheck') else 'exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] in ('unknown-token', 'unknown-variable', 'manual-resize', 'spellcheck') else 'exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
