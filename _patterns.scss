@@ -41,22 +41,33 @@
   text-align: left;
 }
 
-@mixin field-label {
+// Body-size forms opt in without overriding a recipe's typography afterwards.
+@mixin -form-text($size) {
+  @if $size == small {
+    font-size: var(--cedar-font-size-small);
+  } @else if $size == body {
+    font-size: var(--cedar-font-size);
+  } @else {
+    @error 'Form text size must be small or body; got #{$size}.';
+  }
+}
+
+@mixin field-label($size: small) {
   display: block;
   margin: 0 0 var(--cedar-form-label-gap);
   color: var(--cedar-text-muted);
-  font-size: var(--cedar-font-size-small);
+  @include -form-text($size);
   font-weight: var(--cedar-font-weight-medium);
 }
 
-@mixin field-help {
+@mixin field-help($size: small) {
   margin-top: var(--cedar-form-help-gap);
-  font-size: var(--cedar-font-size-small);
+  @include -form-text($size);
   color: var(--cedar-text-muted);
 }
 
-@mixin field-error {
-  @include field-help;
+@mixin field-error($size: small) {
+  @include field-help($size);
   color: var(--cedar-status-error-text);
 }
 

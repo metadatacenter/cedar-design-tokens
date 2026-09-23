@@ -346,6 +346,12 @@ for repeated form rhythm. Help and error text share the small type role and an
 18px line box. Validation timing and accessible descriptions remain component
 responsibilities.
 
+Form recipes default to the small type role for existing consumers. Larger-text forms
+opt in with `patterns.field-label($size: body)`, `patterns.field-help($size: body)`
+and `patterns.field-error($size: body)`. This uses the shared body role while keeping
+each recipe's spacing, weight and semantic color. Use this variant instead of adding
+a local font-size override after the mixin. Only `small` and `body` are supported.
+
 Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
 use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
 grow for wrapped values or larger controls. The ordinary profile fits its controls
