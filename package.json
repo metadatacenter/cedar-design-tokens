@@ -71,5 +71,8 @@
     "prettier": "^3.6.2",
     "sass": "^1.93.2"
   },
-  "type": "module"
+  "type": "module",
+  "allowScripts": {
+    "@parcel/watcher@2.6.0": true
+  }
 }
