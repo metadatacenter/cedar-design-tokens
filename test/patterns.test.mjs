@@ -39,10 +39,10 @@ test('recipes emit nothing until used', () => {
 
 for (const name of ['field-label', 'field-help', 'field-error']) {
   test(`${name} body variant preserves the default recipe except its type role`, () => {
-    const compile = (args) => sass.compileString(
-      `@use 'patterns'; .consumer { @include patterns.${name}${args}; }`,
-      { loadPaths: [process.cwd()] },
-    ).css;
+    const compile = (args) =>
+      sass.compileString(`@use 'patterns'; .consumer { @include patterns.${name}${args}; }`, {
+        loadPaths: [process.cwd()],
+      }).css;
     const defaultCss = compile('');
     assert.equal(compile('($size: small)'), defaultCss);
     assert.equal(
