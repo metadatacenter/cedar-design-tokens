@@ -170,18 +170,24 @@ font source. Each built bundle still embeds the fonts it needs.
 ## Monitor adoption
 
 Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
-component repository's new and existing style findings, advisory spacing/geometry findings,
+component repository's new and existing gated style findings,
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
 one repository; `--all` includes existing findings; `--json` supports dashboards.
-`--strict` fails on new color/typography findings or missing baselines. No network,
+`--strict` fails on new paint, typography, spacing, control geometry, layer, motion
+or utility-style findings, unknown shared properties, missing baselines, or a missing,
+ranged or lockfile-mismatched token dependency. It does not require every consumer
+to match the token checkout's version before that version has been published. No network,
 Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
 shells remain excluded; their styles are not migration targets.
 
 This is a source heuristic, not an adoption percentage or an accessibility audit.
 It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored new
 files. Vendor/assets, generated/ignored files, fixtures and the Material icon
-font are excluded. Inline HTML/TypeScript styles, utility classes and runtime
-computed styles are outside this first check. A matching dependency version
+font are excluded. Policy 2 also inspects Angular component styles/templates,
+HTML inline styles, style bindings and utility classes in static or bound classes.
+It rejects dynamic paint/style bindings that cannot be inspected. Arbitrary
+JavaScript-generated styles are not fully analyzed; browser contracts remain
+necessary alongside this source heuristic. A matching dependency version
 means agreement with the token checkout's version, not proof that unpublished
 source changes have reached Nexus or the served bundle. Use `cedarcli check
 components` to check served component freshness.
@@ -195,9 +201,10 @@ not a claim that every literal must be replaced.
 - Prefer a semantic token; don't select a role just because its current hex matches.
 - After fixing findings, run `cedarcli check design-tokens --repo <repo>
 --prune-baseline`. This can only decrease allowances. Commit the smaller baseline.
-- For an intentional value, add its reported ID to the baseline's `exceptions`
-  object with a concrete reason, such as an external vocabulary's fixed swatch.
-  Exceptions match that exact declaration, not an entire file or rule.
+- Add intentional shared values as semantic roles in this package. CI rejects
+  new or altered exceptions against its trusted base; existing exceptions match
+  exact declarations, never entire files or rules. Unknown roles and icon drift
+  cannot be waived.
 - `--init-baseline` creates the initial inventory and refuses to replace one.
   Don't delete and regenerate a baseline to make CI green.
 
@@ -209,6 +216,15 @@ uses the new inventory and emits a review notice. A later intentional exception
 must be reviewed and merged separately before the styling change it permits.
 Changes to the scanner need tests and a review of their effect on existing findings.
 
+Typography checks include keyword weights and sizes, percentage/viewport units,
+font shorthand and literal fallbacks. A compatibility fallback on a shared token
+is allowed only when it exactly matches that token's canonical Sass value; an
+arbitrary local fallback is still checked. Modern CSS color functions (`lab`,
+`lch`, `oklab`, `oklch`, `hwb`) are checked alongside hex, RGB and HSL colors.
+Push runs compare baselines against the previous pushed revision, just as pull
+requests compare against their base. Adding allowances beside new styles cannot
+silence the gate in the same push.
+
 Rollout order: merge the checker/reusable workflow in this repository first, then
 the consumer baselines/workflows and CLI command. Consumers reference `develop`;
 branch protection must require the adoption job if it is to block merging.
@@ -216,15 +232,15 @@ Publishing an npm package is not needed for this source check.
 
 ### Common styling choices
 
-| Intent             | Sass token / CSS property                                                |
-| ------------------ | ------------------------------------------------------------------------ |
-| Body text          | `tokens.$font-size` / `--cedar-font-size`                                |
-| Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                              |
-| Validation error   | `tokens.$color-error` / `--cedar-color-error`                            |
-| Advisory notice    | `color-warning` foreground and `surface-advisory` background             |
-| Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                              |
-| Designer input     | Shared authoring adapter; embedded CEF uses `density="authoring"`        |
-| Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks |
+| Intent             | Sass token / CSS property                                                     |
+| ------------------ | ----------------------------------------------------------------------------- |
+| Body text          | `tokens.$font-size` / `--cedar-font-size`                                     |
+| Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                                   |
+| Validation error   | `tokens.$color-error` / `--cedar-color-error`                                 |
+| Advisory notice    | `color-warning` foreground and `surface-advisory` background                  |
+| Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                                   |
+| Designer input     | Standard CEE adapter (14px text, 36px controls); inherited host overrides win |
+| Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks      |
 
 For example:
 
@@ -249,3 +265,171 @@ Tab through controls and clear required values or enter invalid email values to
 inspect focus and validation. CED itself remains editable; it has no equivalent
 host read-only property. No disabled state is simulated with a cosmetic overlay.
 See the frontend runbook for building/staging the two bundles and opening the page.
+
+## Shared iconography
+
+The existing package also owns CEDAR's icon vocabulary. Import `getIcon`,
+`iconSvg`, `iconStyle` and the `IconName` type from
+`@org.metadatacenter/cedar-design-tokens/icons`. This export has no framework
+or font dependency. Thin framework adapters render its SVG; applications must
+not maintain their own geometry or import Lucide directly.
+
+`icons/manifest.json` maps CEDAR meanings to a curated, exactly pinned Lucide
+release. For example, `populate`, `artifact-instance`, `permissions` and
+`field-controlled` describe actions and data types rather than upstream filenames.
+Explicit aliases support existing callers. Unknown names throw instead of silently
+rendering a misleading fallback. Add new meanings here with a test and update
+consumers through an immutable package release.
+
+Use the shared small/default/large icon sizes (16/20/24px) and 2-unit stroke.
+SVGs inherit `currentColor`, are decorative and are hidden from assistive
+technology. Give the enclosing icon-only button a descriptive accessible name;
+never use an icon or tooltip as its only accessible name. Logos and authored
+content remain separate from interface iconography.
+
+The build copies only approved SVG geometry and preserves Lucide's license in
+`icons/LICENSE`. Tests compare every icon with the pinned source, verify aliases,
+reject unknown names and check SVG accessibility, color and sizing contracts.
+
+The adoption gate also checks iconography in modern first-party HTML, TypeScript
+and stylesheets. It rejects local SVG geometry, icon-font markup, direct icon-set
+imports, unknown static semantic names and text glyphs used as controls. The thin
+registry adapters and the exact CEDAR brand asset are recognized explicitly.
+Icon violations cannot be added to a baseline or waived by its exceptions.
+Dynamic icon names are validated at runtime and covered by adapter and browser
+tests. Framework-owned native control internals and user-authored content are
+outside this source guard.
+
+The modern Angular OpenView, Monitoring and Bridging applications also consume
+this registry. Their CI runs `tools/check_icons.py --repo .` against the nested
+`*-src/src` application trees. This check has no baseline or exemption file;
+AngularJS and generated distributions remain outside its scope.
+
+## Interaction recipes
+
+The `controls` Sass export provides opt-in `focus-ring`, `action-states`,
+`primary-action` and `input-states` mixins. Applications supply selectors; the
+package supplies shared state values. Include primary styles after ordinary
+action styles. `aria-disabled` styling does not disable behavior: the component
+must still block activation. Use native `disabled` where appropriate.
+
+The focus and invalid recipes accept colors so existing documented embedding
+overrides can remain authoritative. Invalid styling uses `aria-invalid`, not
+`:invalid`, to avoid marking an untouched required field as an error.
+
+## Dialog and menu surfaces
+
+`dialog-*` and `menu-*` describe shared surfaces, not application-specific widths.
+Native dialogs, designer popups and Material adapters consume the same corners,
+shadows, backdrop and spacing. Menu items use the shared compact control height.
+Keep viewport constraints, focus trapping, dismissal and focus restoration in the
+component; tokens do not implement those behaviors. The template designer host
+stages the same generated properties alongside its icon module.
+
+## Semantic color roles
+
+Use `surface-selected`/`text-selected` for selection and `surface-row-hover` for
+hover, so a pointer does not make an unselected row look selected. Status pairs
+(`status-error`, `status-warning`, `status-success`, `status-info`, each with
+`-text` and `-surface`) are tested for normal-text contrast of at least 4.5:1.
+Retain a label or icon alongside status color. `text-destructive` is for actions,
+not a replacement for an error message. Read-only surfaces remain distinct from
+native disabled behavior. CETP derives its selection tint from the documented
+host primary override using the shared percentage.
+
+`--cedar-status-unsaved-dot` supplies the yellow filled indicator beside an unsaved-changes label.
+
+## Forms and table density
+
+Use `form-label-gap`, `form-help-gap`, `form-field-gap` and `form-section-gap`
+for repeated form rhythm. Help and error text share the small type role and an
+18px line box. Validation timing and accessible descriptions remain component
+responsibilities.
+
+Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
+use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
+grow for wrapped values or larger controls. The ordinary profile fits its controls
+plus both vertical gutters, an invariant checked by package tests. Column widths, scrolling limits and responsive layout stay local.
+
+The adoption gate also scans the nested frontends in OpenView, Monitoring and
+Bridging, and the Template Designer host. Their initial baselines inventory
+existing literal colors and typography; they are not exemptions for new values.
+CI reads the trusted base revision, so increasing a baseline in a change cannot
+hide new drift. Policy 2 also gates spacing, control geometry, layers and embedded styles; icon drift is never waived.
+
+Styling `var()` references must name a published CEDAR token, a documented host
+property, or a locally declared alias. Framework variables are not implicit
+contracts. Local aliases are checked at their declaration and in the context of
+the consuming property, so an alias cannot hide a literal font size or spacing.
+Undeclared styling variables cannot be baselined or excepted. Runtime layout
+properties (for example a computed grid column definition) remain local.
+
+### Motion and overlay layers
+
+Use the fast and normal duration roles with the shared easing curves. Continuous
+progress indicators use the spinner duration role. Literal transition/animation
+durations and style utility classes in Angular bindings are gated as well. Include
+`motion.reduced-motion` once per application/shadow root, or import `motion.css`.
+The reduced-motion recipe finishes animations promptly rather than removing them,
+so completion-driven behavior still runs. Component code must separately respect
+the preference for animations driven by JavaScript.
+
+Sticky content, menus, modals, overlays and tooltips have ordered layer roles.
+They apply within each host's stacking context; they cannot escape a shadow host
+or outrank the browser's native dialog top layer. Keep backdrop and modal siblings
+in DOM order at the same modal layer.
+
+### Visual reference
+
+CEE's approved editable and read-only rendering is the reference for the modern
+CEDAR UI. Shared values should be extracted from that reference without changing
+its appearance. Authoring needs additional controls and arrangements, but does
+not establish a separate visual language of gradients, elevated cards or oversized
+branding. The artifact-title size, color and line-height roles preserve CEE's
+existing fluid title exactly. CED's real-component browser comparisons exercise
+that relationship against CEE in both display modes; CEE's screenshot baselines
+remain the reference, not snapshots to update to accommodate another component.
+
+## Shared UI patterns
+
+Use `@use '@org.metadatacenter/cedar-design-tokens/patterns';` for opt-in Sass
+recipes: artifact titles, dialog surfaces/actions, menus/items, field labels/help/errors,
+toolbars, tabs, table cells and empty states. For example:
+
+```scss
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
+.permissions-dialog {
+  @include patterns.dialog-surface;
+}
+```
+
+Recipes emit no global selectors and use the same semantic roles as CEE. Consumers
+retain layout constraints and behavior. See [UI contracts](UI-CONTRACTS.md) for the
+interaction requirements, baseline procedure and the suites that enforce them.
+
+## Candidate consumer CI
+
+The `Consumer contracts` workflow checks all eight modern consumers on token pushes
+and pull requests. It records the consumer revision and candidate tarball hash,
+replaces only the dependency-free token package in a locked consumer install,
+and verifies every published file byte for byte. All consumers build; CEE, CED,
+CETP and Workspace also compare their existing screenshots in the pinned ARM64
+Playwright environment. It never publishes or updates consumer baselines.
+
+### Choice rows
+
+Checkbox, radio, single-select and multi-select fields use the `choice-*` roles
+for editable options and defaults: 14px regular text, 24px line height, 0.25px
+letter spacing, primary text color and a 28px minimum row height. Long labels
+may grow; a row height is a minimum, not clipping. Dropdown options use 2px block
+padding. Disabled/read-only states retain their state-specific treatment.
+
+Use `controls.choice-text` and `controls.choice-row` in native option editors.
+CEE applies these recipes inside its Material adapter and uses the row-height
+role for radio/checkbox state layers and radio clear buttons. CED must not add
+utility typography or inter-row gaps that override this contract. Existing
+`--cedar-control-font-size` and `--cedar-control-line-height` host overrides take
+precedence; the shared `--cedar-choice-*` properties customize choice roles.
+
+Verify option-editor/default parity for checkbox, radio and both list types,
+including dropdown rows, long labels, host typography overrides and narrow hosts.

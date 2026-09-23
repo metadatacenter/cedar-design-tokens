@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import check_adoption as check
 
@@ -18,14 +19,63 @@ class AdoptionTest(unittest.TestCase):
         self.repo.mkdir()
         subprocess.run(['git', 'init', '-q', str(self.repo)], check=True)
         (self.repo / 'src').mkdir()
-        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: '1'}}))
+        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: '1.0.0'}}))
         (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {
-            'node_modules/' + check.PACKAGE: {'version': '1'}}}))
+            'node_modules/' + check.PACKAGE: {'version': '1.0.0'}}}))
         self.style = self.repo / 'src/style.scss'
         self.style.write_text('.a { color: #fff; font-size: 14px; padding: 8px; }')
 
     def run_report(self, **kwargs):
-        return check.report(self.repo, '1', **kwargs)
+        return check.report(self.repo, '1.0.0', **kwargs)
+
+    def test_manual_resize_is_always_forbidden_even_in_baselines_and_exceptions(self):
+        self.style.write_text('textarea { resize: vertical; }')
+        self.run_report(initialize=True)
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        key = next(iter(baseline['findings']))
+        baseline['exceptions'] = {key: 'An obsolete exception must not permit resizing'}
+        baseline_path.write_text(json.dumps(baseline))
+        row = self.run_report()['findings'][0]
+        self.assertEqual(('manual-resize', 'gate', 'new'),
+                         (row['rule'], row['severity'], row['status']))
+
+    def test_spellcheck_is_not_baselinable(self):
+        (self.repo / 'src/control.html').write_text('<input>')
+        self.run_report(initialize=True)
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        baseline['policy'] = 2
+        for row in check.scan_styles(self.repo, 2):
+            baseline['findings'][row['id']] = dict(row, count=1)
+        baseline_path.write_text(json.dumps(baseline))
+        rows = self.run_report()['findings']
+        row = next(row for row in rows if row['rule'] == 'spellcheck')
+        self.assertEqual((row['severity'], row['status']), ('gate', 'new'))
+
+    def test_only_none_is_allowed_for_resize(self):
+        for value in ('both', 'vertical', 'horizontal', 'block', 'inline',
+                      'initial', 'inherit', 'unset', 'revert', 'var(--resize)', '$resize'):
+            with self.subTest(value=value):
+                rows = list(check.findings('x.scss', 'textarea { resize: ' + value + '; }'))
+                self.assertEqual(['manual-resize'], [row['rule'] for row in rows])
+        for value in ('none', 'none !important', 'NONE'):
+            self.assertEqual([], list(check.findings('x.css', 'textarea { resize: ' + value + '; }')))
+
+    def test_nested_frontend_is_scanned_under_a_generic_ci_checkout_name(self):
+        nested = self.repo / 'cedar-monitoring-src'
+        nested.mkdir()
+        for name in ('src', 'package.json', 'package-lock.json'):
+            (self.repo / name).rename(nested / name)
+        (self.repo / 'package.json').write_text('{"name":"wrapper"}')
+        result = self.run_report(initialize=True)
+        self.assertTrue(result['dependencyValid'])
+        self.assertEqual(1, result['files'])
+        self.assertTrue(all(row['file'].startswith('cedar-monitoring-src/src/') for row in result['findings']))
+        (nested / 'package.json').write_text(json.dumps({'dependencies': {check.PACKAGE: '^1.0.0'}}))
+        self.assertFalse(self.run_report()['dependencyValid'])
+        (nested / 'src/style.scss').write_text('a { color: #123456; }')
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
 
     def test_detects_fallbacks_and_shorthand_but_not_token_references(self):
         rows = list(check.findings('x.scss', '.a { color: var(--x, #fff); border: 1px solid rgb(0,0,0); font: 12px Roboto; padding: tokens.$space-2; color: var(--cedar-color-primary); }'))
@@ -39,6 +89,50 @@ class AdoptionTest(unittest.TestCase):
     def test_named_color_tokens_are_not_color_literals(self):
         self.assertEqual([], list(check.findings('x.scss',
             'a { color: $cedar-teal; background: var(--theme-white); color: tokens.$color-error; }')))
+
+    def test_typography_cannot_hide_in_keywords_units_shorthand_or_fallbacks(self):
+        for declaration in ('font-weight: bold', 'font-size: medium', 'font-size: 110%',
+                            'font-size: 3vw', 'font: var(--cedar-font-size)/1.5 var(--cedar-font-family)',
+                            'font: menu', 'font-family: var(--custom, Arial)',
+                            'font-weight: var(--cedar-font-weight-medium, 600)',
+                            'font-weight: var(--custom, 500)', 'line-height: calc(1em + 2px)'):
+            with self.subTest(declaration=declaration):
+                self.assertEqual(['typography'], [r['rule'] for r in check.findings('x.css', f'a {{ {declaration}; }}')])
+
+    def test_shared_references_and_matching_compatibility_fallbacks_are_allowed(self):
+        for declaration in ('font: inherit', 'line-height: normal', 'font-family: tokens.$font-family',
+                            'font: var(--cedar-font-size)/var(--cedar-control-line-height-default) var(--cedar-font-family)',
+                            'font-weight: var(--cedar-font-weight-medium, 500)',
+                            'font-family: var(--cedar-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace)'):
+            with self.subTest(declaration=declaration):
+                self.assertEqual([], list(check.findings('x.css', f'a {{ {declaration}; }}')))
+
+    def test_modern_color_functions_are_gated_including_fallbacks(self):
+        for color in ('lab(50% 0 0)', 'lch(50% 10 20)', 'oklab(.5 0 0)', 'hwb(90 0% 0%)'):
+            self.assertEqual(['color'], [r['rule'] for r in check.findings('x.css', f'a {{ color: var(--custom, {color}); }}')])
+
+    def test_strict_requires_exact_matching_dependency_but_not_latest_checkout(self):
+        self.run_report(initialize=True)
+        for pin, locked, expected in ((None, None, 1), ('^1.0.0', '1.0.0', 1),
+                                      ('1.0.0', '2.0.0', 1), ('1.0.0', None, 1),
+                                      ('1.0.0', '1.0.0', 0)):
+            (self.repo / 'package.json').write_text(json.dumps({'dependencies': {check.PACKAGE: pin}}))
+            (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {
+                'node_modules/' + check.PACKAGE: {'version': locked}}}))
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(expected, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+
+    def test_icon_drift_cannot_be_baselined_or_excepted(self):
+        self.run_report(initialize=True)
+        (self.repo / 'src/control.html').write_text('<mat-icon>help</mat-icon>')
+        icon = next(row for row in self.run_report()['findings'] if row['rule'] == 'iconography')
+        baseline = json.loads((self.repo / check.BASELINE).read_text())
+        baseline['findings'][icon['id']] = {**icon, 'count': 100}
+        baseline['exceptions'] = {icon['id']: 'Attempt to bypass the shared icon contract'}
+        (self.repo / check.BASELINE).write_text(json.dumps(baseline))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+        self.assertEqual('new', next(row for row in self.run_report()['findings'] if row['rule'] == 'iconography')['status'])
 
     def test_malformed_baseline_structure_is_diagnosed(self):
         for data in ([], {'schema': 1, 'findings': {'x': None}},
@@ -101,7 +195,93 @@ class AdoptionTest(unittest.TestCase):
         self.style.write_text('a { color: purple; }')
         (self.repo / check.BASELINE).unlink()
         self.run_report(initialize=True)
-        self.assertEqual('new', self.run_report(ref='HEAD')['findings'][0]['status'])
+        with self.assertRaisesRegex(ValueError, 'allowance increased'):
+            self.run_report(ref='HEAD')
+
+    def commit(self):
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-qm', 'fixture'], check=True)
+
+    def test_policy_upgrade_only_accepts_historical_debt(self):
+        (self.repo / 'src/component.ts').write_text('@Component({styles: [`a { height: 37px; }`]})')
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.assertTrue(all(r['status'] == 'existing' for r in self.run_report(ref='HEAD')['findings']))
+        self.style.write_text('a { gap: 99px; }')
+        self.assertTrue(any(r['status'] == 'new' for r in self.run_report(ref='HEAD')['findings']))
+
+    def test_policy_scan_needs_no_generated_output(self):
+        read = Path.read_text
+        def without_dist(path, *args, **kwargs):
+            if 'dist' in path.parts:
+                raise FileNotFoundError('Clean checkouts have no dist')
+            return read(path, *args, **kwargs)
+        self.style.write_text('a { color: var(--cedar-text-primary); background: var(--cedar-primary-50); border-color: var(--cedar-on-accent-A200); }')
+        with patch.object(Path, 'read_text', without_dist):
+            self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_unknown_tokens_cannot_be_excepted_or_baselined(self):
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('a { color: var(--cedar-typo); }')
+        row = self.run_report()['findings'][0]
+        self.assertEqual('unknown-token', row['rule'])
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        baseline['exceptions'][row['id']] = 'An invalid token should never be permitted'
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
+    def test_framework_variables_and_undefined_alias_targets_are_rejected(self):
+        self.style.write_text('a { color: var(--color-gray-400); --local: var(--missing, var(--cedar-text-muted)); }')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual({'--color-gray-400', '--missing'}, {r['value'] for r in rows})
+        self.assertTrue(all(r['rule'] == 'unknown-variable' for r in rows))
+
+    def test_local_aliases_and_documented_host_overrides_are_supported(self):
+        self.style.write_text(':root { --local: var(--cedar-text-muted); --alias: var(--local); } '
+                              'a { color: var(--alias); height: var(--cedar-control-height); '
+                              'grid-template-columns: var(--runtime-columns, 1fr); }')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_numeric_aliases_cannot_hide_literal_typography_or_spacing(self):
+        self.style.write_text(':root { --size: 13px; --alias: var(--size); } '
+                              'a { font-size: var(--alias); padding: var(--size); }')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual({'typography', 'spacing'}, {r['rule'] for r in rows})
+
+    def test_inline_style_variables_are_checked_and_comments_are_ignored(self):
+        self.style.write_text('/* color: var(--ignored); */')
+        (self.repo / 'src/view.html').write_text('<div style="color: var(--external)"></div>')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertEqual(['--external'], [r['value'] for r in rows])
+
+    def test_unknown_variables_cannot_be_baselined(self):
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('a { color: var(--external); }')
+        row = self.run_report()['findings'][0]
+        baseline_path = self.repo / check.BASELINE
+        baseline = json.loads(baseline_path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        baseline['exceptions'][row['id']] = 'Must not allow undeclared variables'
+        baseline_path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+
+    def test_unused_budget_increase_is_rejected(self):
+        self.run_report(initialize=True)
+        self.commit()
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        next(iter(baseline['findings'].values()))['count'] += 1
+        path.write_text(json.dumps(baseline))
+        self.style.write_text('a {}')
+        with self.assertRaisesRegex(ValueError, 'allowance increased'):
+            self.run_report(ref='HEAD')
 
     def test_default_scan_includes_modern_workspace(self):
         self.repo.rename(self.root / 'cedar-workspace')

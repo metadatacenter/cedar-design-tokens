@@ -1,0 +1,65 @@
+// Opt-in recipes: callers own their selectors and component behavior.
+@use 'tokens';
+
+@mixin focus-ring($color: tokens.$focus-ring-color) {
+  outline: tokens.$focus-ring-width solid $color;
+  outline-offset: tokens.$focus-ring-offset;
+}
+
+@mixin action-states {
+  &:hover:not(:disabled):not([aria-disabled='true']) {
+    background: tokens.$action-hover-surface;
+  }
+  &:active:not(:disabled):not([aria-disabled='true']) {
+    background: tokens.$action-pressed-surface;
+  }
+  &:focus-visible {
+    @include focus-ring;
+  }
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: tokens.$control-disabled-opacity;
+    cursor: default;
+  }
+}
+
+@mixin primary-action {
+  background: tokens.$action-primary-surface;
+  color: tokens.$action-primary-text;
+  &:hover:not(:disabled):not([aria-disabled='true']) {
+    background: tokens.$action-primary-hover-surface;
+  }
+  &:active:not(:disabled):not([aria-disabled='true']) {
+    background: tokens.$action-primary-pressed-surface;
+  }
+}
+
+@mixin input-states($focus: tokens.$focus-ring-color, $error: tokens.$control-invalid-border) {
+  &:focus-visible {
+    @include focus-ring($focus);
+  }
+  &[aria-invalid='true'] {
+    border-color: $error;
+  }
+  &:read-only:not(select):not([type='checkbox']):not([type='radio']) {
+    background: tokens.$control-readonly-surface;
+  }
+  &:disabled {
+    opacity: tokens.$control-disabled-opacity;
+    cursor: default;
+  }
+}
+
+// The option author and the selectable/default value share one readable text role.
+// Existing host control typography overrides remain supported.
+@mixin choice-text {
+  font-family: var(--cedar-font-family, #{tokens.$font-family});
+  font-size: var(--cedar-control-font-size, var(--cedar-choice-font-size, #{tokens.$choice-font-size}));
+  line-height: var(--cedar-control-line-height, var(--cedar-choice-line-height, #{tokens.$choice-line-height}));
+  font-weight: var(--cedar-choice-font-weight, #{tokens.$choice-font-weight});
+  letter-spacing: var(--cedar-choice-letter-spacing, #{tokens.$choice-letter-spacing});
+  color: var(--cedar-choice-text-color, #{tokens.$choice-text-color});
+}
+@mixin choice-row {
+  min-height: var(--cedar-choice-row-height, #{tokens.$choice-row-height});
+}

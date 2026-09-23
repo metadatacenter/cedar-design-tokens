@@ -249,6 +249,103 @@ $space-6: 24px;
 
 // Typography roles shared by application hosts and embeddable controls.
 $font-weight-regular: 400;
+
+// Editable choices: shared by CED option authors and CEE checkbox/radio/list values.
+$choice-row-height: 28px;
+$choice-font-size: $font-size;
+$choice-line-height: 24px;
+$choice-font-weight: $font-weight-regular;
+$choice-letter-spacing: 0.25px;
+$choice-text-color: $text-primary;
+$choice-padding-block: calc($space-1 / 2);
+
 $font-weight-medium: 500;
 $font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
 $font-size-display: 34px;
+
+// Shared SVG icon geometry; independent of the surrounding text size.
+$icon-size-small: 16px;
+$icon-size-default: 20px;
+$icon-size-large: 24px;
+$icon-stroke-width: 2;
+
+// Shared interaction roles. Public embedding overrides remain component-owned.
+$focus-ring-color: $color-primary;
+$focus-ring-width: 2px;
+$focus-ring-offset: 2px;
+$control-disabled-opacity: 0.45;
+$action-hover-surface: $surface-tinted;
+$action-pressed-surface: map.get($brand-primary, 100);
+$action-primary-surface: $color-primary;
+$action-primary-text: $color-on-primary;
+$action-primary-hover-surface: map.get($brand-primary, 700);
+$action-primary-pressed-surface: map.get($brand-primary, 800);
+$control-invalid-border: $color-error;
+$control-readonly-surface: $surface-panel;
+
+$dialog-radius: $control-radius-default;
+$dialog-padding: $space-6;
+$dialog-action-gap: $space-3;
+$dialog-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+$dialog-backdrop: rgba(0, 0, 0, 0.4);
+$menu-radius: $control-radius-default;
+$menu-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
+$menu-padding: $space-1;
+$menu-item-height: $control-height-default;
+$menu-item-padding-block: $space-2;
+$menu-item-padding-inline: $space-3;
+$overlay-surface: $color-on-primary;
+$overlay-border: $border-rule;
+
+$surface-canvas: $surface-authoring;
+$surface-raised: $color-on-primary;
+$surface-row-hover: $surface-panel;
+$surface-selected: $surface-tinted;
+$text-selected: $text-primary;
+$border-selected: $color-primary;
+$text-readonly: $text-muted;
+$text-destructive: $color-error;
+$status-error-text: $color-error;
+$status-error-surface: #fef3f2;
+// Filled indicator for unsaved edits, paired with a visible status label.
+$status-unsaved-dot: #eab308;
+
+$status-warning-text: $color-warning;
+$status-warning-surface: $surface-advisory;
+$status-success-text: #176b3a;
+$status-success-surface: #ecfdf3;
+$status-info-text: map.get($brand-primary, 700);
+$status-info-surface: $surface-tinted;
+$selection-tint-percentage: 12%;
+
+$form-label-gap: $space-2;
+$form-help-gap: $space-1;
+$form-field-gap: $space-4;
+$form-section-gap: $space-6;
+$form-help-size: $font-size-small;
+$form-help-line-height: 18px;
+$table-cell-padding-block: $space-2;
+$table-cell-padding-inline: $space-3;
+$table-cell-padding-block-authoring: 2px;
+$table-cell-padding-inline-authoring: $space-2;
+$table-row-height: 52px;
+$table-row-height-authoring: 28px;
+$table-header-weight: $font-weight-medium;
+$table-divider: $border-rule-light;
+$empty-state-padding: calc(2 * #{$space-6}) #{$space-6};
+
+$motion-duration-fast: 120ms;
+$motion-duration-normal: 200ms;
+// Continuous progress indicators use a calm full rotation rather than interaction timing.
+$motion-duration-spinner: 2s;
+$motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+$motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+$layer-sticky: 10;
+$layer-menu: 100;
+$layer-modal: 1000;
+$layer-overlay: 1100;
+$layer-tooltip: 1200;
+
+$font-size-artifact-title: clamp(19px, 3cqi, 26px);
+$color-artifact-title: #173f3e;
+$line-height-artifact-title: 1.25;
