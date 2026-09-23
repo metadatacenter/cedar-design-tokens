@@ -307,6 +307,9 @@ $text-readonly: $text-muted;
 $text-destructive: $color-error;
 $status-error-text: $color-error;
 $status-error-surface: #fef3f2;
+// Filled indicator for unsaved edits, paired with a visible status label.
+$status-unsaved-dot: #eab308;
+
 $status-warning-text: $color-warning;
 $status-warning-surface: $surface-advisory;
 $status-success-text: #176b3a;

@@ -337,6 +337,8 @@ not a replacement for an error message. Read-only surfaces remain distinct from
 native disabled behavior. CETP derives its selection tint from the documented
 host primary override using the shared percentage.
 
+`--cedar-status-unsaved-dot` supplies the yellow filled indicator beside an unsaved-changes label.
+
 ## Forms and table density
 
 Use `form-label-gap`, `form-help-gap`, `form-field-gap` and `form-section-gap`
