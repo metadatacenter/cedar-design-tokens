@@ -21,6 +21,7 @@ const names = [
   'tabs',
   'table-cell',
   'empty-state',
+  'info-description-resize',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -73,4 +74,11 @@ test('offline checker recognizes exactly the generated roles and host overrides'
       ),
     ].sort(),
   );
+});
+
+test('Info descriptions resize vertically without allowing width changes', () => {
+  const css = sass.compileString("@use 'patterns'; .description { @include patterns.info-description-resize; }", {
+    loadPaths: [process.cwd()],
+  }).css;
+  assert.match(css, /resize: vertical;/);
 });

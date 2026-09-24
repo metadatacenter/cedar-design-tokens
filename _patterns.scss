@@ -155,3 +155,9 @@
     background: var(--cedar-status-warning-surface);
   }
 }
+
+// User-approved Info panel exception: keep width fixed, resize only while open.
+// Authoring fields continue to use resize: none.
+@mixin info-description-resize {
+  resize: vertical;
+}

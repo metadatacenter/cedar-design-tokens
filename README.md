@@ -439,3 +439,7 @@ precedence; the shared `--cedar-choice-*` properties customize choice roles.
 
 Verify option-editor/default parity for checkbox, radio and both list types,
 including dropdown rows, long labels, host typography overrides and narrow hosts.
+
+The Workspace Info panel Description may opt into `patterns.info-description-resize`
+for its explicitly approved temporary vertical resize handle. All authoring fields
+retain `resize: none`; see the Field resizing contract in `UI-CONTRACTS.md`.
