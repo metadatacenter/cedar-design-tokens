@@ -61,3 +61,8 @@ test('SVG sprite exposes the same shared icon geometry for legacy hosts', async 
     assert.ok(sprite.includes(getIcon(name).body));
   }
 });
+
+test('workspace view choices have distinct shared list and grid icons', () => {
+  assert.equal(manifest.grid, 'layout-grid');
+  assert.notEqual(getIcon('list').body, getIcon('grid').body);
+});

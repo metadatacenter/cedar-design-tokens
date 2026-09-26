@@ -349,3 +349,7 @@ $layer-tooltip: 1200;
 $font-size-artifact-title: clamp(19px, 3cqi, 26px);
 $color-artifact-title: #173f3e;
 $line-height-artifact-title: 1.25;
+
+// Explorer interaction overlays retain the established drag and marquee paint.
+$drag-preview-shadow: 0 5px 18px rgba(23, 63, 62, 0.1882352941);
+$selection-marquee-surface: rgba(72, 111, 124, 0.13);

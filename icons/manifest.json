@@ -35,6 +35,7 @@
   "settings": "settings",
   "preview": "eye",
   "list": "list",
+  "grid": "layout-grid",
   "field-text": "type",
   "field-paragraph": "text-align-start",
   "field-number": "hash",

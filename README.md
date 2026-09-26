@@ -443,3 +443,7 @@ including dropdown rows, long labels, host typography overrides and narrow hosts
 The Workspace Info panel Description may opt into `patterns.info-description-resize`
 for its explicitly approved temporary vertical resize handle. All authoring fields
 retain `resize: none`; see the Field resizing contract in `UI-CONTRACTS.md`.
+
+`drag-preview-shadow` and `selection-marquee-surface` provide the explorer drag
+preview elevation and translucent selection rectangle. The shared `grid` icon
+identifies the grid view alongside `list`.
