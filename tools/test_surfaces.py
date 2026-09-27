@@ -105,6 +105,52 @@ class SurfaceCoverageTest(unittest.TestCase):
         parser.feed('template: `<details class="validation-summary"><summary>Error</summary></details><mat-menu></mat-menu>`')
         self.assertEqual([s['kind'] for s in parser.found], ['summary', 'menu'])
 
+    def openview_registry(self):
+        # The CI checkout is named "consumer" and may have no root package.
+        (self.repo / 'package.json').write_text('{}')
+        nested = self.repo / 'cedar-openview-src'
+        nested.mkdir()
+        (nested / 'package.json').write_text('{"name":"cedar-openview"}')
+        (nested / 'src').mkdir()
+        (nested / 'src/app-routing.module.ts').write_text("const routes = [{path: 'templates/:id', component: Template}];")
+        self.registry = {'schema': 1, 'repo': 'cedar-openview', 'surfaces': [{
+            'id': 'openview.template', 'name': 'Template', 'section': 'OpenView',
+            'source': [{'file': 'cedar-openview-src/src/app-routing.module.ts',
+                        'anchor': "path: 'templates/:id'"}]}]}
+        (self.repo / 'src/view.html').unlink()
+        self.save()
+        return nested
+
+    def test_nested_host_inventory_needs_no_unused_browser_helper(self):
+        self.openview_registry()
+        self.assertEqual(validate(self.repo), [])
+        sync(self.repo)
+
+    def test_nested_host_missing_registry_fails_in_ci_checkout(self):
+        self.openview_registry()
+        (self.repo / MANIFEST).unlink()
+        (self.repo / 'package.json').unlink()
+        self.assertIn('Missing', validate(self.repo)[0])
+
+    def test_nested_host_stray_routes_menus_and_dialogs_fail(self):
+        nested = self.openview_registry()
+        (nested / 'src/extra-routing.module.ts').write_text("const routes = [{path: 'new', component: New}];")
+        (nested / 'src/new.html').write_text('<dialog></dialog><mat-menu></mat-menu>')
+        errors = validate(self.repo)
+        for kind in ('route', 'dialog', 'menu'):
+            self.assertTrue(any('unregistered ' + kind in e for e in errors), errors)
+
+    def test_nested_host_stale_route_fails(self):
+        nested = self.openview_registry()
+        (nested / 'src/app-routing.module.ts').write_text('const routes = [];')
+        self.assertTrue(any('stale source' in e for e in validate(self.repo)))
+
+    def test_rendered_contract_cannot_omit_helper(self):
+        del self.registry['browserHelper']
+        self.save()
+        with self.assertRaises(ValueError):
+            validate(self.repo)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,7 +7,8 @@ import subprocess
 
 MANIFEST = '.ui-surfaces.json'
 HOME = Path(__file__).resolve().parents[1]
-REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer')
+REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer', 'cedar-openview')
+SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace', 'OpenView')
 CONTRACTS = json.loads((HOME / 'surfaces/contracts.json').read_text())['contracts']
 
 
@@ -51,7 +52,8 @@ def authored_files(repo):
     names = subprocess.check_output(['git', '-C', str(repo), 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], text=True).split('\0')
     for name in sorted(set(names)):
         p = Path(name)
-        if (p.parts and p.parts[0] in ('src', 'app') and p.suffix in ('.html', '.ts') and
+        parts = p.parts[1:] if p.parts and p.parts[0].endswith('-src') else p.parts
+        if (parts and parts[0] in ('src', 'app') and p.suffix in ('.html', '.ts') and
                 '.spec.' not in name and not {'assets', 'fixtures', 'node_modules'}.intersection(p.parts) and (repo / p).is_file()):
             yield name
 
@@ -60,7 +62,7 @@ def load(repo):
     data = json.loads((repo / MANIFEST).read_text())
     if data.get('schema') != 1 or not isinstance(data.get('surfaces'), list):
         raise ValueError('Invalid surface registry schema')
-    if not isinstance(data.get('browserHelper'), str) or not re.fullmatch(r'(?:browser|visual)/tests/surface-contracts\.generated\.mjs', data['browserHelper']):
+    if (data.get('browserHelper') is not None or any(s.get('contract') for s in data['surfaces'] if isinstance(s, dict))) and (not isinstance(data.get('browserHelper'), str) or not re.fullmatch(r'(?:browser|visual)/tests/surface-contracts\.generated\.mjs', data['browserHelper'])):
         raise ValueError('browserHelper must be the generated helper in the browser test directory')
     if not data['surfaces'] or any(not isinstance(s, dict) for s in data['surfaces']):
         raise ValueError('Registry must contain surface objects')
@@ -75,11 +77,15 @@ def load(repo):
 
 
 def validate(repo):
-    if not (repo / 'package.json').exists() and repo.name not in REQUIRED and not (repo / MANIFEST).exists():
-        return []
     errors = []
-    package = json.loads((repo / 'package.json').read_text())
-    if package.get('name') not in REQUIRED and not (repo / MANIFEST).exists():
+    # Legacy browser apps keep the real package beneath <app>-src; CI may name
+    # the checkout "consumer", so repository directory names cannot identify it.
+    packages = [repo / 'package.json', *sorted(repo.glob('*-src/package.json'))]
+    package = next((json.loads(p.read_text()) for p in packages if p.is_file()
+                    and json.loads(p.read_text()).get('name')), {})
+    if not package and (repo / MANIFEST).exists():
+        return ['Registry has no owning package']
+    if package.get('name') not in REQUIRED and repo.name not in REQUIRED and not (repo / MANIFEST).exists():
         return errors
     if not (repo / MANIFEST).exists():
         return [f'Missing {MANIFEST}']
@@ -92,7 +98,7 @@ def validate(repo):
         if not re.fullmatch(r'[a-z][a-z0-9.-]+', sid) or sid in ids:
             errors.append(f'Invalid or duplicate surface ID: {sid}')
         ids.add(sid)
-        if surface.get('section') not in ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace'):
+        if surface.get('section') not in SECTIONS:
             errors.append(f'{sid}: unknown inventory section')
         if not surface.get('name'):
             errors.append(f'{sid}: missing name')
@@ -129,12 +135,20 @@ def validate(repo):
             parent = next(s.get('parent') for s in data['surfaces'] if s['id'] == parent)
     for name in authored_files(repo):
         parser = Surfaces()
-        parser.feed((repo / name).read_text())
+        source_text = (repo / name).read_text()
+        parser.feed(source_text)
+        if package.get('name') == 'cedar-openview' and name.endswith('-routing.module.ts'):
+            for route in re.finditer(r'\bpath\s*:\s*([\"\'])(.*?)\1', source_text):
+                if not any(any(source['file'] == name and source['anchor'] == route.group(0)
+                               for source in surface.get('source', [])) for surface in data['surfaces']):
+                    errors.append(f'{name}: unregistered route {route.group(2)!r}')
         for found in parser.found:
             registered = [s for s in data['surfaces'] if s.get('contract') and any(
                 source['file'] == name and source['anchor'] in found['anchor'] for source in s.get('source', []))]
             if not registered:
                 errors.append(f'{name}:{found["line"]}: unregistered {found["kind"]}')
+    if not data.get('browserHelper'):
+        return errors
     generated = safe_file(repo, data['browserHelper'])
     if not generated.is_file() or generated.read_text() != browser_source():
         errors.append('Browser contract helper is stale; run --sync-surfaces')
@@ -167,6 +181,8 @@ def sync(repo):
     if not (repo / MANIFEST).exists():
         return
     data = load(repo)
+    if not data.get('browserHelper'):
+        return
     output = safe_file(repo, data['browserHelper'])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(browser_source())
@@ -180,7 +196,7 @@ def markdown(root):
             raise ValueError(f'{name}: ' + '; '.join(errors))
     registries = [load(root / name) for name in REQUIRED]
     nodes = [s for data in registries for s in data['surfaces']]
-    sections = ['Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace']
+    sections = SECTIONS
     lines = ['# Modern Workspace — UI Pages & Surfaces', '', '<!-- Generated from .ui-surfaces.json registries. Do not edit this file. -->', '']
     def render(node, depth=0):
         if node.get('inventory') is False:

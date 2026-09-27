@@ -466,10 +466,23 @@ it does not prove the entire CSS cascade. Legacy AngularJS pages remain excluded
 
 ## Maintained surface registry
 
-Workspace, CED, CEE and the Template Designer host own `.ui-surfaces.json` files.
+Workspace, CED, CEE, the Template Designer host and OpenView own `.ui-surfaces.json` files.
 These are the source for the human-readable surface hierarchy and the rendered
 menu, dialog and validation-summary checks. Embedded CEE/CEF internals remain
 opaque in the hierarchy; their own component suites retain that coverage.
+
+OpenView's registry lives at its repository root; its source and owning package
+live under `cedar-openview-src`. Coverage scans that nested source even when CI
+names the checkout `consumer`. Its literal Angular routes must be registered,
+including the hidden root redirect. The hierarchy lists the five resource pages,
+metadata panel, legend, opaque CEE and host error/empty states. The unused slide
+menu shell and unused JSON viewer are not user-facing surfaces.
+
+OpenView currently has source/hierarchy coverage and the existing style-adoption
+gate, with no rendered token contracts. Its errors are inline cards, not dialogs.
+Registries without rendered contracts may omit `browserHelper`; adding a recognized
+menu or dialog still requires registration, a rendered contract and browser tests.
+CEE menus/dialogs remain registered once in CEE, rather than copied into each host.
 
 Each checked surface has a stable ID, name, parent/section, source anchor,
 central contract, browser selector, scenario, applicable states and test file.
