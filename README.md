@@ -447,3 +447,19 @@ retain `resize: none`; see the Field resizing contract in `UI-CONTRACTS.md`.
 `drag-preview-shadow` and `selection-marquee-surface` provide the explorer drag
 preview elevation and translucent selection rectangle. The shared `grid` icon
 identifies the grid view alongside `list`.
+
+### Native checkbox and radio controls
+
+`native-choices.css` applies `controls.native-choice` beneath a
+`cedar-native-choices` host class. Import it once and place that class on the
+modern application's root. This supplies primary accent and keyboard focus roles
+without replacing browser semantics, disabled treatment or control dimensions.
+Workspace uses this for Groups, Permissions, type filters and draft sharing.
+The runtime `--cedar-color-primary` and `--cedar-focus-ring-*` values remain authoritative.
+
+The adoption gate requires Workspace's root opt-in and the import in an injected
+global build stylesheet. Missing coverage and resets to browser-default accent
+colours cannot be baselined or excepted. Rendered Chromium/WebKit checks compare
+actual controls with token values, including disabled and newly added native
+controls and a changed host palette. The source check is an integration guard;
+it does not prove the entire CSS cascade. Legacy AngularJS pages remain excluded.

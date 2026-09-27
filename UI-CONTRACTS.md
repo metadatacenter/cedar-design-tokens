@@ -109,3 +109,14 @@ Hosts without Sass can load `custom-properties.css` and `validation-summary.css`
 `.cedar-validation-summary`. The compiled stylesheet includes the shared regular font;
 `icons.svg` exposes the same icon registry as SVG symbols for those hosts. Main consumes
 these assets through its declared design-token dependency and stages them with `copy:tokens`.
+
+### Native choices in modern Workspace
+
+Checkboxes and radios inherit the shared native-choice stylesheet at the app root.
+Keep native keyboard operation and disabled semantics; do not replace their
+appearance or geometry to apply brand colour. Groups, permission ownership,
+resource filters and create-draft sharing are covered by Workspace's browser
+contract in Chromium and WebKit. It compares computed accent colours with the
+central role and checks a host palette override, rather than copying a hex value.
+The adoption checker independently rejects a missing root/import and explicit
+resets to browser-default accent colours; these findings cannot be waived.

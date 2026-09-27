@@ -1,0 +1,7 @@
+@use 'controls';
+
+// Hosts opt in at their application root; legacy hosts can opt in one page only.
+.cedar-native-choices input[type='checkbox'],
+.cedar-native-choices input[type='radio'] {
+  @include controls.native-choice;
+}

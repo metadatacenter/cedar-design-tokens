@@ -28,6 +28,25 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_native_choice_resets_in_bound_styles_are_gated(self):
+        (self.repo / 'src/control.html').write_text('<input spellcheck="false" [style.accent-color]="colour">')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertTrue(any(row['rule'] == 'dynamic-style' for row in rows))
+        for value in ['auto', 'revert-layer', 'INITIAL !IMPORTANT']:
+            rows = list(check.findings('x.scss', 'input { accent-color: ' + value + '; }'))
+            self.assertEqual(('native-choice-reset', 'gate'), (rows[0]['rule'], rows[0]['severity']))
+
+    def test_native_choice_contracts_cannot_be_baselined_or_excepted(self):
+        self.style.write_text('input { accent-color: auto; }')
+        self.run_report(initialize=True)
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        key = next(iter(baseline['findings']))
+        baseline['exceptions'] = {key: 'No native browser defaults'}
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+        self.assertEqual('native-choice-reset', self.run_report()['findings'][0]['rule'])
+
     def test_manual_resize_is_always_forbidden_even_in_baselines_and_exceptions(self):
         self.style.write_text('textarea { resize: vertical; }')
         self.run_report(initialize=True)

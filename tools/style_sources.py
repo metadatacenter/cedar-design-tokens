@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
-STYLE_PROPERTIES = r'(?:resize|color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
+STYLE_PROPERTIES = r'(?:resize|accent-color|color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
 UTILITY = re.compile(r'^(?:!?)(?:(?:[\w-]+|\[[^]]+\]):)*(?:bg|text|font|leading|tracking|rounded|shadow|ring|border|p[trblxyse]?|m[trblxyse]?|gap(?:-[xy])?|space-[xy]|h|min-h|z)-(.+)$')
 
 def masked(text):

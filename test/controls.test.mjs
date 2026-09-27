@@ -66,3 +66,12 @@ test('choice recipes share typography and grow beyond a minimum row height', () 
   assert.match(css, /--cedar-choice-letter-spacing, 0.25px/);
   assert.doesNotMatch(css, /(?:^|[;{}])\s*height:/m);
 });
+
+test('native choices use runtime tokens without replacing browser semantics or geometry', () => {
+  const css = compile('input { @include controls.native-choice; }');
+  assert.match(css, /accent-color: var\(--cedar-color-primary, #0f7686\)/i);
+  assert.match(css, /:focus-visible/);
+  for (const role of ['focus-ring-width', 'focus-ring-color', 'focus-ring-offset'])
+    assert.ok(css.includes(`var(--cedar-${role},`));
+  assert.doesNotMatch(css, /(?:appearance|width|height|padding|opacity)\s*:/);
+});

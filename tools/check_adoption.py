@@ -11,6 +11,7 @@ import sys
 from check_icons import scan as icon_findings
 from style_sources import sources, STYLE_PROPERTIES
 from check_spellcheck import findings as spellcheck_findings
+from check_native_choices import findings as native_choice_findings
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -81,6 +82,8 @@ def findings(path, source, policy=1):
         rule = None
         if prop.lower() == 'resize' and re.sub(r'\s*!important$', '', value, flags=re.I).lower() != 'none':
             rule = 'manual-resize'
+        elif prop == 'accent-color' and re.sub(r'\s*!important$', '', value, flags=re.I).strip().lower() in ('auto', 'initial', 'unset', 'revert', 'revert-layer'):
+            rule = 'native-choice-reset'
         elif value == 'uninspectable-binding':
             rule = 'dynamic-style'
         elif prop == 'utility-style':
@@ -102,7 +105,7 @@ def findings(path, source, policy=1):
             yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
                    'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
                    'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize') else 'advisory'}
+                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
 
 
 
@@ -119,6 +122,7 @@ def known_css_properties():
 
 
 def scan_styles(repo, policy=1, ref=None):
+    yield from native_choice_findings(lambda name: git(repo, 'show', f'{ref}:{name}') if ref else (repo / name).read_text())
     known = known_css_properties()
     authored = []
     for path in source_files(repo, max(policy, 2), ref):
@@ -258,7 +262,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] in ('unknown-token', 'unknown-variable', 'manual-resize', 'spellcheck') else 'exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] in ('unknown-token', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
