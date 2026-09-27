@@ -346,6 +346,12 @@ for repeated form rhythm. Help and error text share the small type role and an
 18px line box. Validation timing and accessible descriptions remain component
 responsibilities.
 
+Form recipes default to the small type role for existing consumers. Larger-text forms
+opt in with `patterns.field-label($size: body)`, `patterns.field-help($size: body)`
+and `patterns.field-error($size: body)`. This uses the shared body role while keeping
+each recipe's spacing, weight and semantic color. Use this variant instead of adding
+a local font-size override after the mixin. Only `small` and `body` are supported.
+
 Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
 use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
 grow for wrapped values or larger controls. The ordinary profile fits its controls
@@ -433,3 +439,11 @@ precedence; the shared `--cedar-choice-*` properties customize choice roles.
 
 Verify option-editor/default parity for checkbox, radio and both list types,
 including dropdown rows, long labels, host typography overrides and narrow hosts.
+
+The Workspace Info panel Description may opt into `patterns.info-description-resize`
+for its explicitly approved temporary vertical resize handle. All authoring fields
+retain `resize: none`; see the Field resizing contract in `UI-CONTRACTS.md`.
+
+`drag-preview-shadow` and `selection-marquee-surface` provide the explorer drag
+preview elevation and translucent selection rectangle. The shared `grid` icon
+identifies the grid view alongside `list`.

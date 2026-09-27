@@ -52,6 +52,12 @@ and scrolling remain supported. Other resize values, dynamic resize bindings and
 resizing utility classes fail the adoption gate and cannot be grandfathered through
 a baseline or exception.
 
+The Workspace Info panel Description is the explicit exception requested by the
+product owner. It opts into `patterns.info-description-resize`: a native vertical
+grab handle with fixed width. Its height is temporary for the open resource and
+is never stored in the artifact or user preferences. Do not apply this recipe to
+authoring fields or other textareas.
+
 ## Browser spellchecking
 
 Modern CEDAR controls explicitly set `spellcheck="false"`. Browser spelling marks

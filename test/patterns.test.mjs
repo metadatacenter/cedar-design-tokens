@@ -21,6 +21,7 @@ const names = [
   'tabs',
   'table-cell',
   'empty-state',
+  'info-description-resize',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -36,6 +37,22 @@ for (const name of names) {
 test('recipes emit nothing until used', () => {
   assert.equal(sass.compileString("@use 'patterns';", { loadPaths: [process.cwd()] }).css, '');
 });
+
+for (const name of ['field-label', 'field-help', 'field-error']) {
+  test(`${name} body variant preserves the default recipe except its type role`, () => {
+    const compile = (args) =>
+      sass.compileString(`@use 'patterns'; .consumer { @include patterns.${name}${args}; }`, {
+        loadPaths: [process.cwd()],
+      }).css;
+    const defaultCss = compile('');
+    assert.equal(compile('($size: small)'), defaultCss);
+    assert.equal(
+      compile('($size: body)'),
+      defaultCss.replace('var(--cedar-font-size-small)', 'var(--cedar-font-size)'),
+    );
+    assert.throws(() => compile('($size: huge)'), /Form text size must be small or body/);
+  });
+}
 
 test('offline checker recognizes exactly the generated roles and host overrides', () => {
   const known = JSON.parse(
@@ -57,4 +74,11 @@ test('offline checker recognizes exactly the generated roles and host overrides'
       ),
     ].sort(),
   );
+});
+
+test('Info descriptions resize vertically without allowing width changes', () => {
+  const css = sass.compileString("@use 'patterns'; .description { @include patterns.info-description-resize; }", {
+    loadPaths: [process.cwd()],
+  }).css;
+  assert.match(css, /resize: vertical;/);
 });
