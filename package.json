@@ -66,7 +66,8 @@
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",
-    "format:check": "prettier --check \"**/*.{scss,css,json,md,mjs}\""
+    "format:check": "prettier --check \"**/*.{scss,css,json,md,mjs}\"",
+    "surfaces:defaults": "node tools/build-surface-defaults.mjs"
   },
   "devDependencies": {
     "lucide-static": "1.47.0",

@@ -44,7 +44,7 @@ jobs:
             command: npm run build
           - repo: cedar-template-designer
             directory: .
-            command: npm run prepare:components && npm test
+            command: npm run prepare:components && npm test && npm --prefix browser ci && ./browser/node_modules/.bin/playwright install --with-deps chromium && npm run test:browser
     steps:
       - name: Check out candidate tokens
         uses: actions/checkout@v4
@@ -77,6 +77,8 @@ jobs:
           tar -xzf "$GITHUB_WORKSPACE"/tokens/candidate/*.tgz --strip-components=1 -C node_modules/@org.metadatacenter/cedar-design-tokens
           git diff --exit-code -- package.json package-lock.json
           node "$GITHUB_WORKSPACE/tokens/tools/verify-candidate.mjs" "$GITHUB_WORKSPACE/tokens"
+      - name: Generate surface checks against the candidate contracts
+        run: python3 tokens/tools/check_adoption.py --root . --repo consumer --sync-surfaces --strict
       - name: Record exact inputs
         run: |
           git -C tokens rev-parse HEAD

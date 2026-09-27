@@ -1,0 +1,11 @@
+{
+  "--cedar-font-size": "14px",
+  "--cedar-surface-panel": "#f5f5f5",
+  "--cedar-dialog-radius": "4px",
+  "--cedar-menu-radius": "4px",
+  "--cedar-overlay-surface": "#ffffff",
+  "--cedar-status-error-text": "#b42318",
+  "--cedar-status-error-surface": "#fef3f2",
+  "--cedar-status-warning-text": "#b45309",
+  "--cedar-status-warning-surface": "#fff8e5"
+}

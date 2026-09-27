@@ -1,0 +1,77 @@
+// Central implementation. Consumer copies are generated; the adoption gate checks their bytes.
+import assert from 'node:assert/strict';
+
+export function surfaceCases(registry, scenarios) {
+  const surfaces = registry.surfaces.filter((surface) => surface.contract);
+  assert.ok(surfaces.length, 'No registered browser surfaces');
+  assert.equal(new Set(surfaces.map((surface) => surface.id)).size, surfaces.length, 'Duplicate surface IDs');
+  for (const surface of surfaces) {
+    assert.ok(CONTRACTS[surface.contract], `Unknown contract: ${surface.contract}`);
+    assert.deepEqual(
+      surface.states,
+      surface.contract.endsWith('summary') ? ['collapsed', 'expanded'] : ['open'],
+      `Missing required states: ${surface.id}`,
+    );
+    assert.equal(typeof scenarios[surface.scenario], 'function', `Missing scenario: ${surface.id}`);
+  }
+  return surfaces.flatMap((surface) =>
+    surface.states.flatMap((state) =>
+      [1440, 375].map((width) => ({ surface, state, width, title: `${surface.id} / ${state} / ${width}` })),
+    ),
+  );
+}
+
+export async function checkSurface(page, surface, state, expect, testInfo) {
+  const target = page.locator(surface.selector);
+  await expect(target, surface.id).toHaveCount(1);
+  await expect(target, surface.id).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  if (state === 'collapsed') await expect(target).not.toHaveAttribute('open', '');
+  if (state === 'expanded') {
+    await target.locator('summary').click();
+    await expect(target).toHaveAttribute('open', '');
+    await expect(target.locator('li').first()).toBeVisible();
+  }
+  const contract = CONTRACTS[surface.contract];
+  assert.ok(contract, `Unknown contract: ${surface.contract}`);
+  const values = await target.evaluate(
+    (element, { rules, defaults }) => {
+      const actual = getComputedStyle(element);
+      const probe = document.createElement('span');
+      // Same parent preserves the active theme and shadow-root boundary; never copy a hex value.
+      probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;';
+      element.append(probe);
+      const result = {};
+      for (const [property, token] of Object.entries(rules)) {
+        const tokenValue = actual.getPropertyValue(token).trim();
+        if (!tokenValue) {
+          if (!defaults[token]) throw Error(`Missing token ${token}`);
+          probe.style.setProperty(token, defaults[token]);
+        }
+        probe.style.setProperty(property, `var(${token})`);
+        result[property] = {
+          actual: actual.getPropertyValue(property),
+          expected: getComputedStyle(probe).getPropertyValue(property),
+          token,
+        };
+      }
+      probe.remove();
+      return result;
+    },
+    { rules: contract, defaults: TOKEN_DEFAULTS },
+  );
+  await testInfo.attach(`surface-${surface.id}`, {
+    body: JSON.stringify({ id: surface.id, state, width: page.viewportSize().width, values }, null, 2),
+    contentType: 'application/json',
+  });
+  for (const [property, value] of Object.entries(values)) {
+    const debt = surface.debt?.[property];
+    if (debt) {
+      expect(value.expected, `${surface.id}: reviewed token expectation changed`).toBe(debt.expected);
+      expect(value.actual, `${surface.id}: remove resolved debt or fix new drift (${debt.reason})`).toBe(debt.actual);
+      expect(value.actual, `${surface.id}: remove obsolete debt`).not.toBe(value.expected);
+    } else {
+      expect(value.actual, `${surface.id}: ${property} must use ${value.token}`).toBe(value.expected);
+    }
+  }
+}

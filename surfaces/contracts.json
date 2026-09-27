@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "contracts": {
+    "menu": {
+      "background-color": "--cedar-overlay-surface",
+      "border-top-left-radius": "--cedar-menu-radius"
+    },
+    "dialog": {
+      "background-color": "--cedar-overlay-surface",
+      "border-top-left-radius": "--cedar-dialog-radius"
+    },
+    "error-summary": {
+      "color": "--cedar-status-error-text",
+      "background-color": "--cedar-status-error-surface",
+      "font-size": "--cedar-font-size"
+    },
+    "warning-summary": {
+      "color": "--cedar-status-warning-text",
+      "background-color": "--cedar-status-warning-surface",
+      "font-size": "--cedar-font-size"
+    },
+    "calendar": {
+      "background-color": "--cedar-surface-panel",
+      "border-top-left-radius": "--cedar-dialog-radius"
+    },
+    "error-alert": {
+      "color": "--cedar-status-error-text",
+      "background-color": "--cedar-status-error-surface"
+    }
+  }
+}

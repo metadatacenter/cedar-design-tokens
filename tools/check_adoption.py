@@ -12,6 +12,7 @@ from check_icons import scan as icon_findings
 from style_sources import sources, STYLE_PROPERTIES
 from check_spellcheck import findings as spellcheck_findings
 from check_native_choices import findings as native_choice_findings
+from check_surfaces import findings as surface_findings, sync as sync_surfaces, markdown as surface_markdown, load as load_surfaces
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -279,11 +280,15 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
         locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
     dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
-    return {'repo': repo.name, 'baseline': exists, 'pin': pin, 'locked': locked,
+    surface_registry = load_surfaces(repo) if (repo / '.ui-surfaces.json').exists() else None
+    surface_counts = {'registered': len(surface_registry['surfaces']),
+                      'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
+                      'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
+    return {'surfaces': surface_counts, 'repo': repo.name, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
-            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)),
+            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 
@@ -291,6 +296,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
+    parser.add_argument('--sync-surfaces', action='store_true', help='Refresh generated browser contracts from the central implementation')
+    parser.add_argument('--surface-inventory', type=Path, help='Generate the maintained Markdown surface hierarchy (requires all registered repositories)')
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
     parser.add_argument('--json', action='store_true', help='Machine-readable report')
     parser.add_argument('--all', action='store_true', help='Show existing findings as well as new ones')
@@ -311,6 +318,8 @@ def main(argv=None):
         if not repo.exists() and not args.repo:
             continue
         try:
+            if args.sync_surfaces:
+                sync_surfaces(repo)
             if args.upgrade_policy:
                 upgrade_policy(repo)
             reports.append(report(repo, expected, args.baseline_ref, args.init_baseline, args.prune_baseline))
@@ -318,6 +327,12 @@ def main(argv=None):
             errors.append(f'{name}: {error}')
     if not reports and not errors:
         errors.append('No frontend repositories found')
+    if args.surface_inventory:
+        try:
+            inventory = surface_markdown(args.root)
+            args.surface_inventory.write_text(inventory)
+        except (OSError, ValueError, KeyError) as error:
+            errors.append(f'Surface inventory: {error}')
     output = {'schema': 1, 'reports': reports, 'errors': errors}
     if args.json:
         print(json.dumps(output, indent=2))
@@ -330,6 +345,9 @@ def main(argv=None):
             advisory = sum(r['severity'] == 'advisory' for r in rows)
             print(f"{result['repo']}: {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
             print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
+            if result.get('surfaces'):
+                coverage = result['surfaces']
+                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / {coverage['debt']} existing differences; browser execution is a separate gate")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:

@@ -463,3 +463,73 @@ colours cannot be baselined or excepted. Rendered Chromium/WebKit checks compare
 actual controls with token values, including disabled and newly added native
 controls and a changed host palette. The source check is an integration guard;
 it does not prove the entire CSS cascade. Legacy AngularJS pages remain excluded.
+
+## Maintained surface registry
+
+Workspace, CED, CEE and the Template Designer host own `.ui-surfaces.json` files.
+These are the source for the human-readable surface hierarchy and the rendered
+menu, dialog and validation-summary checks. Embedded CEE/CEF internals remain
+opaque in the hierarchy; their own component suites retain that coverage.
+
+Each checked surface has a stable ID, name, parent/section, source anchor,
+central contract, browser selector, scenario, applicable states and test file.
+Several commands may share one dialog implementation. Navigation/group entries
+have no rendering contract. Source declarations and scenario implementations stay
+in the owning repository, so a surface change and its registration travel together.
+
+`cedarcli check design-tokens --strict` now also rejects missing registries,
+duplicate IDs, missing parents/cycles, stale source/test references, unregistered
+semantic dialogs/menus/validation summaries, and modified generated browser helpers.
+This coverage gate has no style-baseline escape hatch. Discovery also recognizes
+the existing custom menu/modal classes; arbitrary new unlabelled divs cannot be
+reliably classified automatically and still require review.
+
+Run these through the CLI:
+
+```bash
+cedarcli check design-tokens --strict
+cedarcli check design-tokens --sync-surfaces
+cedarcli check design-tokens --surface-inventory "$CEDAR_HOME/output/modern-workspace-ui-inventory.md"
+```
+
+`--sync-surfaces` copies the central browser implementation/types into each
+consumer's test directory, allowing its ordinary CI suite to run without a sibling
+checkout or a new package publication. Generated helpers are compared byte for byte
+with the central implementation. Never edit those copies. Candidate-token CI
+regenerates them against the candidate before exercising consumers.
+
+The registries generate Playwright cases at 1440px and 375px. Summary cases cover
+collapsed and expanded states. Tests open actual surfaces through local fixtures,
+then compare computed styles with the central roles in `surfaces/contracts.json`.
+Expected values resolve in the surface's own shadow root/theme, with compiled
+central Sass defaults for adapters that do not expose CSS properties. Evidence is
+attached to each Playwright result. Source validation remains offline: it does
+**not** claim that browser cases ran or that a deployed bundle is current.
+
+Current rendered contracts cover overlay colors/corners and validation-summary
+colors/type. Existing interaction/visual suites continue to cover keyboard access,
+focus, saving, disabled controls and geometry. A registry entry is not a claim that
+every state or every property has been visually verified.
+
+Existing measured differences use per-surface, per-property `debt` records with
+exact actual/expected values and a reason. They preserve the approved UI during
+registration; they are not an instruction to redesign it. Changed or resolved
+values fail until the implementation or obsolete debt is addressed. Consumer CI
+compares debt against the trusted base registry and rejects added/altered allowances.
+The initial registry is reviewed as a migration, alongside the source-style baseline;
+subsequent feature work cannot silently expand it.
+
+To add a surface, add its registration and fixture scenario in the same change,
+run the strict adoption check and its registry-driven browser suite, then regenerate
+the Markdown if needed. Removing a surface removes its record and scenario. Keep
+IDs stable through label changes. Add new shared visual rules centrally and sync
+consumers; do not copy expected hex values or pixel constants into scenarios.
+
+When changing the central token values used here, run `npm run surfaces:defaults`
+to regenerate `surfaces/token-defaults.json`. Package tests compare that offline
+reference with evaluated Sass, so a stale reference cannot pass token CI.
+
+Roll out consumer registries and their self-contained browser tests first, then
+the central coverage gate and CLI options. This avoids making adoption CI require
+a registry before the consumer has it. No release version or application style
+change is part of registration.
