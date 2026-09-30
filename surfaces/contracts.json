@@ -26,6 +26,19 @@
     "error-alert": {
       "color": "--cedar-status-error-text",
       "background-color": "--cedar-status-error-surface"
+    },
+    "authoring-label": {
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-medium"
+    },
+    "authoring-control": {
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-regular"
+    },
+    "authoring-table-cell": {
+      "padding-top": "--cedar-table-cell-padding-block-authoring",
+      "padding-bottom": "--cedar-table-cell-padding-block-authoring",
+      "line-height": "--cedar-form-help-line-height"
     }
   }
 }

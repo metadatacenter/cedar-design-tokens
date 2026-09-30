@@ -38,16 +38,15 @@ export async function checkSurface(page, surface, state, expect, testInfo) {
     (element, { rules, defaults }) => {
       const actual = getComputedStyle(element);
       const probe = document.createElement('span');
-      // Same parent preserves the active theme and shadow-root boundary; never copy a hex value.
+      // Void controls cannot render children. Keep the probe beside the target,
+      // inside the same shadow root, and carry its resolved token roles across.
       probe.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;';
-      element.append(probe);
+      element.parentNode.append(probe);
       const result = {};
       for (const [property, token] of Object.entries(rules)) {
         const tokenValue = actual.getPropertyValue(token).trim();
-        if (!tokenValue) {
-          if (!defaults[token]) throw Error(`Missing token ${token}`);
-          probe.style.setProperty(token, defaults[token]);
-        }
+        if (!tokenValue && !defaults[token]) throw Error(`Missing token ${token}`);
+        probe.style.setProperty(token, tokenValue || defaults[token]);
         probe.style.setProperty(property, `var(${token})`);
         result[property] = {
           actual: actual.getPropertyValue(property),

@@ -1,4 +1,6 @@
 {
+  "--cedar-font-weight-regular": "400",
+  "--cedar-font-weight-medium": "500",
   "--cedar-font-size": "14px",
   "--cedar-surface-panel": "#f5f5f5",
   "--cedar-dialog-radius": "4px",
@@ -7,5 +9,7 @@
   "--cedar-status-error-text": "#b42318",
   "--cedar-status-error-surface": "#fef3f2",
   "--cedar-status-warning-text": "#b45309",
-  "--cedar-status-warning-surface": "#fff8e5"
+  "--cedar-status-warning-surface": "#fff8e5",
+  "--cedar-form-help-line-height": "18px",
+  "--cedar-table-cell-padding-block-authoring": "2px"
 }
