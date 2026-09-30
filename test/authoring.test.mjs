@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as sass from 'sass';
+
+const compile = (body) => sass.compileString(`@use 'authoring'; ${body}`, { loadPaths: [process.cwd()] }).css;
+
+test('authoring recipes are opt-in and preserve the native control host API', () => {
+  assert.equal(compile(''), '');
+  const css = compile('input { @include authoring.compact-control; }');
+  for (const role of ['height', 'border', 'radius', 'font-size', 'line-height', 'focus'])
+    assert.ok(css.includes(`var(--cedar-control-${role},`), `missing host override: ${role}`);
+  assert.match(css, /min-height:/);
+  assert.doesNotMatch(css, /(?:^|[;{])\s*height:/);
+  assert.match(css, /font-weight: var\(--cedar-font-weight-regular, 400\)/);
+});
+
+test('authoring table closes its last row and uses authoring density without fixed control heights', () => {
+  const css = compile('.editor { @include authoring.compact-table; @include authoring.density; }');
+  assert.match(css, /\.editor table\s*\{[^}]*border-bottom: 1px solid var\(--cedar-border-rule\)/);
+  assert.match(css, /--cedar-table-cell-padding-block-authoring/);
+  assert.match(css, /--cedar-table-row-height-authoring/);
+  assert.match(css, /--cedar-control-height-default: var\(--cedar-control-height-authoring\)/);
+  assert.doesNotMatch(css, /overflow: hidden/);
+});
+
+test('authoring labels and values use distinct shared weights without forcing label layout', () => {
+  const css = compile('label { @include authoring.label-text; }');
+  assert.match(css, /font-weight: var\(--cedar-font-weight-medium, 500\)/);
+  assert.doesNotMatch(css, /display:|margin:|font-style: italic/);
+});
+
+test('select arrows reserve trailing space and stay themed', () => {
+  const css = compile('select { @include authoring.select-arrow; }');
+  assert.match(css, /padding-right: calc\(3 \* var\(--cedar-space-2\)\)/);
+  assert.match(css, /var\(--cedar-color-primary\)/);
+  assert.match(css, /background-repeat: no-repeat/);
+});

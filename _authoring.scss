@@ -1,0 +1,111 @@
+// Shared native authoring recipes. Consumers own selectors and document state.
+// These preserve the compact-control host override API and emit nothing until included.
+@use 'controls';
+
+@mixin compact-control {
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default));
+  padding: var(--cedar-space-1) var(--cedar-space-2);
+  border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
+  border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default));
+  background: var(--cedar-surface-raised);
+  color: var(--cedar-text-authoring);
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
+  font-weight: var(--cedar-font-weight-regular, 400);
+  &:focus-visible {
+    @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-focus-ring-color)));
+  }
+}
+
+// Authoring tables follow content height, not the taller workspace listing rows.
+// Keep action controls at their normal size; long values can still wrap naturally.
+@mixin compact-table {
+  table {
+    border-collapse: collapse;
+    border-bottom: 1px solid var(--cedar-border-rule);
+  }
+  th,
+  td {
+    box-sizing: border-box;
+    height: auto;
+    padding-block: var(--cedar-table-cell-padding-block-authoring);
+    line-height: var(--cedar-form-help-line-height);
+    vertical-align: middle;
+  }
+  td {
+    height: var(--cedar-table-row-height-authoring);
+  }
+}
+
+@mixin text-action {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--cedar-primary-700);
+  font-family: inherit;
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size));
+  font-weight: var(--cedar-font-weight-regular, 400);
+  line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+@mixin select-arrow {
+  appearance: none;
+  padding-right: calc(3 * var(--cedar-space-2));
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent 42%,
+      var(--cedar-color-primary) 42%,
+      var(--cedar-color-primary) 58%,
+      transparent 58%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 42%,
+      var(--cedar-color-primary) 42%,
+      var(--cedar-color-primary) 58%,
+      transparent 58%
+    );
+  background-size: 6px 6px;
+  background-position:
+    right 12px center,
+    right 8px center;
+  background-repeat: no-repeat;
+}
+
+@mixin density {
+  --cedar-control-height-default: var(--cedar-control-height-authoring);
+  --cedar-control-line-height-default: var(--cedar-control-line-height-authoring);
+}
+
+@mixin entry-row {
+  gap: var(--cedar-space-1);
+  margin-bottom: var(--cedar-space-1);
+}
+
+@mixin entry-label {
+  gap: calc(var(--cedar-space-1) / 2);
+  line-height: var(--cedar-form-help-line-height);
+}
+
+@mixin entry-action {
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default));
+  line-height: var(--cedar-control-line-height-default);
+  padding-block: calc(var(--cedar-space-1) / 2);
+}
+
+@mixin table-caption {
+  padding-block: 0;
+  line-height: var(--cedar-form-help-line-height);
+}
+
+// Typography only: label placement belongs to the consumer layout.
+@mixin label-text {
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-medium, 500);
+}

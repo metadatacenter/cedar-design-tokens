@@ -307,6 +307,14 @@ AngularJS and generated distributions remain outside its scope.
 
 ## Interaction recipes
 
+The `authoring` Sass export owns native authoring controls, labels, compact tables,
+entry-row density, themed select arrows and inline text actions. It emits no CSS
+until included. CED consumes it directly; `src/authoring.scss` in CED selects the
+surfaces, while geometry and typography stay in this package. Do not copy these
+recipes into component-local helpers or patch them with a second global recipe.
+The `compact-control` recipe preserves the existing `--cedar-control-*` host API;
+`density` selects the authoring defaults without overriding explicit host values.
+
 The `controls` Sass export provides opt-in `focus-ring`, `action-states`,
 `primary-action` and `input-states` mixins. Applications supply selectors; the
 package supplies shared state values. Include primary styles after ordinary
