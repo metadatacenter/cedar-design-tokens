@@ -68,7 +68,8 @@
 @mixin native-choice {
   accent-color: var(--cedar-color-primary, #{tokens.$color-primary});
   &:focus-visible {
-    outline: var(--cedar-focus-ring-width, #{tokens.$focus-ring-width}) solid var(--cedar-focus-ring-color, #{tokens.$focus-ring-color});
+    outline: var(--cedar-focus-ring-width, #{tokens.$focus-ring-width}) solid
+      var(--cedar-focus-ring-color, #{tokens.$focus-ring-color});
     outline-offset: var(--cedar-focus-ring-offset, #{tokens.$focus-ring-offset});
   }
 }
