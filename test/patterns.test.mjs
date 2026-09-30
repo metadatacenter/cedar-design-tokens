@@ -82,3 +82,11 @@ test('Info descriptions resize vertically without allowing width changes', () =>
   }).css;
   assert.match(css, /resize: vertical;/);
 });
+
+test('dialog content can own padding while retaining the shared surface', () => {
+  const compile = (args) =>
+    sass.compileString(`@use 'patterns'; .dialog { @include patterns.dialog-surface${args}; }`, {
+      loadPaths: [process.cwd()],
+    }).css;
+  assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-dialog-padding);', 'padding: 0;'));
+});

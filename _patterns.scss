@@ -7,10 +7,10 @@
   font-weight: var(--cedar-font-weight-medium);
 }
 
-@mixin dialog-surface {
+@mixin dialog-surface($padding: var(--cedar-dialog-padding)) {
   border: 1px solid var(--cedar-overlay-border);
   border-radius: var(--cedar-dialog-radius);
-  padding: var(--cedar-dialog-padding);
+  padding: $padding;
   color: var(--cedar-text-primary);
   background: var(--cedar-overlay-surface);
   box-shadow: var(--cedar-dialog-shadow);

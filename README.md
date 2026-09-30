@@ -308,7 +308,11 @@ AngularJS and generated distributions remain outside its scope.
 ## Interaction recipes
 
 The `authoring` Sass export owns native authoring controls, labels, compact tables,
-entry-row density, themed select arrows and inline text actions. It emits no CSS
+entry-row density, themed select arrows, inline text actions and settings-dialog
+structure. The `settings-dialog` mixin supplies `.settings-dialog-*` classes for
+headers, bodies, groups and footer actions; consumers retain content and width.
+The general `patterns.dialog-surface($padding: ...)` recipe also supports content
+that owns its internal padding. It emits no CSS
 until included. CED consumes it directly; `src/authoring.scss` in CED selects the
 surfaces, while geometry and typography stay in this package. Do not copy these
 recipes into component-local helpers or patch them with a second global recipe.

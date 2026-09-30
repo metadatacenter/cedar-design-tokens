@@ -35,3 +35,12 @@ test('select arrows reserve trailing space and stay themed', () => {
   assert.match(css, /var\(--cedar-color-primary\)/);
   assert.match(css, /background-repeat: no-repeat/);
 });
+
+test('settings dialog actions follow theme states without fixed content height', () => {
+  const css = compile('.settings { @include authoring.settings-dialog; }');
+  assert.match(css, /var\(--cedar-action-primary-hover-surface\)/);
+  assert.match(css, /var\(--cedar-action-primary-pressed-surface\)/);
+  assert.match(css, /gap: var\(--cedar-dialog-action-gap\)/);
+  assert.match(css, /font-weight: var\(--cedar-font-weight-medium/);
+  assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i);
+});
