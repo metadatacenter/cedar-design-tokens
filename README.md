@@ -558,3 +558,17 @@ Roll out consumer registries and their self-contained browser tests first, then
 the central coverage gate and CLI options. This avoids making adoption CI require
 a registry before the consumer has it. No release version or application style
 change is part of registration.
+
+### Read-only specification recipes
+
+`patterns.specification-box`, `specification-separator` and `specification-link`
+share the read-only rendering used by CEE and CEF and embedded by CED. They retain
+standalone defaults through Sass-backed CSS fallbacks, while honoring documented
+host control and specification properties. The box grows for wrapped content;
+consumers own suffix layout and whether a particular value intentionally truncates.
+Specification roles describe quiet facts, lead-in words and discoverable authority
+links, rather than replacing them with generic disabled text.
+
+An adoption baseline is a record of existing debt, not an approval. Reasoned
+exceptions are exact and count-limited by their baseline allowance: another copy is
+new drift. Pruning removed findings must not leave a reusable exception budget.

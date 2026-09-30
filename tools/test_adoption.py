@@ -194,6 +194,7 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual('differs from checkout/lock', self.run_report()['versionStatus'])
 
     def test_reasoned_exceptions_apply_to_exact_finding(self):
+        self.style.write_text('a { color: red; }')
         self.run_report(initialize=True)
         self.style.write_text('a { color: red; color: blue; }')
         result = self.run_report()
@@ -301,6 +302,17 @@ class AdoptionTest(unittest.TestCase):
         self.style.write_text('a {}')
         with self.assertRaisesRegex(ValueError, 'allowance increased'):
             self.run_report(ref='HEAD')
+
+    def test_reasoned_exception_cannot_authorize_extra_copies(self):
+        result = self.run_report(initialize=True)
+        key = next(r['id'] for r in result['findings'] if r['rule'] == 'color')
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['exceptions'] = {key: 'External swatch keeps its source color in this one location'}
+        path.write_text(json.dumps(baseline))
+        self.style.write_text(self.style.read_text() + '.extra { color: #fff; }')
+        colors = [r['status'] for r in self.run_report()['findings'] if r['rule'] == 'color']
+        self.assertEqual(['exception', 'new'], colors)
 
     def test_default_scan_includes_modern_workspace(self):
         self.repo.rename(self.root / 'cedar-workspace')

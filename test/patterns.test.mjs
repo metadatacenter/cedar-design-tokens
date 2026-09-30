@@ -90,3 +90,24 @@ test('dialog content can own padding while retaining the shared surface', () => 
     }).css;
   assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-dialog-padding);', 'padding: 0;'));
 });
+
+for (const name of ['specification-box', 'specification-separator', 'specification-link']) {
+  test(`${name} has registered host-overridable roles with standalone fallbacks`, () => {
+    const css = sass.compileString(`@use 'patterns'; .reader { @include patterns.${name}; }`, {
+      loadPaths: [process.cwd()],
+    }).css;
+    for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g)) {
+      assert.ok(
+        roles.has(role[1]) ||
+          ['--cedar-control-height', '--cedar-control-border', '--cedar-control-radius'].includes(role[1]),
+        role[1],
+      );
+    }
+    if (name === 'specification-box') {
+      assert.match(css, /min-height: var/);
+      assert.match(css, /flex-wrap: wrap/);
+      assert.match(css, /overflow-wrap: anywhere/);
+      assert.doesNotMatch(css, /(?:^|[;{])\s*height:/);
+    }
+  });
+}

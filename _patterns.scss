@@ -1,3 +1,4 @@
+@use 'tokens';
 // Framework-neutral visual contracts. Consumers own their DOM and application state.
 // CSS roles deliberately remain overridable at a host boundary.
 @mixin artifact-title {
@@ -160,4 +161,36 @@
 // Authoring fields continue to use resize: none.
 @mixin info-description-resize {
   resize: vertical;
+}
+
+// Read-only field surfaces must grow for long facts and identifiers. Fallbacks
+// keep the recipe usable inside CEE's isolated shadow root without host CSS.
+@mixin specification-box(
+  $padding-block: var(--cedar-specification-padding-block, #{tokens.$specification-padding-block}),
+  $padding-end: var(--cedar-specification-padding-inline, #{tokens.$specification-padding-inline})
+) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default, #{tokens.$control-height-default}));
+  padding: $padding-block $padding-end $padding-block
+    var(--cedar-specification-padding-inline, #{tokens.$specification-padding-inline});
+  border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default, #{tokens.$control-border-default}));
+  border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default, #{tokens.$control-radius-default}));
+  overflow-wrap: anywhere;
+}
+@mixin specification-separator {
+  margin: 0 var(--cedar-specification-padding-block, #{tokens.$specification-padding-block});
+  color: var(--cedar-specification-separator-color, #{tokens.$specification-separator-color});
+}
+@mixin specification-link {
+  color: inherit;
+  text-decoration: underline dotted var(--cedar-specification-link-underline, #{tokens.$specification-link-underline});
+  text-underline-offset: 2px;
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline solid var(--cedar-specification-text, #{tokens.$specification-text});
+  }
 }

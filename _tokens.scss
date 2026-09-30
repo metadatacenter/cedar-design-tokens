@@ -357,3 +357,12 @@ $line-height-artifact-title: 1.25;
 // Explorer interaction overlays retain the established drag and marquee paint.
 $drag-preview-shadow: 0 5px 18px rgba(23, 63, 62, 0.1882352941);
 $selection-marquee-surface: rgba(72, 111, 124, 0.13);
+
+// Read-only specifications share outlined-control geometry and quiet linked facts.
+$specification-text: rgba(0, 0, 0, 0.54);
+$specification-separator-color: rgba(0, 0, 0, 0.32);
+$specification-keyword-color: rgba(0, 0, 0, 0.45);
+$specification-link-underline: rgba(0, 0, 0, 0.42);
+$specification-padding-block: 6px;
+$specification-padding-inline: 14px;
+$specification-line-height: 1.5;
