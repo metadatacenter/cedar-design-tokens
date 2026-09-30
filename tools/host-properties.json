@@ -6,5 +6,6 @@
   "cedar-control-border": "CEE/CEF and CED embedding contract: host control border override",
   "cedar-control-focus": "CEE/CEF and CED embedding contract: host focus color override",
   "cedar-control-error": "CEE/CEF and CED embedding contract: host invalid state override",
-  "cedar-textarea-min-rows": "CEE/CEF embedding contract: minimum textarea rows"
+  "cedar-textarea-min-rows": "CEE/CEF embedding contract: minimum textarea rows",
+  "cedar-field-type-font-weight": "CEE/CEF field type label weight; CED requests authoring-label emphasis without changing input text"
 }
