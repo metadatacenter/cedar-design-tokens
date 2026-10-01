@@ -541,8 +541,8 @@ OpenView's registry lives at its repository root; its source and owning package
 live under `cedar-openview-src`. Coverage scans that nested source even when CI
 names the checkout `consumer`. Its literal Angular routes must be registered,
 including the hidden root redirect. The hierarchy lists the five resource pages,
-metadata panel, legend, opaque CEE and host error/empty states. The unused slide
-menu shell and unused JSON viewer are not user-facing surfaces.
+metadata panel, legend, opaque CEE and host error/empty states. The unused JSON viewer is
+not a user-facing surface.
 
 OpenView currently has source/hierarchy coverage and the existing style-adoption
 gate, with no rendered token contracts. Its errors are inline cards, not dialogs.
