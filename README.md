@@ -554,8 +554,10 @@ including the hidden root redirect. The hierarchy lists the five resource pages,
 metadata panel, legend, opaque CEE and host error/empty states. The unused JSON viewer is
 not a user-facing surface.
 
-OpenView currently has source/hierarchy coverage and the existing style-adoption
-gate, with no rendered token contracts. Its errors are inline cards, not dialogs.
+OpenView's folder and template pages, and its not-found and not-open error cards,
+are checked as rendered pages. Its browser suite, under `browser/`, serves the built
+application and answers the open API from captured fixtures, so it needs no network.
+Its errors are inline cards, not dialogs.
 Registries without rendered contracts may omit `browserHelper`; adding a recognized
 menu or dialog still requires registration, a rendered contract and browser tests.
 CEE menus/dialogs remain registered once in CEE, rather than copied into each host.
