@@ -15,6 +15,8 @@
   through local overrides.
 - `patterns.tabs` and `patterns.tab` draw every tab row, and `custom-properties.declare` declares
   the shared properties on a component's own shadow host.
+- The adoption check rejects a consumer that redefines a shared token, names the replacement for a
+  retired one, and fails when a token has no consumer.
 
 - First release. CEDAR's font stack, type scale, brand palettes and neutrals, extracted from the
   three copies that had been holding them: the embeddable editor's `_cee-tokens.scss`, the term

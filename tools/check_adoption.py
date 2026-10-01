@@ -111,6 +111,7 @@ def findings(path, source, policy=1):
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+RETIRED = json.loads((Path(__file__).parent / 'retired-tokens.json').read_text())
 HOSTS = {name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text())}
 
 
@@ -188,9 +189,40 @@ def scan_styles(repo, policy=1, ref=None):
             for match in re.finditer(r'var\(\s*--cedar-([\w-]+)', clean):
                 if match[1] not in known:
                     value = '--cedar-' + match[1]
-                    yield {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
+                    row = {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
                            'file': str(path), 'line': clean[:match.start()].count('\n') + 1,
                            'rule': 'unknown-token', 'property': 'var', 'value': value, 'severity': 'gate'}
+                    if match[1] in RETIRED:
+                        row['replacement'] = RETIRED[match[1]]
+                    yield row
+            # A consumer must not give a shared token a local value: no other surface can see it.
+            shared = shared_tokens()
+            for match in re.finditer(r'(?<![\w-])--cedar-([\w-]+)\s*:\s*([^;{}]*)', clean):
+                # A component may re-point a shared role to its own documented host property, as the
+                # term picker does with `--cetp-*`, so shared recipes follow what an embedder sets.
+                if re.fullmatch(r'var\(--cetp-[\w-]+\)', match[2].strip()):
+                    continue
+                if match[1] in shared or match[1] in RETIRED:
+                    value = '--cedar-' + match[1]
+                    yield {'id': hashlib.sha256(f'{path}|token-override|{value}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': clean[:match.start()].count('\n') + 1,
+                           'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
+
+
+def unused_tokens(root):
+    """Shared tokens that no consumer and no package recipe references; None unless every consumer is checked out."""
+    if not all((root / name).exists() for name in REPOS):
+        return None
+    texts = [path.read_text() for path in PACKAGE_ROOT.glob('*.scss')
+             if path.name not in ('_tokens.scss', 'tokens.entry.scss')]
+    for name in REPOS:
+        repo = root / name
+        texts.extend((repo / path).read_text() for path in source_files(repo, 2))
+    used = set()
+    for text in texts:
+        used.update(re.findall(r'--cedar-([\w-]+)', text))
+        used.update(re.findall(r'\b[\w-]+\.\$([\w-]+)', text))
+    return sorted(shared_tokens() - used)
 
 
 def upgrade_policy(repo):
@@ -266,7 +298,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] in ('unknown-token', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) and remaining[key] > 0 else
+        row['status'] = ('new' if row['rule'] in ('unknown-token', 'token-override', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) and remaining[key] > 0 else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
@@ -336,7 +368,8 @@ def main(argv=None):
             args.surface_inventory.write_text(inventory)
         except (OSError, ValueError, KeyError) as error:
             errors.append(f'Surface inventory: {error}')
-    output = {'schema': 1, 'reports': reports, 'errors': errors}
+    unused = unused_tokens(args.root) if not args.repo else None
+    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused}
     if args.json:
         print(json.dumps(output, indent=2))
     else:
@@ -357,11 +390,14 @@ def main(argv=None):
                 print('  INVALID token dependency; use an exact version with a matching lockfile')
             for row in rows:
                 if args.all or row['status'] == 'new':
-                    print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']})")
+                    hint = f"; use {row['replacement']}" if row.get('replacement') else ''
+                    print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']}){hint}")
+        if unused:
+            print(f"Unused shared tokens ({len(unused)}): {', '.join(unused)}; adopt or remove them")
         for error in errors:
             print(error, file=sys.stderr)
-    return 2 if errors else int(args.strict and any(
-        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports))
+    return 2 if errors else int(args.strict and (bool(unused) or any(
+        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
 
 
 if __name__ == '__main__':

@@ -9,14 +9,15 @@ ROOT = Path(__file__).resolve().parents[1]
 NAMES = set(json.loads((ROOT / 'icons/manifest.json').read_text())) | set(json.loads((ROOT / 'icons/aliases.json').read_text()))
 ADAPTERS = {'src/app/icon.ts', 'src/app/shared/components/icon/icon.component.ts'}
 # The one inline brand asset is pinned by geometry, not by an easily copied exemption comment.
-BRAND_HASH = '1755bc8dd8839f0c70fcd9259a47da3dbad2462fbb20e703588f573e99ad30be'
+# Its class is presentation the host owns, so it is not part of what the pin identifies.
+BRAND_HASH = '374d3ed39286496c1239a9f0f9bbaec1622e2996915c6eed6a7ea45572a1f5c3'
 
 
 def violations(path, source):
     source = re.sub(r'/\*.*?\*/|<!--.*?-->|(?m:^[ \t]*//[^\n]*)', lambda m: '\n' * m[0].count('\n'), source, flags=re.S)
     for match in re.finditer(r'<svg\b[^>]*>[\s\S]*?</svg>', source):
         svg = match[0]
-        brand = hashlib.sha256(re.sub(r'\s+', '', svg).encode()).hexdigest() == BRAND_HASH
+        brand = hashlib.sha256(re.sub(r'\s+', '', re.sub(r'\sclass="[^"]*"', '', svg)).encode()).hexdigest() == BRAND_HASH
         adapter = str(path) in ADAPTERS and '/cedar-design-tokens/icons' in source and not re.search(r'<(?:path|circle|rect|line|polyline|polygon|ellipse)\b', svg)
         if not brand and not adapter:
             yield match.start(), 'inline-svg', 'Render through the shared icon adapter'

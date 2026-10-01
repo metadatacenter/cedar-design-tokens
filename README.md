@@ -17,7 +17,7 @@ differently.
 A Sass consumer takes the partial and reads the variables through an alias:
 
 ```scss
-@use "@org.metadatacenter/cedar-design-tokens/tokens" as tokens;
+@use '@org.metadatacenter/cedar-design-tokens/tokens' as tokens;
 
 .hint {
   font-size: tokens.$font-size-small;
@@ -46,7 +46,7 @@ A consumer whose stylesheet is plain CSS imports the compiled declarations inste
 bundler rather than by Sass:
 
 ```css
-@import "@org.metadatacenter/cedar-design-tokens/custom-properties.css";
+@import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
 ```
 
 That file declares each value as a custom property under a `--cedar-` prefix: `--cedar-font-size`,
@@ -58,7 +58,7 @@ outside it. A component that renders in a shadow root of its own can include
 on the embedding page:
 
 ```scss
-@use "@org.metadatacenter/cedar-design-tokens/custom-properties";
+@use '@org.metadatacenter/cedar-design-tokens/custom-properties';
 
 :host {
   @include custom-properties.declare;
@@ -127,9 +127,23 @@ ordered stacking levels: sticky, menu, modal, overlay and tooltip.
 
 ## Holding the Line
 
-The vocabulary stays small only if adding to it is visible. The package's `test/inventory.test.mjs`
-lists every token by group, and the build fails when the emitted set differs from it. A new token is
-added there, for a role no existing token covers, in the same change as the consumer that needs it.
+The vocabulary stays small only if adding to it, or working around it, is visible. Four checks
+make it so.
+
+The package's `test/inventory.test.mjs` lists every token by group, and the build fails when the
+emitted set differs from it. A new token is added there, for a role no existing token covers, in
+the same change as the consumer that needs it.
+
+`cedarcli check design-tokens --strict` fails on a token that no consumer and no recipe reads, so
+an unused token is removed rather than kept in reserve.
+
+The same check rejects a reference to a retired name and states its replacement, from
+`tools/retired-tokens.json`. Retired names cannot be baselined.
+
+A consumer may not give a shared token a local value: `--cedar-space-2: 6px` inside a component
+changes the meaning of a shared name where no other surface can see it, and the check rejects it
+without exception. A component may only re-point a shared role at one of its own documented host
+properties, as the term picker does with `--cetp-*`.
 
 ## What Does Not Belong Here
 
@@ -440,7 +454,7 @@ required marks, toolbars, tabs, breadcrumbs, resource grids and cards, table cel
 empty states. For example:
 
 ```scss
-@use "@org.metadatacenter/cedar-design-tokens/patterns";
+@use '@org.metadatacenter/cedar-design-tokens/patterns';
 .permissions-dialog {
   @include patterns.dialog-surface;
 }

@@ -241,6 +241,29 @@ class AdoptionTest(unittest.TestCase):
         with patch.object(Path, 'read_text', without_dist):
             self.assertEqual([], list(check.scan_styles(self.repo, 2)))
 
+    def test_retired_tokens_name_their_replacement(self):
+        self.style.write_text('a { color: var(--cedar-color-component-title); background: var(--cedar-primary-50); }')
+        rows = [r for r in check.scan_styles(self.repo, 2) if r['rule'] == 'unknown-token']
+        self.assertEqual({'--cedar-color-component-title': 'text-title'},
+                         {r['value']: r['replacement'] for r in rows if r['value'].endswith('title')})
+        self.assertEqual(2, len(rows))
+
+    def test_consumers_cannot_redefine_shared_tokens(self):
+        self.style.write_text('.table { --cedar-space-2: 6px; --cedar-icon-color: var(--cedar-status-error-text); }')
+        rows = [r for r in check.scan_styles(self.repo, 2) if r['rule'] == 'token-override']
+        self.assertEqual(['--cedar-space-2'], [r['value'] for r in rows])
+        self.style.write_text('.a { color: #fff; }')
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('.table { --cedar-space-2: 6px; }')
+        row = next(r for r in self.run_report()['findings'] if r['rule'] == 'token-override')
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', next(r for r in self.run_report()['findings'] if r['rule'] == 'token-override')['status'])
+
     def test_unknown_tokens_cannot_be_excepted_or_baselined(self):
         self.run_report(initialize=True)
         self.commit()
