@@ -79,18 +79,18 @@ Typography is one family, five sizes and two weights. The sizes are in px rather
 `rem` resolves against the embedding page's root element, which a component neither sets nor can
 see: a host with `html { font-size: 62.5% }` would render rem-sized type at 62.5% of its size.
 
-| Token                       | Value                     | Role                                                  |
-| --------------------------- | ------------------------- | ----------------------------------------------------- |
-| `font-family`               | CEE Roboto stack          | All interface text                                    |
-| `font-family-monospace`     | System monospace stack    | Logs, identifiers and code                            |
-| `font-weight-regular`       | 400                       | Body text, values and unselected tabs                 |
-| `font-weight-medium`        | 500                       | Labels, headings, the selected tab, the current crumb |
-| `font-size-small`           | 12px                      | Hints, counts, versions and other secondary facts     |
-| `font-size`                 | 14px                      | Body text, controls, labels, menus and tabs           |
-| `font-size-element-heading` | 18px                      | A nested element's heading; a section inside a page   |
-| `font-size-heading`         | 20px                      | A section break; the largest heading inside a form    |
-| `font-size-artifact-title`  | `clamp(19px, 3cqi, 26px)` | The title of a page, an artifact or a dialog          |
-| `line-height-heading`       | 1.25                      | Every heading and title                               |
+| Token                       | Value                     | Role                                                |
+| --------------------------- | ------------------------- | --------------------------------------------------- |
+| `font-family`               | CEE Roboto stack          | All interface text                                  |
+| `font-family-monospace`     | System monospace stack    | Logs, identifiers and code                          |
+| `font-weight-regular`       | 400                       | Body text and values                                |
+| `font-weight-medium`        | 500                       | Labels, headings, tabs and the current crumb        |
+| `font-size-small`           | 12px                      | Hints, counts, versions and other secondary facts   |
+| `font-size`                 | 14px                      | Body text, controls, labels, menus and tabs         |
+| `font-size-element-heading` | 18px                      | A nested element's heading; a section inside a page |
+| `font-size-heading`         | 20px                      | A section break; the largest heading inside a form  |
+| `font-size-artifact-title`  | `clamp(19px, 3cqi, 26px)` | The title of a page, an artifact or a dialog        |
+| `line-height-heading`       | 1.25                      | Every heading and title                             |
 
 Colour is one theme colour with a stronger variant, three text colours, two rules and three
 surfaces. Status colours come in pairs, each tested for normal-text contrast against its surface,
@@ -369,8 +369,8 @@ recipes into component-local helpers or patch them with a second global recipe.
 The `compact-control` recipe preserves the existing `--cedar-control-*` host API;
 `density` selects the authoring defaults without overriding explicit host values.
 
-The `patterns` export's `tabs` and `tab` recipes draw every tab row: muted body text, the
-selected tab primary and medium over a 2px primary rule, and a rule under the row. Workspace's
+The `patterns` export's `tabs` and `tab` recipes draw every tab row: muted medium-weight text, the
+selected tab primary over a 2px primary rule, and a rule under the row. Workspace's
 Groups and information tabs, CED's settings tabs and the term picker's result tabs all use them.
 
 The `controls` Sass export provides opt-in `focus-ring`, `action-states`,

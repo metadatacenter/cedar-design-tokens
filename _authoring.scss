@@ -86,6 +86,7 @@
 
 // Typography only: label placement belongs to the consumer layout.
 @mixin label-text {
+  color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size);
   font-weight: var(--cedar-font-weight-medium, 500);
 }

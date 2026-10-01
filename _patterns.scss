@@ -119,7 +119,8 @@
   color: var(--cedar-text-muted);
   font-family: inherit;
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-regular);
+  // Every tab carries a label's emphasis. Selecting one changes its colour and rule, never its width.
+  font-weight: var(--cedar-font-weight-medium);
   line-height: var(--cedar-control-line-height-default);
   cursor: pointer;
   &:hover {
@@ -128,7 +129,6 @@
   &[aria-selected='true'] {
     border-bottom-color: var(--cedar-color-primary);
     color: var(--cedar-color-primary);
-    font-weight: var(--cedar-font-weight-medium);
   }
   &:focus-visible {
     outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);

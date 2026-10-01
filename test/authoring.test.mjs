@@ -23,9 +23,10 @@ test('authoring table closes its last row and uses authoring density without fix
   assert.doesNotMatch(css, /overflow: hidden/);
 });
 
-test('authoring labels and values use distinct shared weights without forcing label layout', () => {
+test('authoring labels are muted and medium, as form labels are, without forcing label layout', () => {
   const css = compile('label { @include authoring.label-text; }');
   assert.match(css, /font-weight: var\(--cedar-font-weight-medium, 500\)/);
+  assert.match(css, /color: var\(--cedar-text-muted\)/);
   assert.doesNotMatch(css, /display:|margin:|font-style: italic/);
 });
 
