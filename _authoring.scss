@@ -154,12 +154,12 @@
     width: calc(var(--cedar-space-6) + var(--cedar-space-4));
     height: calc(var(--cedar-space-6) + var(--cedar-space-4));
     border-radius: 50%;
-    background: var(--cedar-primary-50);
+    background: transparent;
     color: var(--cedar-color-primary);
   }
   .settings-dialog-close {
     padding: var(--cedar-space-1);
-    color: var(--cedar-text-muted);
+    color: var(--cedar-color-primary);
     cursor: pointer;
   }
   .settings-dialog-close:hover {

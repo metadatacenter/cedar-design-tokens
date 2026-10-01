@@ -3,7 +3,12 @@
   "contracts": {
     "menu": {
       "background-color": "--cedar-overlay-surface",
-      "border-top-left-radius": "--cedar-menu-radius"
+      "border-top-left-radius": "--cedar-menu-radius",
+      "color": "--cedar-color-primary",
+      "font-family": "--cedar-font-family",
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-regular",
+      "line-height": "--cedar-control-line-height-default"
     },
     "dialog": {
       "background-color": "--cedar-overlay-surface",

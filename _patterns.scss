@@ -27,7 +27,21 @@
   gap: var(--cedar-dialog-action-gap);
 }
 
+// All menu labels use one type and theme contract, including framework adapters.
+@mixin menu-icon {
+  color: var(--cedar-color-primary, #{tokens.$color-primary});
+}
+
+@mixin menu-text {
+  font-family: var(--cedar-font-family, #{tokens.$font-family});
+  font-size: var(--cedar-font-size, #{tokens.$font-size});
+  font-weight: var(--cedar-font-weight-regular, #{tokens.$font-weight-regular});
+  line-height: var(--cedar-control-line-height-default, #{tokens.$control-line-height-default});
+  @include menu-icon;
+}
+
 @mixin menu-surface {
+  @include menu-text;
   z-index: var(--cedar-layer-menu);
   background: var(--cedar-overlay-surface);
   border: 1px solid var(--cedar-overlay-border);
@@ -37,6 +51,7 @@
 }
 
 @mixin menu-item {
+  @include menu-text;
   min-height: var(--cedar-menu-item-height);
   padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
   text-align: left;
@@ -106,6 +121,7 @@
 
 // Shared collapsible validation notices for designer and metadata authoring.
 @mixin validation-summary {
+  --cedar-icon-color: var(--cedar-status-error-text);
   color: var(--cedar-status-error-text);
   background: var(--cedar-status-error-surface);
   padding: var(--cedar-space-2) var(--cedar-space-4);
@@ -152,6 +168,7 @@
     text-decoration: underline;
   }
   &.validation-summary--warning {
+    --cedar-icon-color: var(--cedar-status-warning-text);
     color: var(--cedar-status-warning-text);
     background: var(--cedar-status-warning-surface);
   }

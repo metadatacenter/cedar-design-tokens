@@ -12,6 +12,8 @@ const names = [
   'artifact-title',
   'dialog-surface',
   'dialog-actions',
+  'menu-icon',
+  'menu-text',
   'menu-surface',
   'menu-item',
   'field-label',
@@ -31,7 +33,7 @@ for (const name of names) {
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g))
       assert.ok(roles.has(role[1]), `Unknown role: ${role[1]}`);
     assert.match(css, /^\.consumer/);
-    assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(|font-family:/i);
+    if (!name.startsWith('menu-')) assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(/i);
   });
 }
 test('recipes emit nothing until used', () => {

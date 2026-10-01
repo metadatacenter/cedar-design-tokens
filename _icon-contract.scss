@@ -1,0 +1,50 @@
+// One foreground contract for SVG adapters and the remaining font-icon consumers.
+// Important is deliberate: local text styles must not override an icon's role.
+// Consumers choose a semantic/inverse role with --cedar-icon-color, never a glyph colour.
+@use 'tokens';
+
+@mixin styles {
+  :is(svg[data-cedar-icon], mat-icon, .material-icons, .fa, .glyphicon) {
+    color: var(--cedar-icon-color, var(--cedar-color-primary, #{tokens.$color-primary})) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  // Material's disabled foreground must not be lost when glyph colour is locked.
+  // Dim the control once, rather than both its mat-icon and nested SVG.
+  button:disabled,
+  button[aria-disabled='true'],
+  [role='button'][aria-disabled='true'] {
+    opacity: var(--cedar-control-disabled-opacity, #{tokens.$control-disabled-opacity});
+  }
+
+  [data-cedar-icon-tone='inverse'],
+  .btn-primary,
+  .btn-success,
+  .btn-danger,
+  .mat-toolbar.mat-primary,
+  .mat-mdc-unelevated-button.mat-primary,
+  .mat-mdc-raised-button.mat-primary {
+    --cedar-icon-color: var(--cedar-color-on-primary, #{tokens.$color-on-primary});
+  }
+  [data-cedar-icon-tone='error'],
+  mat-icon.mat-warn,
+  .text-danger,
+  .alert-danger {
+    --cedar-icon-color: var(--cedar-status-error-text, #{tokens.$status-error-text});
+  }
+  [data-cedar-icon-tone='warning'],
+  .text-warning,
+  .alert-warning {
+    --cedar-icon-color: var(--cedar-status-warning-text, #{tokens.$status-warning-text});
+  }
+  [data-cedar-icon-tone='success'],
+  .text-success,
+  .alert-success {
+    --cedar-icon-color: var(--cedar-status-success-text, #{tokens.$status-success-text});
+  }
+  [data-cedar-icon-tone='primary'] {
+    --cedar-icon-color: var(--cedar-color-primary, #{tokens.$color-primary});
+  }
+}

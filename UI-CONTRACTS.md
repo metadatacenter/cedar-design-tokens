@@ -120,3 +120,33 @@ contract in Chromium and WebKit. It compares computed accent colours with the
 central role and checks a host palette override, rather than copying a hex value.
 The adoption checker independently rejects a missing root/import and explicit
 resets to browser-default accent colours; these findings cannot be waived.
+
+## Menu text
+
+Menu icons must use the same primary theme colour as their labels, including CEE's
+Material download icons. Black icon defaults are not permitted.
+
+Every menu surface and action uses `patterns.menu-text` (included by `menu-surface`
+and `menu-item`): the shared font family, body size, regular weight, control line height
+and primary theme colour. Framework adapters, including Material menu labels, use
+the same recipe. Do not override these properties locally, including on nested labels
+or selected actions; selection remains visible through the existing background/checkmark.
+Disabled actions retain their disabled affordance. Section headings and empty-menu
+messages inherit the same text style; input placeholders retain their input affordance. Registered menu browser contracts check the
+rendered surface, action labels and icons, including an alternate host theme, so local drift fails.
+
+## Icon foreground and surfaces
+
+Ordinary UI icons use the current theme primary colour and have transparent glyph
+backgrounds, without a shadow. This is enforced by `icon-contract` for shared SVG,
+Material and legacy font-icon adapters. Its deliberate `!important` declarations
+prevent text utilities and framework defaults from overriding the glyph role.
+Consumers select a role with `data-cedar-icon-tone` (`primary`, `inverse`, `error`,
+`warning`, `success`) or a scoped `--cedar-icon-color` referencing the corresponding
+shared token. Filled controls use inverse icons; semantic feedback retains its
+status colour; disabled controls retain their role and central disabled opacity.
+Logos and authored imagery are outside this UI-glyph contract.
+
+Person and settings glyphs are flat, not decorative shaded circular badges.
+Selection/hover backgrounds, focus rings, status surfaces and overlay elevation
+remain separate surface roles. Do not remove them with a global shadow reset.

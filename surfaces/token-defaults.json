@@ -1,8 +1,11 @@
 {
+  "--cedar-font-family": "\"CEE Roboto\", \"Helvetica Neue\", sans-serif",
   "--cedar-font-weight-regular": "400",
   "--cedar-font-weight-medium": "500",
   "--cedar-font-size": "14px",
+  "--cedar-color-primary": "#0f7686",
   "--cedar-surface-panel": "#f5f5f5",
+  "--cedar-control-line-height-default": "21px",
   "--cedar-dialog-radius": "4px",
   "--cedar-menu-radius": "4px",
   "--cedar-overlay-surface": "#ffffff",

@@ -24,6 +24,7 @@
 }
 
 @mixin primary-action {
+  --cedar-icon-color: var(--cedar-color-on-primary, #{tokens.$color-on-primary});
   background: tokens.$action-primary-surface;
   color: tokens.$action-primary-text;
   &:hover:not(:disabled):not([aria-disabled='true']) {
