@@ -218,6 +218,25 @@ class AdoptionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'allowance increased'):
             self.run_report(ref='HEAD')
 
+    def test_a_local_run_compares_with_the_upstream_branch(self):
+        # CI compares a push with the remote's previous head, so a local run refuses what CI would.
+        self.run_report(initialize=True)
+        self.commit()
+        self.assertIsNone(check.upstream_ref(self.repo))
+        remote = self.root / 'remote.git'
+        subprocess.run(['git', 'init', '-q', '--bare', str(remote)], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'remote', 'add', 'origin', str(remote)], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'push', '-q', '-u', 'origin', 'HEAD:main'], check=True)
+        head = subprocess.run(['git', '-C', str(self.repo), 'rev-parse', 'HEAD'], check=True, capture_output=True, text=True)
+        self.assertEqual(head.stdout.strip(), check.upstream_ref(self.repo))
+        self.style.write_text('a { color: purple; }')
+        (self.repo / check.BASELINE).unlink()
+        self.run_report(initialize=True)
+        errors = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(errors):
+            self.assertEqual(2, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+        self.assertIn('allowance increased', errors.getvalue())
+
     def commit(self):
         subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-qm', 'fixture'], check=True)

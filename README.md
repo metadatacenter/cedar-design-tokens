@@ -258,7 +258,10 @@ not a claim that every literal must be replaced.
 The consumer CI workflows call this repository's reusable `adoption.yml` workflow
 and upload `adoption.json`, even when the strict gate fails. Pull requests compare
 against the **base revision's** baseline and exceptions, so expanding them in the
-same PR cannot conceal new drift. Initial rollout, where the base has no baseline,
+same PR cannot conceal new drift. A push is compared with the previous head. A local
+run compares each repository with its upstream branch in the same way, once that
+branch holds a baseline, and names the revision it compared with, so a refusal CI
+would give a push appears before the push. `--baseline-ref` names another revision. Initial rollout, where the base has no baseline,
 uses the new inventory and emits a review notice. A later intentional exception
 must be reviewed and merged separately before the styling change it permits.
 Changes to the scanner need tests and a review of their effect on existing findings.

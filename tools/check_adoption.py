@@ -54,6 +54,16 @@ def git(repo, *args):
     return subprocess.check_output(['git', '-C', str(repo), *args], text=True)
 
 
+def upstream_ref(repo):
+    """The revision CI compares a push with: the upstream branch's head, once it holds a baseline."""
+    def quiet(*args):
+        return subprocess.run(['git', '-C', str(repo), *args], capture_output=True, text=True)
+    revision = quiet('rev-parse', '--verify', '--quiet', '@{upstream}')
+    if revision.returncode or quiet('cat-file', '-e', f'{revision.stdout.strip()}:{BASELINE}').returncode:
+        return None
+    return revision.stdout.strip()
+
+
 def source_files(repo, policy=1, ref=None):
     # Includes new local files but never ignored build products or dependencies.
     names = (git(repo, 'ls-tree', '-rz', '--name-only', ref) if ref else git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard')).split('\0')
@@ -319,7 +329,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     surface_counts = {'registered': len(surface_registry['surfaces']),
                       'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
                       'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
-    return {'surfaces': surface_counts, 'repo': repo.name, 'baseline': exists, 'pin': pin, 'locked': locked,
+    return {'surfaces': surface_counts, 'repo': repo.name, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
@@ -336,7 +346,7 @@ def main(argv=None):
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
     parser.add_argument('--json', action='store_true', help='Machine-readable report')
     parser.add_argument('--all', action='store_true', help='Show existing findings as well as new ones')
-    parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base)')
+    parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base); defaults to the upstream branch')
     action = parser.add_mutually_exclusive_group()
     action.add_argument('--upgrade-policy', action='store_true', help='Record existing committed debt and enable complete style gates')
     action.add_argument('--init-baseline', action='store_true', help='Create a baseline once; never replace one')
@@ -357,7 +367,12 @@ def main(argv=None):
                 sync_surfaces(repo)
             if args.upgrade_policy:
                 upgrade_policy(repo)
-            reports.append(report(repo, expected, args.baseline_ref, args.init_baseline, args.prune_baseline))
+            # A run that writes a baseline reads the working tree; any other run compares with the
+            # revision CI would, so a refusal CI would give a push appears before the push.
+            ref = args.baseline_ref
+            if ref is None and not (args.upgrade_policy or args.init_baseline or args.prune_baseline):
+                ref = upstream_ref(repo)
+            reports.append(report(repo, expected, ref, args.init_baseline, args.prune_baseline))
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             errors.append(f'{name}: {error}')
     if not reports and not errors:
@@ -381,6 +396,8 @@ def main(argv=None):
             advisory = sum(r['severity'] == 'advisory' for r in rows)
             print(f"{result['repo']}: {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
             print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
+            if result['base']:
+                print(f"  compared with {result['base'][:12]}")
             if result.get('surfaces'):
                 coverage = result['surfaces']
                 print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / {coverage['debt']} existing differences; browser execution is a separate gate")
