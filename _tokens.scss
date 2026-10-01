@@ -1,32 +1,20 @@
 // CEDAR's own design values.
 //
-// One source for the values that decide what a CEDAR component looks like: the
-// font stack, the type scale, the brand palettes and the neutrals. The embeddable
-// editor, the embeddable designer and the embeddable term picker all render in
-// one page and read as one product only if they agree on these, and for a while
-// they agreed by being copied — the editor held the original, the picker a
-// verbatim copy of it, the designer a hand translation into CSS custom
-// properties. Copies drift, and these had: the editor moved its advisory colour
-// from #856404 to #b45309 and the picker went on drawing the old one.
+// The interface is plain text and boxes: one font, five type sizes, two weights, one theme
+// colour, three text colours, two rule colours, three surfaces, one spacing scale and one corner
+// radius. The embeddable editor, the embeddable designer, the term picker and every browser
+// application read these values, and they read as one product only because none of them states a
+// value of its own. A component that needs a value not on this list uses the nearest one; a value
+// that is genuinely new is added here, under a role name, once.
 //
-// Nothing here may reference `@angular/material`. That is the whole point of it:
-// these values are CEDAR's, and they should not be expressed in the vocabulary of
-// a framework that renames and removes that vocabulary every couple of releases.
-// Angular Material's theming API is on its third generation — `define-palette`
-// became `m2-define-palette` and the M2 helpers are on the way out entirely — and
-// each move would otherwise edit the brand. The editor's
-// `_cee-material-theme.scss` is the adapter that feeds these to whatever theming
-// API the installed Material version happens to offer, and it is the only file
-// that imports Material.
+// Nothing here may reference `@angular/material`. Material's theming vocabulary is renamed every
+// couple of releases, and each rename would otherwise edit the brand. The editor's
+// `_cee-material-theme.scss` is the adapter that feeds these values to Material.
 //
-// What is not here: a value only one component has. The editor's own layout
-// constants — the trailing slot in a title row, the card's inline gutter, the
-// size of a toolbar control — stay in the editor, because a shared package that
-// carries them hands two other components measurements of a card they do not
-// draw.
-//
-// The names carry no component prefix. The module is used under an alias, so a
-// consumer writes `tokens.$font-size`, and the alias is where the scope belongs.
+// The names carry no component prefix. The module is used under an alias, so a consumer writes
+// `tokens.$font-size`, and the alias is where the scope belongs. `tokens.entry.scss` emits every
+// scalar here as a `--cedar-` custom property; the two palette maps and the Material font string
+// are Sass inputs only.
 
 @use 'sass:map';
 
@@ -34,57 +22,38 @@
 // Typography
 // ---------------------------------------------------------------------------
 
-// Two spellings of one font stack, because they are consumed differently: this
-// one is a CSS value, used directly in `font-family` declarations.
+// Two spellings of one font stack: a CSS value for `font-family` declarations, and the single
+// string Material's typography config takes. Quoting them differently is what makes each emit
+// correctly, so they are kept in step by hand.
 $font-family: 'CEE Roboto', 'Helvetica Neue', sans-serif;
-
-// ...and this one is a single string, which is what Material's typography config
-// takes. Keep the two in step; they are deliberately not derived from each other
-// because quoting them differently is what makes each emit correctly.
 $font-family-string: 'CEE Roboto, "Helvetica Neue", sans-serif';
 
-// The type scale, in px, and px is the point of it.
+// Logs, identifiers and code samples.
+$font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+// Body text is regular; labels, headings and the current item in a trail are medium. Authored
+// rich text keeps its own emphasis.
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+
+// The type scale, in px. These are web components in someone else's page, and `rem` resolves
+// against that page's root element, which a component neither sets nor can see: a host with
+// `html { font-size: 62.5% }` would render rem-sized type at 62.5% of its intended size.
 //
-// These are web components in someone else's page, and `rem` resolves against
-// that page's root element — which a component neither sets nor can see. A host
-// with `html { font-size: 62.5% }`, a common reset idiom, renders every rem-sized
-// thing at 62.5% of the size it was drawn at. Type stated in rem is not the
-// component's type; it is a ratio applied to a number the embedder chose,
-// possibly by accident.
-//
-// So the steps are absolute, and they are steps rather than one size and a set of
-// multipliers, because that is what a scale is. Five of them, and a size between
-// two steps is not on the scale: the designer ran a step below these for a while
-// — 11px controls under 10px labels — and every seam where it met a component at
-// 14px showed. `$font-size` is the body, and Material's `body-1` and `subtitle-1`
-// are built from it in the editor's adapter, so a field's label and its value
-// agree.
-$font-size: 14px;
-
-/// Hints, and the version stamp under the template title.
-$font-size-small: 12px;
-
-/// The template description, one step above the body.
-$font-size-lead: 15px;
-
-/// A nested element's heading.
-$font-size-element-heading: 18px;
-
-/// A section break's heading — the largest thing in a form after its title.
-///
-/// Above the 18px a nested element's heading takes, so the two do not read as the
-/// same level.
-$font-size-heading: 20px;
+// Five steps, and a size between two of them is not on the scale.
+$font-size-small: 12px; // hints, counts, versions and other secondary facts
+$font-size: 14px; // body text, controls, labels, menus and tabs
+$font-size-element-heading: 18px; // a nested element's heading; a section heading inside a page
+$font-size-heading: 20px; // a section break; the largest heading inside a form
+$font-size-artifact-title: clamp(19px, 3cqi, 26px); // the title of a page, an artifact or a dialog
+$line-height-heading: 1.25; // every heading and title
 
 // ---------------------------------------------------------------------------
-// Brand palettes
+// Palettes
 // ---------------------------------------------------------------------------
 //
-// Generated with http://mcg.mbitson.com/ from CEDAR's teal and rust. The 14-step
-// shape (50–900, A100–A700, plus a contrast map) is Material's convention, and
-// keeping it means the editor's adapter can hand these straight to Material
-// rather than translating. It is a convention, not a dependency — no Material
-// code is needed to read these maps.
+// Material adapters take these maps whole; nothing else reads them, and no step is emitted as a
+// custom property. Components use the colour roles below instead of a palette step.
 
 $brand-primary: (
   50: #e2eff0,
@@ -119,6 +88,8 @@ $brand-primary: (
   ),
 );
 
+// The rust accent remains only as the Material M2 accent input of Monitoring and Bridging. Modern
+// components draw a single theme colour and must not read it.
 $brand-accent: (
   50: #f0e4e2,
   100: #dbbcb7,
@@ -153,190 +124,93 @@ $brand-accent: (
 );
 
 // ---------------------------------------------------------------------------
-// Resolved colors
+// Colour roles
 // ---------------------------------------------------------------------------
-//
-// Derived from the maps above rather than restated, so a palette edit cannot
-// leave these behind. The hues match what the editor publishes today: the
-// primary's default hue is 500, and the accent palette is declared with A200 as
-// its default.
 
+// The theme colour: links, icons, focus, selection marks and filled actions. The strong variant is
+// for text that must read as primary on a tinted surface, and for a filled action's hover.
 $color-primary: map.get($brand-primary, 500);
+$color-primary-strong: map.get($brand-primary, 700);
 $color-on-primary: map.get(map.get($brand-primary, contrast), 500);
-$color-accent: map.get($brand-accent, A200);
 
-// Material's red 500, pinned as a literal. CEDAR never chose a warn color — the
-// editor inherited Material's default — and reading it out of `mat.$red-palette`
-// made this one value depend on the framework for no benefit. Pinning it means
-// the upgrade cannot change it silently.
-$color-warn: #f44336;
-
-// Advisory, not an error, and one letter away from the colour that is one.
-// `warn` is Material's word for its danger palette; `warning` is the ordinary
-// English one, and they carry opposite severities.
-//
-// This is the colour of the editor's `.input-warning`, which exists because
-// Material's form field projects a hint *or* an error and never both. A
-// controlled-term field that has just discarded what the user typed has to say so
-// while a required field's own error is still showing, so the notice sits outside
-// that slot — and in a colour unlike the error red, or the two read as one
-// message.
-$color-warning: #b45309;
-
-// Brand colors used directly in component CSS rather than through a theme.
-$color-icon-hover: map.get($brand-primary, 500);
-$color-component-title: #0b3938;
-
-// ---------------------------------------------------------------------------
-// Neutrals
-// ---------------------------------------------------------------------------
-//
-// Surfaces, borders and text. These were not copied from the editor the way the
-// brand values were, because the editor states no neutral palette: its greys are
-// literals written where each is used. They were gathered from what it renders,
-// one value at a time, and the comment on each says where it was read from.
-
-// The border every editor input carries — source-panels, time-picker and
-// timezone-picker all state it, as does the editor's own stylesheet.
-$border-control: #777;
-
-// The rule under the editor header, tinted toward the brand teal rather than
-// neutral grey, which is what keeps a plain divider from reading as foreign.
-$border-rule: #d7e0df;
-
-// The lighter rule above its footer, for a separation that should carry less
-// weight.
-$border-rule-light: #e5ebea;
-
-// The resting background of a panel, from source-panels.
-$surface-panel: #f5f5f5;
-
-// A tinted surface, from the component header — the teal equivalent of the panel
-// grey.
-$surface-tinted: #e4f1f1;
-
-// Body text. Not an editor value in the sense the others are: the editor declares
-// no text colour and inherits Material's default foreground, so this is what it
-// renders rather than what it states. Written down because a component that takes
-// no Material would otherwise fall through to the user agent's black.
+// Text: ordinary, secondary and titles. A secondary fact is muted, never a fourth grey.
 $text-primary: rgba(0, 0, 0, 0.87);
-
-// Secondary text — a hint, a count, anything supporting the line above it. From
-// the time picker and the datetime input.
 $text-muted: #555;
+$text-title: #173f3e;
 
-// Shared control defaults. Public host overrides deliberately have different names.
-$control-height-default: 36px;
-$control-line-height-default: 21px;
-$control-radius-default: 4px;
+// Rules divide content; control outlines frame what a person can edit.
+$border-rule: #d7e0df;
 $control-border-default: rgba(0, 0, 0, 0.38);
+
+// Surfaces: the white of a page, card, menu or dialog; the subtle grey of a panel, a read-only
+// value or a hovered row; and the teal tint of a selected or hovered action.
+$surface-raised: #ffffff;
+$surface-subtle: #f4f6f6;
+$surface-selected: #e4f1f1;
+
+// Status pairs, each tested for normal-text contrast. A status colour always accompanies a label
+// or icon. Information uses the primary roles.
+$status-error-text: #b42318;
+$status-error-surface: #fef3f2;
+$status-warning-text: #b45309;
+$status-warning-surface: #fff8e5;
+$status-success-text: #176b3a;
+$status-success-surface: #ecfdf3;
+
+// The filled dot beside an unsaved-changes label.
+$status-unsaved-dot: #eab308;
+
+$dialog-backdrop: rgba(0, 0, 0, 0.4);
+
+// ---------------------------------------------------------------------------
+// Controls
+// ---------------------------------------------------------------------------
+//
+// Defaults only. The public host overrides (`--cedar-control-height` and its siblings) have
+// different names, so a default never shadows what an embedder sets. Authoring density points the
+// two `-default` properties at their `-authoring` values.
+
+$control-height-default: 36px;
 $control-height-authoring: 32px;
-$control-font-size-authoring: $font-size-small;
+$control-line-height-default: 21px;
 $control-line-height-authoring: 18px;
-$control-radius-authoring: 2px;
-$control-border-authoring: #ccc;
+$control-disabled-opacity: 0.45;
 $textarea-min-rows-default: 2;
-$color-error: #b42318;
-$color-on-error: #fff;
-$surface-advisory: #fff8e5;
-$surface-authoring: #f4f6f6;
-$text-authoring: #444;
+$focus-ring-width: 2px;
+$focus-ring-offset: 2px;
+
+// A choice option and an authoring table row; an ordinary listing row, which holds a control with a
+// small gutter above and below it.
+$row-height-compact: 28px;
+$table-row-height: 44px;
+
+// ---------------------------------------------------------------------------
+// Space, shape and elevation
+// ---------------------------------------------------------------------------
+
+// Every padding, margin and gap is a step of this scale.
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
 $space-4: 16px;
 $space-6: 24px;
 
-// Typography roles shared by application hosts and embeddable controls.
-$font-weight-regular: 400;
+// One corner for every box, and the fully rounded end of a chip or pill.
+$radius: 4px;
+$radius-pill: 9999px;
 
-// Editable choices: shared by CED option authors and CEE checkbox/radio/list values.
-$choice-row-height: 28px;
-$choice-font-size: $font-size;
-$choice-line-height: 24px;
-$choice-font-weight: $font-weight-regular;
-$choice-letter-spacing: 0.25px;
-$choice-text-color: $text-primary;
-$choice-padding-block: calc($space-1 / 2);
-
-$font-weight-medium: 500;
-$font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
-$font-size-display: 34px;
-
-// Shared SVG icon geometry; independent of the surrounding text size.
+// Icon geometry is independent of the surrounding text size.
 $icon-size-small: 16px;
 $icon-size-default: 20px;
 $icon-size-large: 24px;
-$icon-stroke-width: 2;
 
-// Shared interaction roles. Public embedding overrides remain component-owned.
-$focus-ring-color: $color-primary;
-$focus-ring-width: 2px;
-$focus-ring-offset: 2px;
-$control-disabled-opacity: 0.45;
-$action-hover-surface: $surface-tinted;
-$action-pressed-surface: map.get($brand-primary, 100);
-$action-primary-surface: $color-primary;
-$action-primary-text: $color-on-primary;
-$action-primary-hover-surface: map.get($brand-primary, 700);
-$action-primary-pressed-surface: map.get($brand-primary, 800);
-$control-invalid-border: $color-error;
-$control-readonly-surface: $surface-panel;
+// Menus, popovers, tooltips and drag previews float; dialogs float higher.
+$shadow-overlay: 0 4px 18px rgba(0, 0, 0, 0.13);
+$shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.2);
 
-$dialog-radius: $control-radius-default;
-$dialog-padding: $space-6;
-$dialog-action-gap: $space-3;
-$dialog-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-$dialog-backdrop: rgba(0, 0, 0, 0.4);
-$menu-radius: $control-radius-default;
-$tooltip-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-$media-warning-border: #8a6d3b;
-$media-warning-surface: #fffaf0;
-$media-warning-text: #6b4e1e;
-$menu-shadow: 0 4px 18px rgba(0, 0, 0, 0.13);
-$menu-padding: $space-1;
-$menu-item-height: $control-height-default;
-$menu-item-padding-block: $space-2;
-$menu-item-padding-inline: $space-3;
-$overlay-surface: $color-on-primary;
-$overlay-border: $border-rule;
-
-$surface-canvas: $surface-authoring;
-$surface-raised: $color-on-primary;
-$surface-row-hover: $surface-panel;
-$surface-selected: $surface-tinted;
-$text-selected: $text-primary;
-$border-selected: $color-primary;
-$text-readonly: $text-muted;
-$text-destructive: $color-error;
-$status-error-text: $color-error;
-$status-error-surface: #fef3f2;
-// Filled indicator for unsaved edits, paired with a visible status label.
-$status-unsaved-dot: #eab308;
-
-$status-warning-text: $color-warning;
-$status-warning-surface: $surface-advisory;
-$status-success-text: #176b3a;
-$status-success-surface: #ecfdf3;
-$status-info-text: map.get($brand-primary, 700);
-$status-info-surface: $surface-tinted;
-$selection-tint-percentage: 12%;
-
-$form-label-gap: $space-2;
-$form-help-gap: $space-1;
-$form-field-gap: $space-4;
-$form-section-gap: $space-6;
-$form-help-size: $font-size-small;
-$form-help-line-height: 18px;
-$table-cell-padding-block: $space-2;
-$table-cell-padding-inline: $space-3;
-$table-cell-padding-block-authoring: 2px;
-$table-cell-padding-inline-authoring: $space-2;
-$table-row-height: 52px;
-$table-row-height-authoring: 28px;
-$table-header-weight: $font-weight-medium;
-$table-divider: $border-rule-light;
-$empty-state-padding: calc(2 * #{$space-6}) #{$space-6};
+// ---------------------------------------------------------------------------
+// Motion and layers
+// ---------------------------------------------------------------------------
 
 $motion-duration-fast: 120ms;
 $motion-duration-normal: 200ms;
@@ -344,28 +218,10 @@ $motion-duration-normal: 200ms;
 $motion-duration-spinner: 2s;
 $motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 $motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+
+// Ordered within a host's stacking context.
 $layer-sticky: 10;
 $layer-menu: 100;
 $layer-modal: 1000;
 $layer-overlay: 1100;
 $layer-tooltip: 1200;
-
-$font-size-artifact-title: clamp(19px, 3cqi, 26px);
-$color-artifact-title: #173f3e;
-$line-height-artifact-title: 1.25;
-
-// A card in a resource listing is never narrower than this, unless its container is.
-$resource-card-min-width: 190px;
-
-// Explorer interaction overlays retain the established drag and marquee paint.
-$drag-preview-shadow: 0 5px 18px rgba(23, 63, 62, 0.1882352941);
-$selection-marquee-surface: rgba(72, 111, 124, 0.13);
-
-// Read-only specifications share outlined-control geometry and quiet linked facts.
-$specification-text: rgba(0, 0, 0, 0.54);
-$specification-separator-color: rgba(0, 0, 0, 0.32);
-$specification-keyword-color: rgba(0, 0, 0, 0.45);
-$specification-link-underline: rgba(0, 0, 0, 0.42);
-$specification-padding-block: 6px;
-$specification-padding-inline: 14px;
-$specification-line-height: 1.5;

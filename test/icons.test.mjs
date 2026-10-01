@@ -45,7 +45,8 @@ test('icon sizing agrees with the emitted shared style tokens', async () => {
   const css = await readFile(new URL('../dist/custom-properties.css', import.meta.url), 'utf8');
   for (const size of ['small', 'default', 'large'])
     assert.ok(css.includes(`--cedar-icon-size-${size}: ${iconStyle[size]}px;`));
-  assert.ok(css.includes(`--cedar-icon-stroke-width: ${iconStyle.strokeWidth};`));
+  assert.doesNotMatch(css, /--cedar-icon-stroke-width/, 'the stroke is fixed by the registry, not a token');
+  assert.equal(iconStyle.strokeWidth, 2);
 });
 test('the packaged icons retain upstream license attribution', async () => {
   assert.equal(

@@ -2,8 +2,8 @@
   "schema": 1,
   "contracts": {
     "menu": {
-      "background-color": "--cedar-overlay-surface",
-      "border-top-left-radius": "--cedar-menu-radius",
+      "background-color": "--cedar-surface-raised",
+      "border-top-left-radius": "--cedar-radius",
       "color": "--cedar-color-primary",
       "font-family": "--cedar-font-family",
       "font-size": "--cedar-font-size",
@@ -11,8 +11,8 @@
       "line-height": "--cedar-control-line-height-default"
     },
     "dialog": {
-      "background-color": "--cedar-overlay-surface",
-      "border-top-left-radius": "--cedar-dialog-radius"
+      "background-color": "--cedar-surface-raised",
+      "border-top-left-radius": "--cedar-radius"
     },
     "error-summary": {
       "color": "--cedar-status-error-text",
@@ -25,8 +25,8 @@
       "font-size": "--cedar-font-size"
     },
     "calendar": {
-      "background-color": "--cedar-surface-panel",
-      "border-top-left-radius": "--cedar-dialog-radius"
+      "background-color": "--cedar-surface-subtle",
+      "border-top-left-radius": "--cedar-radius"
     },
     "error-alert": {
       "color": "--cedar-status-error-text",
@@ -41,9 +41,7 @@
       "font-weight": "--cedar-font-weight-regular"
     },
     "authoring-table-cell": {
-      "padding-top": "--cedar-table-cell-padding-block-authoring",
-      "padding-bottom": "--cedar-table-cell-padding-block-authoring",
-      "line-height": "--cedar-form-help-line-height"
+      "line-height": "--cedar-control-line-height-authoring"
     }
   }
 }

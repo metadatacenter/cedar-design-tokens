@@ -25,7 +25,7 @@ test('input recipes preserve host focus and error overrides and avoid premature 
 
 test('table density keeps compact action rows at 28px and ordinary controls unclipped', () => {
   const css = sass.compileString(
-    `@use 'tokens'; a { default-row: tokens.$table-row-height; authoring-row: tokens.$table-row-height-authoring; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$table-cell-padding-block; authoring-padding: tokens.$table-cell-padding-block-authoring; }`,
+    `@use 'sass:math'; @use 'tokens'; a { default-row: tokens.$table-row-height; authoring-row: tokens.$row-height-compact; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$space-1; authoring-padding: math.div(tokens.$space-1, 2); }`,
     { loadPaths: [process.cwd()] },
   ).css;
   const values = new Map([...css.matchAll(/([\w-]+): (\d+)px/g)].map((m) => [m[1], Number(m[2])]));
@@ -61,11 +61,11 @@ test('reduced motion preserves animation completion and covers pseudo elements',
 
 test('choice recipes share typography and grow beyond a minimum row height', () => {
   const css = compile('.choice { @include controls.choice-text; @include controls.choice-row; }');
-  assert.match(css, /--cedar-choice-row-height, 28px/);
-  assert.match(css, /--cedar-control-font-size, var\(--cedar-choice-font-size, 14px\)/);
-  assert.match(css, /--cedar-control-line-height, var\(--cedar-choice-line-height, 24px\)/);
-  assert.match(css, /--cedar-choice-font-weight, 400/);
-  assert.match(css, /--cedar-choice-letter-spacing, 0.25px/);
+  assert.match(css, /--cedar-row-height-compact, 28px/);
+  assert.match(css, /--cedar-control-font-size, var\(--cedar-font-size, 14px\)/);
+  assert.match(css, /--cedar-control-line-height, var\(--cedar-control-line-height-default, 21px\)/);
+  assert.match(css, /--cedar-font-weight-regular, 400/);
+  assert.match(css, /letter-spacing: normal/);
   assert.doesNotMatch(css, /(?:^|[;{}])\s*height:/m);
 });
 
@@ -73,7 +73,7 @@ test('native choices use runtime tokens without replacing browser semantics or g
   const css = compile('input { @include controls.native-choice; }');
   assert.match(css, /accent-color: var\(--cedar-color-primary, #0f7686\)/i);
   assert.match(css, /:focus-visible/);
-  for (const role of ['focus-ring-width', 'focus-ring-color', 'focus-ring-offset'])
+  for (const role of ['focus-ring-width', 'color-primary', 'focus-ring-offset'])
     assert.ok(css.includes(`var(--cedar-${role},`));
   assert.doesNotMatch(css, /(?:appearance|width|height|padding|opacity)\s*:/);
 });

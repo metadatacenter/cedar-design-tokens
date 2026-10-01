@@ -89,7 +89,7 @@ browser tests enforce it at desktop and narrow widths and across nested elements
 ## Choice editors and default values
 
 Editable checkbox, radio and list options and their default-value controls share
-`controls.choice-text` and the `choice-row-height` role. Minimum row height is
+`controls.choice-text` and the `row-height-compact` role. Minimum row height is
 28px; wrapped labels grow. Consumers must not derive this height independently
 from ordinary-control density or layer utility text colors over the shared role.
 The CED real-CEF browser suite compares both renderers for every choice type;

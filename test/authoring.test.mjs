@@ -17,8 +17,8 @@ test('authoring recipes are opt-in and preserve the native control host API', ()
 test('authoring table closes its last row and uses authoring density without fixed control heights', () => {
   const css = compile('.editor { @include authoring.compact-table; @include authoring.density; }');
   assert.match(css, /\.editor table\s*\{[^}]*border-bottom: 1px solid var\(--cedar-border-rule\)/);
-  assert.match(css, /--cedar-table-cell-padding-block-authoring/);
-  assert.match(css, /--cedar-table-row-height-authoring/);
+  assert.match(css, /padding-block: calc\(var\(--cedar-space-1\) \/ 2\)/);
+  assert.match(css, /height: var\(--cedar-row-height-compact\)/);
   assert.match(css, /--cedar-control-height-default: var\(--cedar-control-height-authoring\)/);
   assert.doesNotMatch(css, /overflow: hidden/);
 });
@@ -41,9 +41,8 @@ test('the authoring select arrow is the shared native-select chevron at authorin
 
 test('settings dialog actions follow theme states without fixed content height', () => {
   const css = compile('.settings { @include authoring.settings-dialog; }');
-  assert.match(css, /var\(--cedar-action-primary-hover-surface\)/);
-  assert.match(css, /var\(--cedar-action-primary-pressed-surface\)/);
-  assert.match(css, /gap: var\(--cedar-dialog-action-gap\)/);
+  assert.match(css, /background: var\(--cedar-color-primary-strong\)/);
+  assert.match(css, /gap: var\(--cedar-space-3\)/);
   assert.match(css, /font-weight: var\(--cedar-font-weight-medium/);
   assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i);
 });

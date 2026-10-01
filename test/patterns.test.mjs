@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 const roles = new Set(
   [...readFileSync('dist/custom-properties.css', 'utf8').matchAll(/(--cedar-[\w-]+)\s*:/g)].map((m) => m[1]),
 );
+const hosts = JSON.parse(readFileSync('tools/host-properties.json', 'utf8'));
 const names = [
   'validation-summary',
   'artifact-title',
@@ -19,8 +20,8 @@ const names = [
   'field-label',
   'field-help',
   'field-error',
-  'toolbar',
   'tabs',
+  'tab',
   'table-cell',
   'empty-state',
   'info-description-resize',
@@ -76,7 +77,6 @@ test('offline checker recognizes exactly the generated roles and host overrides'
       { encoding: 'utf8' },
     ),
   );
-  const hosts = JSON.parse(readFileSync('tools/host-properties.json', 'utf8'));
   assert.deepEqual(
     known,
     [
@@ -99,7 +99,7 @@ test('dialog content can own padding while retaining the shared surface', () => 
     sass.compileString(`@use 'patterns'; .dialog { @include patterns.dialog-surface${args}; }`, {
       loadPaths: [process.cwd()],
     }).css;
-  assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-dialog-padding);', 'padding: 0;'));
+  assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-space-6);', 'padding: 0;'));
 });
 
 for (const name of ['specification-box', 'specification-separator', 'specification-link']) {
@@ -108,11 +108,7 @@ for (const name of ['specification-box', 'specification-separator', 'specificati
       loadPaths: [process.cwd()],
     }).css;
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g)) {
-      assert.ok(
-        roles.has(role[1]) ||
-          ['--cedar-control-height', '--cedar-control-border', '--cedar-control-radius'].includes(role[1]),
-        role[1],
-      );
+      assert.ok(roles.has(role[1]) || role[1].replace('--', '') in hosts, role[1]);
     }
     if (name === 'specification-box') {
       assert.match(css, /min-height: var/);
@@ -144,12 +140,12 @@ test('breadcrumbs take the element-heading size only when they head a listing', 
   assert.throws(() => compile('($size: huge)'), /Breadcrumb size/);
 });
 
-test('resource cards share one minimum width role and clamp names to two lines', () => {
+test('resource cards share one minimum width and clamp names to two lines', () => {
   const css = sass.compileString(
     `@use 'patterns'; ul { @include patterns.resource-grid; } li { @include patterns.resource-card-name; }`,
     { loadPaths: [process.cwd()] },
   ).css;
-  assert.match(css, /minmax\(min\(100%, var\(--cedar-resource-card-min-width\)\), 1fr\)/);
+  assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
   assert.match(css, /-webkit-line-clamp: 2/);
   assert.match(css, /max-height: calc\(2 \* var\(--cedar-font-size-heading\)\)/);
 });

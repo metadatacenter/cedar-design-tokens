@@ -3,17 +3,15 @@
 @use 'tokens';
 @use 'dist/icon-masks';
 
-@mixin focus-ring($color: tokens.$focus-ring-color) {
+@mixin focus-ring($color: tokens.$color-primary) {
   outline: tokens.$focus-ring-width solid $color;
   outline-offset: tokens.$focus-ring-offset;
 }
 
 @mixin action-states {
-  &:hover:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$action-hover-surface;
-  }
+  &:hover:not(:disabled):not([aria-disabled='true']),
   &:active:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$action-pressed-surface;
+    background: tokens.$surface-selected;
   }
   &:focus-visible {
     @include focus-ring;
@@ -27,17 +25,15 @@
 
 @mixin primary-action {
   --cedar-icon-color: var(--cedar-color-on-primary, #{tokens.$color-on-primary});
-  background: tokens.$action-primary-surface;
-  color: tokens.$action-primary-text;
-  &:hover:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$action-primary-hover-surface;
-  }
+  background: tokens.$color-primary;
+  color: tokens.$color-on-primary;
+  &:hover:not(:disabled):not([aria-disabled='true']),
   &:active:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$action-primary-pressed-surface;
+    background: tokens.$color-primary-strong;
   }
 }
 
-@mixin input-states($focus: tokens.$focus-ring-color, $error: tokens.$control-invalid-border) {
+@mixin input-states($focus: tokens.$color-primary, $error: tokens.$status-error-text) {
   &:focus-visible {
     @include focus-ring($focus);
   }
@@ -45,7 +41,7 @@
     border-color: $error;
   }
   &:read-only:not(select):not([type='checkbox']):not([type='radio']) {
-    background: tokens.$control-readonly-surface;
+    background: tokens.$surface-subtle;
   }
   &:disabled {
     opacity: tokens.$control-disabled-opacity;
@@ -53,18 +49,21 @@
   }
 }
 
-// The option author and the selectable/default value share one readable text role.
-// Existing host control typography overrides remain supported.
+// The option author and the selectable/default value share the body text role, so an option reads
+// the same in the designer and the form. Host control typography overrides remain supported.
 @mixin choice-text {
   font-family: var(--cedar-font-family, #{tokens.$font-family});
-  font-size: var(--cedar-control-font-size, var(--cedar-choice-font-size, #{tokens.$choice-font-size}));
-  line-height: var(--cedar-control-line-height, var(--cedar-choice-line-height, #{tokens.$choice-line-height}));
-  font-weight: var(--cedar-choice-font-weight, #{tokens.$choice-font-weight});
-  letter-spacing: var(--cedar-choice-letter-spacing, #{tokens.$choice-letter-spacing});
-  color: var(--cedar-choice-text-color, #{tokens.$choice-text-color});
+  font-size: var(--cedar-control-font-size, var(--cedar-font-size, #{tokens.$font-size}));
+  line-height: var(
+    --cedar-control-line-height,
+    var(--cedar-control-line-height-default, #{tokens.$control-line-height-default})
+  );
+  font-weight: var(--cedar-font-weight-regular, #{tokens.$font-weight-regular});
+  letter-spacing: normal;
+  color: var(--cedar-text-primary, #{tokens.$text-primary});
 }
 @mixin choice-row {
-  min-height: var(--cedar-choice-row-height, #{tokens.$choice-row-height});
+  min-height: var(--cedar-row-height-compact, #{tokens.$row-height-compact});
 }
 
 // Keep native semantics and geometry; only theme the browser-painted control.
@@ -72,7 +71,7 @@
   accent-color: var(--cedar-color-primary, #{tokens.$color-primary});
   &:focus-visible {
     outline: var(--cedar-focus-ring-width, #{tokens.$focus-ring-width}) solid
-      var(--cedar-focus-ring-color, #{tokens.$focus-ring-color});
+      var(--cedar-color-primary, #{tokens.$color-primary});
     outline-offset: var(--cedar-focus-ring-offset, #{tokens.$focus-ring-offset});
   }
 }

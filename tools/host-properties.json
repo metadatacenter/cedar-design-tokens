@@ -8,5 +8,12 @@
   "cedar-control-error": "CEE/CEF and CED embedding contract: host invalid state override",
   "cedar-textarea-min-rows": "CEE/CEF embedding contract: minimum textarea rows",
   "cedar-field-type-font-weight": "CEE/CEF field type label weight; CED requests authoring-label emphasis without changing input text",
-  "cedar-icon-color": "Explicit UI glyph role: primary by default, inverse or semantic in named contexts"
+  "cedar-icon-color": "Explicit UI glyph role: primary by default, inverse or semantic in named contexts",
+  "cedar-specification-text": "CEE/CEF embedding contract: read-only specification fact colour (default text-muted)",
+  "cedar-specification-keyword-color": "CEE/CEF embedding contract: read-only specification lead-in word colour (default text-muted)",
+  "cedar-specification-separator-color": "CEE/CEF embedding contract: read-only specification separator colour (default control-border-default)",
+  "cedar-specification-link-underline": "CEE/CEF embedding contract: read-only specification link underline colour (default text-muted)",
+  "cedar-specification-padding-block": "CEE/CEF embedding contract: read-only specification box block padding (default 6px)",
+  "cedar-specification-padding-inline": "CEE/CEF embedding contract: read-only specification box inline padding (default 14px)",
+  "cedar-specification-line-height": "CEE/CEF embedding contract: read-only specification line height (default 1.5)"
 }

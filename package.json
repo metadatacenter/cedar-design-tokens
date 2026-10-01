@@ -47,10 +47,14 @@
     "./icon-contract": {
       "sass": "./_icon-contract.scss"
     },
-    "./icon-contract.css": "./dist/icon-contract.css"
+    "./icon-contract.css": "./dist/icon-contract.css",
+    "./custom-properties": {
+      "sass": "./_custom-properties.scss"
+    }
   },
   "files": [
     "_tokens.scss",
+    "_custom-properties.scss",
     "dist/custom-properties.css",
     "license.txt",
     "README.md",

@@ -110,16 +110,19 @@ def findings(path, source, policy=1):
 
 
 
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+HOSTS = {name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text())}
+
+
+def shared_tokens():
+    """Every scalar of the Sass module, which tokens.entry.scss emits under its own name."""
+    source = COMMENT.sub('', (PACKAGE_ROOT / '_tokens.scss').read_text())
+    return {name for name, value in re.findall(r'^\$([\w-]+):\s*(.)', source, re.M)
+            if value != '(' and name != 'font-family-string'}
+
+
 def known_css_properties():
-    known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'tokens.entry.scss').read_text()))
-    # Palette properties are emitted by the entry point's four Sass map loops.
-    token_source = (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text()
-    for palette in ('primary', 'accent'):
-        body = re.search(r'\$brand-' + palette + r':\s*\((.*?)^\);', token_source, re.S | re.M)[1]
-        for hue in re.findall(r'^\s+(A?\d+):', body, re.M):
-            known.update((f'{palette}-{hue}', f'on-{palette}-{hue}'))
-    known.update(name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text()))
-    return known
+    return shared_tokens() | HOSTS
 
 
 def scan_styles(repo, policy=1, ref=None):

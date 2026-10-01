@@ -1,10 +1,13 @@
 # CEDAR Design Tokens
 
-CEDAR's design values in one place: the font stack, the type scale, the brand palettes and the
-neutrals. The [embeddable editor](https://github.com/metadatacenter/cedar-embeddable-editor), the
-[embeddable designer](https://github.com/metadatacenter/cedar-embeddable-designer) and the
-[embeddable term picker](https://github.com/metadatacenter/cedar-embeddable-term-picker) appear
-together in one page, and they read as one product only if they agree on these.
+CEDAR's interface is plain text and boxes, and this package holds every value that decides how it
+looks: one font, five type sizes, two weights, one theme colour, three text colours, two rule
+colours, three surfaces, one spacing scale and one corner radius. The
+[embeddable editor](https://github.com/metadatacenter/cedar-embeddable-editor), the
+[embeddable designer](https://github.com/metadatacenter/cedar-embeddable-designer), the
+[embeddable term picker](https://github.com/metadatacenter/cedar-embeddable-term-picker) and the
+browser applications that host them read as one product only because none of them states a value of
+its own.
 
 ## Using It
 
@@ -14,7 +17,7 @@ differently.
 A Sass consumer takes the partial and reads the variables through an alias:
 
 ```scss
-@use '@org.metadatacenter/cedar-design-tokens/tokens' as tokens;
+@use "@org.metadatacenter/cedar-design-tokens/tokens" as tokens;
 
 .hint {
   font-size: tokens.$font-size-small;
@@ -43,62 +46,104 @@ A consumer whose stylesheet is plain CSS imports the compiled declarations inste
 bundler rather than by Sass:
 
 ```css
-@import '@org.metadatacenter/cedar-design-tokens/custom-properties.css';
+@import "@org.metadatacenter/cedar-design-tokens/custom-properties.css";
 ```
 
-That file declares each value as a custom property under a `--cedar-` prefix — `--cedar-font-size`,
-`--cedar-primary-500`, `--cedar-text-muted`. A custom property has no alias to be scoped by, so the
+That file declares each value as a custom property under a `--cedar-` prefix: `--cedar-font-size`,
+`--cedar-color-primary`, `--cedar-text-muted`. A custom property has no alias to be scoped by, so the
 prefix is on the name. The declarations land on `:root` **and** `:host`, because a CEDAR component
 renders inside a shadow root when it is embedded and `:root` matches the document element, which is
-outside it.
+outside it. A component that renders in a shadow root of its own can include
+`custom-properties.declare` on `:host` instead, so the shared recipes it uses resolve without relying
+on the embedding page:
 
-`custom-properties.css` is generated from the partial by `npm run build`. `npm test` checks
-that every emitted name has its own evaluated Sass value, including derived colours and palette
-contrast entries, and that nothing is declared twice. Run the build after changing a value:
-the registry tarball contains the compiled CSS, prepared before packing. A linked working copy
-serves whatever it last compiled.
+```scss
+@use "@org.metadatacenter/cedar-design-tokens/custom-properties";
 
-## The Type Scale
+:host {
+  @include custom-properties.declare;
+}
+```
 
-Six roles, in px:
+`custom-properties.css` is generated from the partial by `npm run build`, which emits every scalar
+in the Sass module under its own name. The two palette maps and the Material font string are
+adapter inputs and are not emitted. Run the build after changing a value: the registry tarball
+contains the compiled CSS, prepared before packing.
 
-| Variable                     | Size | What it is for                                      |
-| ---------------------------- | ---- | --------------------------------------------------- |
-| `$font-size-small`           | 12px | Hints, and the version stamp under a template title |
-| `$font-size`                 | 14px | The body                                            |
-| `$font-size-lead`            | 15px | A template description, one step above the body     |
-| `$font-size-element-heading` | 18px | A nested element's heading                          |
-| `$font-size-heading`         | 20px | A section break's heading                           |
-| `$font-size-display`         | 34px | OpenView's artifact title                           |
+## The Vocabulary
 
-px, not rem, and that is the point of it. These are web components in someone else's page, and
-`rem` resolves against that page's root element — which a component neither sets nor can see. A host
-with `html { font-size: 62.5% }`, a common reset idiom, would render every rem-sized thing at 62.5%
-of the size it was drawn at.
+Sixty-one tokens, in seven groups. A value between two of them is not on the scale; a consumer uses
+the nearer one.
 
-Small labels and count badges use the 12px floor; enlarge their containers to fit.
-Icon glyphs retain their own geometry. Interface emphasis uses `$font-weight-medium`
-(500), with `$font-weight-regular` (400) for body text. Authored rich-text formatting
-is separate. `$font-family-monospace` supplies the common system monospace stack
-for logs and identifiers.
+Typography is one family, five sizes and two weights. The sizes are in px rather than rem, because
+`rem` resolves against the embedding page's root element, which a component neither sets nor can
+see: a host with `html { font-size: 62.5% }` would render rem-sized type at 62.5% of its size.
 
-The `fonts/regular` and `fonts/medium` Sass exports each include just one embedded
-Roboto weight. A host supplying both can load CEE's `cedar-embeddable-editor.host-fonts.js`
-variant to avoid duplicate text font data; standalone CEE still embeds its fonts.
-Both use the same `CEE Roboto` family name. Consumers on older token snapshots may
-use `var(--cedar-font-weight-medium, 500)` and the equivalent regular/display/mono
-fallbacks until their immutable package pins are advanced.
+| Token                       | Value                     | Role                                                  |
+| --------------------------- | ------------------------- | ----------------------------------------------------- |
+| `font-family`               | CEE Roboto stack          | All interface text                                    |
+| `font-family-monospace`     | System monospace stack    | Logs, identifiers and code                            |
+| `font-weight-regular`       | 400                       | Body text, values and unselected tabs                 |
+| `font-weight-medium`        | 500                       | Labels, headings, the selected tab, the current crumb |
+| `font-size-small`           | 12px                      | Hints, counts, versions and other secondary facts     |
+| `font-size`                 | 14px                      | Body text, controls, labels, menus and tabs           |
+| `font-size-element-heading` | 18px                      | A nested element's heading; a section inside a page   |
+| `font-size-heading`         | 20px                      | A section break; the largest heading inside a form    |
+| `font-size-artifact-title`  | `clamp(19px, 3cqi, 26px)` | The title of a page, an artifact or a dialog          |
+| `line-height-heading`       | 1.25                      | Every heading and title                               |
+
+Colour is one theme colour with a stronger variant, three text colours, two rules and three
+surfaces. Status colours come in pairs, each tested for normal-text contrast against its surface,
+and always accompany a label or icon. Information uses the primary roles.
+
+| Token                                        | Role                                                      |
+| -------------------------------------------- | --------------------------------------------------------- |
+| `color-primary`, `color-on-primary`          | Links, icons, focus, selection marks and filled actions   |
+| `color-primary-strong`                       | Primary text on a tinted surface; a filled action's hover |
+| `text-primary`, `text-muted`, `text-title`   | Ordinary text, secondary text and titles                  |
+| `border-rule`                                | Rules, card borders, table dividers and overlay outlines  |
+| `control-border-default`                     | The outline of anything a person can edit                 |
+| `surface-raised`                             | Pages, cards, menus, dialogs and controls                 |
+| `surface-subtle`                             | Panels, read-only values, hovered rows and canvases       |
+| `surface-selected`                           | Selected rows and hovered actions                         |
+| `status-error-*`, `-warning-*`, `-success-*` | `-text` and `-surface` pairs                              |
+| `status-unsaved-dot`, `dialog-backdrop`      | The unsaved-changes dot; the scrim behind a modal dialog  |
+
+Controls have two densities. The `-default` tokens describe the 36px control with a 21px line; the
+`-authoring` tokens the 32px control with an 18px line that authoring surfaces use. The
+`authoring.density` mixin points the two `-default` properties at their `-authoring` values. These
+are defaults only: the public host overrides, such as `--cedar-control-height`, have different
+names, and the adapters read an override first. A choice option and an authoring table row are
+`row-height-compact` (28px); an ordinary listing row is `table-row-height` (44px: a control with a
+small gutter above and below).
+
+Space, shape and elevation are each one short scale. Every padding, margin and gap is a step of
+`space-1/2/3/4/6` (4, 8, 12, 16 and 24px), with `calc()` for a half step or a multiple. Every box
+has the `radius` corner (4px); chips and pills take `radius-pill`. Icons are 16, 20 or 24px. Menus,
+popovers, tooltips and drag previews take `shadow-overlay`; dialogs take `shadow-dialog`.
+
+Motion is two interaction durations, a spinner duration and two easing curves. Layers are five
+ordered stacking levels: sticky, menu, modal, overlay and tooltip.
+
+## Holding the Line
+
+The vocabulary stays small only if adding to it is visible. The package's `test/inventory.test.mjs`
+lists every token by group, and the build fails when the emitted set differs from it. A new token is
+added there, for a role no existing token covers, in the same change as the consumer that needs it.
 
 ## What Does Not Belong Here
 
-A value only one component has. The editor's layout constants — the trailing slot in a title row,
-the card's inline gutter, the size of a toolbar control — stay in the editor. A shared package that
-carried them would hand two other components measurements of a card they do not draw.
+A value only one component has. The editor's layout constants (the trailing slot in a title row,
+the card's inline gutter, the size of a toolbar control) stay in the editor. A shared package that
+carried them would hand two other components measurements of a card they do not draw. Geometry
+that a shared recipe needs, such as the minimum width of a resource card, lives in the recipe.
 
 Anything from `@angular/material`. These values are CEDAR's, and expressing them in the vocabulary
 of a framework that renames that vocabulary every couple of releases means each rename edits the
 brand. The editor's `_cee-material-theme.scss` is the adapter that feeds these to whatever theming
-API the installed Material version offers, and it is the only file that imports Material.
+API the installed Material version offers. The palette maps exist for such adapters: the primary
+map feeds Material's tonal roles, and the rust accent map remains only as the M2 accent input of
+Monitoring and Bridging.
 
 ## Releasing
 
@@ -111,54 +156,31 @@ Consumers pin an exact snapshot in `package.json` and their lockfiles. A token
 change reaches them by publishing a new version, updating those pins, and
 rebuilding each component. Publishing alone does not change an existing pin.
 
-## Component adapters and host styling
+## Component Adapters and Host Styling
 
 The shared package defines build-time defaults. Consumers translate those values
-into their own styling systems: CEE's Material adapter, CED's CSS/Tailwind aliases,
-and CETP's `--cetp-*` defaults. Adapters must read tokens for shared roles; controls
-must not retain copies in TypeScript objects or local stylesheets.
+into their own styling systems: CEE's Material adapter, CED's Tailwind theme and
+CETP's `--cetp-*` defaults. Adapters read tokens for shared roles; controls do not
+keep copies in TypeScript objects or local stylesheets. CED's Tailwind theme maps
+its `teal-*` and `gray-*` scales, its shadows and its radii onto the shared roles,
+so a utility written there can only produce a shared value.
 
 Host customization is explicit and tested:
 
 - CEE/CEF and CED's native controls retain the compact-control API documented in
-  [CEE's STYLING.md](https://github.com/metadatacenter/cedar-embeddable-editor/blob/develop/STYLING.md).
+  [CEE's STYLING.md](https://github.com/metadatacenter/cedar-embeddable-editor/blob/develop/STYLING.md),
+  and CEE keeps its documented `--cedar-specification-*` overrides for read-only values.
 - CETP retains its ten documented `--cetp-*` properties, including body size and
-  primary/on-primary colors. Its constraint table and search surface both consume
-  them; small and lead sizes use offsets derived from this package's scale.
-- Generated `--cedar-*` palette and type properties are the CSS representation of
-  these defaults, not a promise that setting one will theme all three components.
-  CEE's Material palette is compiled from Sass. A broader runtime theme API must
-  reach rendered controls before being documented as supported.
+  primary/on-primary colors, and re-points the shared roles at them inside its
+  shadow root, so the shared recipes it uses follow a host's settings too.
+- The generated `--cedar-*` properties are the CSS representation of these defaults,
+  not a promise that setting one will theme all three components.
 
 Keep Material internals private. Do not remove existing host properties to achieve
-uniformity. Geometry remains component-owned except for the established compact
-control API. Hosts overriding colors must preserve status meaning and readable
+uniformity. Hosts overriding colors must preserve status meaning and readable
 foreground/background combinations.
 
-Consumer browser tests exercise actual controls, not just property declarations.
-Package tests compare the complete name/value mapping and reject swapped sizes
-or missing derived and contrast entries.
-
-## Control defaults, authoring density and spacing
-
-The `control-*-default` tokens describe the 36px compact control. The
-`control-*-authoring` tokens describe the explicit authoring profile: 32px high,
-12px text, 18px line height and 2px corners. Both use `color-error` for invalid
-text and borders; `color-warning` and `surface-advisory` describe advisory notices.
-`color-warn` remains available for legacy palette consumers. `surface-authoring`
-and `text-authoring` describe settings panels.
-
-These defaults intentionally do **not** declare public `--cedar-control-height`,
-`--cedar-control-radius` or other host override properties. The component adapters
-read a host override first, then the selected profile default. Embedding CEF in
-an authoring surface uses `density="authoring"`; standalone CEE/CEF retain the
-compact profile unless explicitly configured otherwise.
-
-The optional spacing scale is `space-1/2/3/4/6`: 4/8/12/16/24px. Apply it to
-ordinary padding, margins and gaps; icon sizes, widths, toolbar geometry and
-responsive card gutters remain component-owned.
-
-## Embedded fonts
+## Embedded Fonts
 
 `@use '@org.metadatacenter/cedar-design-tokens/fonts'` emits the self-contained
 Roboto 300/400/500 font faces shared by the editor and designer. Include it in
@@ -167,7 +189,7 @@ faces inside shadow roots. The export contains no selectors or network URLs.
 The font family remains `CEE Roboto`; consumers no longer keep copies of the
 font source. Each built bundle still embeds the fonts it needs.
 
-## Monitor adoption
+## Monitor Adoption
 
 Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
 component repository's new and existing gated style findings,
@@ -230,14 +252,14 @@ the consumer baselines/workflows and CLI command. Consumers reference `develop`;
 branch protection must require the adoption job if it is to block merging.
 Publishing an npm package is not needed for this source check.
 
-### Common styling choices
+### Common Styling Choices
 
 | Intent             | Sass token / CSS property                                                     |
 | ------------------ | ----------------------------------------------------------------------------- |
 | Body text          | `tokens.$font-size` / `--cedar-font-size`                                     |
 | Secondary hint     | `tokens.$text-muted` / `--cedar-text-muted`                                   |
-| Validation error   | `tokens.$color-error` / `--cedar-color-error`                                 |
-| Advisory notice    | `color-warning` foreground and `surface-advisory` background                  |
+| Validation error   | `tokens.$status-error-text` / `--cedar-status-error-text`                     |
+| Advisory notice    | `status-warning-text` foreground and `status-warning-surface` background      |
 | Ordinary gap       | `tokens.$space-2` / `--cedar-space-2` (8px)                                   |
 | Designer input     | Standard CEE adapter (14px text, 36px controls); inherited host overrides win |
 | Host customization | Existing public `--cedar-control-*` overrides; defaults remain fallbacks      |
@@ -256,7 +278,7 @@ Review a styling PR for the intended role, preserved host overrides and a check
 of focus, errors, read-only behavior and narrow hosts. Component-specific geometry
 can stay local. New values used across components belong here with a semantic name.
 
-### Compare the real components
+### Compare the Real Components
 
 CED's `browser/fixtures/style-comparison.html` renders CEE, CEF, CED and CEFD
 from local distribution bundles with the same sample fields. It offers both entry
@@ -266,7 +288,7 @@ inspect focus and validation. CED itself remains editable; it has no equivalent
 host read-only property. No disabled state is simulated with a cosmetic overlay.
 See the frontend runbook for building/staging the two bundles and opening the page.
 
-## Shared iconography
+## Shared Iconography
 
 The existing package also owns CEDAR's icon vocabulary. Import `getIcon`,
 `iconSvg`, `iconStyle` and the `IconName` type from
@@ -305,7 +327,7 @@ this registry. Their CI runs `tools/check_icons.py --repo .` against the nested
 `*-src/src` application trees. This check has no baseline or exemption file;
 AngularJS and generated distributions remain outside its scope.
 
-## Interaction recipes
+## Interaction Recipes
 
 The `authoring` Sass export owns native authoring controls, labels, compact tables,
 entry-row density, themed select arrows, inline text actions and settings-dialog
@@ -319,6 +341,10 @@ recipes into component-local helpers or patch them with a second global recipe.
 The `compact-control` recipe preserves the existing `--cedar-control-*` host API;
 `density` selects the authoring defaults without overriding explicit host values.
 
+The `patterns` export's `tabs` and `tab` recipes draw every tab row: muted body text, the
+selected tab primary and medium over a 2px primary rule, and a rule under the row. Workspace's
+Groups and information tabs, CED's settings tabs and the term picker's result tabs all use them.
+
 The `controls` Sass export provides opt-in `focus-ring`, `action-states`,
 `primary-action`, `input-states`, `select-indicator` and `picker-indicator` mixins.
 Applications supply selectors; the package supplies shared state values. Include primary styles after ordinary
@@ -329,33 +355,32 @@ The focus and invalid recipes accept colors so existing documented embedding
 overrides can remain authoritative. Invalid styling uses `aria-invalid`, not
 `:invalid`, to avoid marking an untouched required field as an error.
 
-## Dialog and menu surfaces
+## Dialog and Menu Surfaces
 
-`dialog-*` and `menu-*` describe shared surfaces, not application-specific widths.
-Native dialogs, designer popups and Material adapters consume the same corners,
-shadows, backdrop and spacing. Menu items use the shared compact control height.
+`patterns.dialog-surface`, `menu-surface` and `menu-item` describe shared surfaces, not
+application-specific widths. Native dialogs, designer popups and Material adapters consume the same
+corner, shadows, backdrop and spacing steps. Menu items use the shared control height.
 Keep viewport constraints, focus trapping, dismissal and focus restoration in the
 component; tokens do not implement those behaviors. The template designer host
 stages the same generated properties alongside its icon module.
 
-## Semantic color roles
+## Semantic Color Roles
 
-Use `surface-selected`/`text-selected` for selection and `surface-row-hover` for
-hover, so a pointer does not make an unselected row look selected. Status pairs
-(`status-error`, `status-warning`, `status-success`, `status-info`, each with
-`-text` and `-surface`) are tested for normal-text contrast of at least 4.5:1.
-Retain a label or icon alongside status color. `text-destructive` is for actions,
-not a replacement for an error message. Read-only surfaces remain distinct from
-native disabled behavior. CETP derives its selection tint from the documented
-host primary override using the shared percentage.
+Use `surface-selected` for selection and `surface-subtle` for hover, so a pointer does not make an
+unselected row look selected. Every text role is tested for normal-text contrast of at least 4.5:1
+on each surface it is drawn on, the status pairs included. Retain a label or icon alongside status
+color. A destructive action uses `status-error-text`, which does not replace an error message.
+Read-only surfaces remain distinct from native disabled behavior. CETP derives its selection tint
+from the documented host primary override, so a host that re-points the primary gets a matching
+tint.
 
 `--cedar-status-unsaved-dot` supplies the yellow filled indicator beside an unsaved-changes label.
 
-## Forms and table density
+## Forms and Table Density
 
-Use `form-label-gap`, `form-help-gap`, `form-field-gap` and `form-section-gap`
-for repeated form rhythm. Help and error text share the small type role and an
-18px line box. Validation timing and accessible descriptions remain component
+The field recipes set form rhythm from the spacing scale: a label sits `space-2` above its control
+and help text `space-1` below it. Help and error text share the small type role and an 18px line
+box. Validation timing and accessible descriptions remain component
 responsibilities.
 
 Form recipes default to the small type role for existing consumers. Larger-text forms
@@ -364,7 +389,7 @@ and `patterns.field-error($size: body)`. This uses the shared body role while ke
 each recipe's spacing, weight and semantic color. Use this variant instead of adding
 a local font-size override after the mixin. Only `small` and `body` are supported.
 
-Ordinary tables use 52px minimum rows with 8px/12px cell padding; authoring tables
+Ordinary tables use 44px minimum rows with 4px/12px cell padding; authoring tables
 use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
 grow for wrapped values or larger controls. The ordinary profile fits its controls
 plus both vertical gutters, an invariant checked by package tests. Column widths, scrolling limits and responsive layout stay local.
@@ -382,7 +407,7 @@ the consuming property, so an alias cannot hide a literal font size or spacing.
 Undeclared styling variables cannot be baselined or excepted. Runtime layout
 properties (for example a computed grid column definition) remain local.
 
-### Motion and overlay layers
+### Motion and Overlay Layers
 
 Use the fast and normal duration roles with the shared easing curves. Continuous
 progress indicators use the spinner duration role. Literal transition/animation
@@ -397,18 +422,17 @@ They apply within each host's stacking context; they cannot escape a shadow host
 or outrank the browser's native dialog top layer. Keep backdrop and modal siblings
 in DOM order at the same modal layer.
 
-### Visual reference
+### Visual Reference
 
-CEE's approved editable and read-only rendering is the reference for the modern
-CEDAR UI. Shared values should be extracted from that reference without changing
-its appearance. Authoring needs additional controls and arrangements, but does
-not establish a separate visual language of gradients, elevated cards or oversized
-branding. The artifact-title size, color and line-height roles preserve CEE's
-existing fluid title exactly. CED's real-component browser comparisons exercise
+CEE's editable and read-only rendering is the reference for the modern CEDAR UI, and it is drawn
+from this vocabulary like everything else: its Material adapter maps every type level to the five
+sizes and two weights without Material's per-level letter spacing, and every Material box to the
+one radius. Authoring needs additional controls and arrangements, but does not establish a separate
+visual language of gradients, elevated cards or oversized branding. CED's real-component browser comparisons exercise
 that relationship against CEE in both display modes; CEE's screenshot baselines
 remain the reference, not snapshots to update to accommodate another component.
 
-## Shared UI patterns
+## Shared UI Patterns
 
 Use `@use '@org.metadatacenter/cedar-design-tokens/patterns';` for opt-in Sass
 recipes: artifact titles, dialog surfaces/actions, menus/items, field labels/help/errors,
@@ -416,7 +440,7 @@ required marks, toolbars, tabs, breadcrumbs, resource grids and cards, table cel
 empty states. For example:
 
 ```scss
-@use '@org.metadatacenter/cedar-design-tokens/patterns';
+@use "@org.metadatacenter/cedar-design-tokens/patterns";
 .permissions-dialog {
   @include patterns.dialog-surface;
 }
@@ -429,7 +453,7 @@ a public folder reads like Workspace content; selection, menus and moves stay wi
 Workspace. See [UI contracts](UI-CONTRACTS.md) for the
 interaction requirements, baseline procedure and the suites that enforce them.
 
-## Candidate consumer CI
+## Candidate Consumer CI
 
 The `Consumer contracts` workflow checks all eight modern consumers on token pushes
 and pull requests. It records the consumer revision and candidate tarball hash,
@@ -438,20 +462,20 @@ and verifies every published file byte for byte. All consumers build; CEE, CED,
 CETP and Workspace also compare their existing screenshots in the pinned ARM64
 Playwright environment. It never publishes or updates consumer baselines.
 
-### Choice rows
+### Choice Rows
 
-Checkbox, radio, single-select and multi-select fields use the `choice-*` roles
-for editable options and defaults: 14px regular text, 24px line height, 0.25px
-letter spacing, primary text color and a 28px minimum row height. Long labels
-may grow; a row height is a minimum, not clipping. Dropdown options use 2px block
-padding. Disabled/read-only states retain their state-specific treatment.
+Checkbox, radio, single-select and multi-select fields draw editable options and defaults in the
+body text role: 14px regular text on a 21px line in the primary text colour, without letter spacing,
+in rows of at least `row-height-compact` (28px). Long labels may grow; a row height is a minimum,
+not clipping. Dropdown options use a 2px block padding. Disabled and read-only states retain their
+state-specific treatment.
 
 Use `controls.choice-text` and `controls.choice-row` in native option editors.
 CEE applies these recipes inside its Material adapter and uses the row-height
 role for radio/checkbox state layers and radio clear buttons. CED must not add
 utility typography or inter-row gaps that override this contract. Existing
 `--cedar-control-font-size` and `--cedar-control-line-height` host overrides take
-precedence; the shared `--cedar-choice-*` properties customize choice roles.
+precedence.
 
 Verify option-editor/default parity for checkbox, radio and both list types,
 including dropdown rows, long labels, host typography overrides and narrow hosts.
@@ -460,11 +484,10 @@ The Workspace Info panel Description may opt into `patterns.info-description-res
 for its explicitly approved temporary vertical resize handle. All authoring fields
 retain `resize: none`; see the Field resizing contract in `UI-CONTRACTS.md`.
 
-`drag-preview-shadow` and `selection-marquee-surface` provide the explorer drag
-preview elevation and translucent selection rectangle. The shared `grid` icon
-identifies the grid view alongside `list`.
+The explorer's drag preview takes `shadow-overlay`, and its selection rectangle is the primary
+colour at 13% opacity. The shared `grid` icon identifies the grid view alongside `list`.
 
-### Native checkbox and radio controls
+### Native Checkbox and Radio Controls
 
 `native-choices.css` applies `controls.native-choice` beneath a
 `cedar-native-choices` host class. Import it once and place that class on the
@@ -493,7 +516,7 @@ actual controls with token values, including disabled and newly added native
 controls and a changed host palette. The source check is an integration guard;
 it does not prove the entire CSS cascade. Legacy AngularJS pages remain excluded.
 
-## Maintained surface registry
+## Maintained Surface Registry
 
 Workspace, CED, CEE, the Template Designer host and OpenView own `.ui-surfaces.json` files.
 These are the source for the human-readable surface hierarchy and the rendered
@@ -576,12 +599,14 @@ the central coverage gate and CLI options. This avoids making adoption CI requir
 a registry before the consumer has it. No release version or application style
 change is part of registration.
 
-### Read-only specification recipes
+### Read-Only Specification Recipes
 
 `patterns.specification-box`, `specification-separator` and `specification-link`
-share the read-only rendering used by CEE and CEF and embedded by CED. They retain
-standalone defaults through Sass-backed CSS fallbacks, while honoring documented
-host control and specification properties. The box grows for wrapped content;
+share the read-only rendering used by CEE and CEF and embedded by CED. They honour CEE's documented
+`--cedar-specification-*` host properties and fall back to shared roles: facts and lead-in words in
+`text-muted`, separators in `control-border-default`. The box keeps the outlined control's geometry,
+6px and 14px of padding inside a 36px box, so a read-only value sits where its editable
+counterpart's text does. The box grows for wrapped content;
 consumers own suffix layout and whether a particular value intentionally truncates.
 Specification roles describe quiet facts, lead-in words and discoverable authority
 links, rather than replacing them with generic disabled text.

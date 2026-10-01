@@ -3,18 +3,18 @@
 // CSS roles deliberately remain overridable at a host boundary.
 @mixin artifact-title {
   font-size: var(--cedar-font-size-artifact-title);
-  color: var(--cedar-color-artifact-title);
-  line-height: var(--cedar-line-height-artifact-title);
+  color: var(--cedar-text-title);
+  line-height: var(--cedar-line-height-heading);
   font-weight: var(--cedar-font-weight-medium);
 }
 
-@mixin dialog-surface($padding: var(--cedar-dialog-padding)) {
-  border: 1px solid var(--cedar-overlay-border);
-  border-radius: var(--cedar-dialog-radius);
+@mixin dialog-surface($padding: var(--cedar-space-6)) {
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
   padding: $padding;
   color: var(--cedar-text-primary);
-  background: var(--cedar-overlay-surface);
-  box-shadow: var(--cedar-dialog-shadow);
+  background: var(--cedar-surface-raised);
+  box-shadow: var(--cedar-shadow-dialog);
   &::backdrop {
     background: var(--cedar-dialog-backdrop);
   }
@@ -24,7 +24,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--cedar-dialog-action-gap);
+  gap: var(--cedar-space-3);
 }
 
 // All menu labels use one type and theme contract, including framework adapters.
@@ -43,17 +43,17 @@
 @mixin menu-surface {
   @include menu-text;
   z-index: var(--cedar-layer-menu);
-  background: var(--cedar-overlay-surface);
-  border: 1px solid var(--cedar-overlay-border);
-  border-radius: var(--cedar-menu-radius);
-  box-shadow: var(--cedar-menu-shadow);
-  padding: var(--cedar-menu-padding);
+  background: var(--cedar-surface-raised);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: var(--cedar-radius);
+  box-shadow: var(--cedar-shadow-overlay);
+  padding: var(--cedar-space-1);
 }
 
 @mixin menu-item {
   @include menu-text;
-  min-height: var(--cedar-menu-item-height);
-  padding: var(--cedar-menu-item-padding-block) var(--cedar-menu-item-padding-inline);
+  min-height: var(--cedar-control-height-default);
+  padding: var(--cedar-space-2) var(--cedar-space-3);
   text-align: left;
 }
 
@@ -70,14 +70,14 @@
 
 @mixin field-label($size: small) {
   display: block;
-  margin: 0 0 var(--cedar-form-label-gap);
+  margin: 0 0 var(--cedar-space-2);
   color: var(--cedar-text-muted);
   @include -form-text($size);
   font-weight: var(--cedar-font-weight-medium);
 }
 
 @mixin field-help($size: small) {
-  margin-top: var(--cedar-form-help-gap);
+  margin-top: var(--cedar-space-1);
   @include -form-text($size);
   color: var(--cedar-text-muted);
 }
@@ -98,24 +98,39 @@
   color: inherit;
 }
 
-@mixin toolbar {
+// A row of tabs over a rule. A tab is muted body text; the selected tab is primary and medium,
+// underlined in primary. Hosts own `aria-selected`, keyboard movement and the panels.
+@mixin tabs {
   display: flex;
-  align-items: center;
-  gap: var(--cedar-space-4);
-  padding: var(--cedar-space-4);
-  background: var(--cedar-surface-raised);
+  flex-wrap: wrap;
+  gap: var(--cedar-space-1);
   border-bottom: 1px solid var(--cedar-border-rule);
 }
 
-@mixin tabs {
-  display: flex;
-  border-bottom: 1px solid var(--cedar-border-rule);
-  > [role='tab'] {
-    border-radius: 0;
+@mixin tab {
+  margin: 0 0 -1px;
+  padding: var(--cedar-space-1) var(--cedar-space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--cedar-text-muted);
+  font-family: inherit;
+  font-size: var(--cedar-font-size);
+  font-weight: var(--cedar-font-weight-regular);
+  line-height: var(--cedar-control-line-height-default);
+  cursor: pointer;
+  &:hover {
+    color: var(--cedar-color-primary);
   }
-  > [aria-selected='true'] {
-    border-bottom: 2px solid var(--cedar-color-primary);
-    margin-bottom: -1px;
+  &[aria-selected='true'] {
+    border-bottom-color: var(--cedar-color-primary);
+    color: var(--cedar-color-primary);
+    font-weight: var(--cedar-font-weight-medium);
+  }
+  &:focus-visible {
+    outline: var(--cedar-focus-ring-width) solid var(--cedar-color-primary);
+    outline-offset: calc(-1 * var(--cedar-focus-ring-width));
   }
 }
 
@@ -147,7 +162,7 @@
 // folders share these recipes; selection, menus and drag behaviour stay with the host.
 @mixin resource-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--cedar-resource-card-min-width)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
   gap: calc(var(--cedar-space-2) + var(--cedar-space-1) / 2);
 }
 
@@ -158,7 +173,7 @@
   height: calc(3 * var(--cedar-control-height-default) - var(--cedar-space-1) / 2);
   padding: var(--cedar-space-2) calc(var(--cedar-space-3) + var(--cedar-space-1) / 2);
   border: 1px solid var(--cedar-border-rule);
-  border-radius: calc(var(--cedar-control-radius-default) * 1.25);
+  border-radius: var(--cedar-radius);
   gap: var(--cedar-space-1);
   min-width: 0;
 }
@@ -202,12 +217,12 @@
 }
 
 @mixin table-cell {
-  padding: var(--cedar-table-cell-padding-block) var(--cedar-table-cell-padding-inline);
-  border-bottom: 1px solid var(--cedar-table-divider);
+  padding: var(--cedar-space-1) var(--cedar-space-3);
+  border-bottom: 1px solid var(--cedar-border-rule);
 }
 
 @mixin empty-state {
-  padding: var(--cedar-empty-state-padding);
+  padding: calc(2 * var(--cedar-space-6)) var(--cedar-space-6);
   text-align: center;
   color: var(--cedar-text-muted);
 }
@@ -273,11 +288,15 @@
   resize: vertical;
 }
 
-// Read-only field surfaces must grow for long facts and identifiers. Fallbacks
-// keep the recipe usable inside CEE's isolated shadow root without host CSS.
+// Read-only field surfaces must grow for long facts and identifiers. The `--cedar-specification-*`
+// properties are CEE's documented host overrides, not shared tokens; their defaults are shared roles.
+// The box keeps the outlined control's geometry, so a read-only value sits where its editable
+// counterpart's text does: 6px above and below a 21px line inside a 36px box, 14px from the outline.
+$specification-padding-block: 6px;
+$specification-padding-inline: 14px;
 @mixin specification-box(
-  $padding-block: var(--cedar-specification-padding-block, #{tokens.$specification-padding-block}),
-  $padding-end: var(--cedar-specification-padding-inline, #{tokens.$specification-padding-inline})
+  $padding-block: var(--cedar-specification-padding-block, #{$specification-padding-block}),
+  $padding-end: var(--cedar-specification-padding-inline, #{$specification-padding-inline})
 ) {
   display: flex;
   flex-wrap: wrap;
@@ -286,21 +305,25 @@
   width: 100%;
   min-height: var(--cedar-control-height, var(--cedar-control-height-default, #{tokens.$control-height-default}));
   padding: $padding-block $padding-end $padding-block
-    var(--cedar-specification-padding-inline, #{tokens.$specification-padding-inline});
+    var(--cedar-specification-padding-inline, #{$specification-padding-inline});
   border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default, #{tokens.$control-border-default}));
-  border-radius: var(--cedar-control-radius, var(--cedar-control-radius-default, #{tokens.$control-radius-default}));
+  border-radius: var(--cedar-control-radius, var(--cedar-radius, #{tokens.$radius}));
   overflow-wrap: anywhere;
 }
 @mixin specification-separator {
-  margin: 0 var(--cedar-specification-padding-block, #{tokens.$specification-padding-block});
-  color: var(--cedar-specification-separator-color, #{tokens.$specification-separator-color});
+  margin: 0 var(--cedar-specification-padding-block, #{$specification-padding-block});
+  color: var(
+    --cedar-specification-separator-color,
+    var(--cedar-control-border-default, #{tokens.$control-border-default})
+  );
 }
 @mixin specification-link {
   color: inherit;
-  text-decoration: underline dotted var(--cedar-specification-link-underline, #{tokens.$specification-link-underline});
+  text-decoration: underline dotted
+    var(--cedar-specification-link-underline, var(--cedar-text-muted, #{tokens.$text-muted}));
   text-underline-offset: 2px;
   &:hover,
   &:focus-visible {
-    text-decoration: underline solid var(--cedar-specification-text, #{tokens.$specification-text});
+    text-decoration: underline solid var(--cedar-specification-text, var(--cedar-text-muted, #{tokens.$text-muted}));
   }
 }
