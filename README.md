@@ -150,7 +150,9 @@ summary is also checked as rendered. The shared browser helper walks the open su
 included, and fails on a font size, weight, family, text colour, letter spacing or corner that no
 token supplies. A page surface (contract `page`) has no property rules of its own: the whole frame
 is walked against the scale. Another CEDAR component embedded in a surface is skipped, because its
-own repository checks it. The allowed values resolve in the surface's own context, so a host theme override
+own repository checks it. The walk also skips glyphs: icons and the box Material draws as a
+checkbox's mark. That box keeps Material's 2px corner, which matches the mark the browser paints for
+a native checkbox. The allowed values resolve in the surface's own context, so a host theme override
 passes. A reviewed exception is a `scaleDebt` entry on the surface (the property, the exact value
 and a reason), and a change cannot add one against its base revision.
 
