@@ -112,6 +112,23 @@ $-chevron-inset: 3px;
   background-repeat: no-repeat;
 }
 
+// A search field's clear button draws the registry's close glyph in the icon role instead of the
+// browser's blue cross. The browser keeps the button, its hit area and the input event it fires.
+@mixin search-clear-indicator($icon: 'close') {
+  $mask: url('#{map.get(icon-masks.$masks, $icon)}') center / contain no-repeat;
+  &::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--cedar-icon-size-small, #{tokens.$icon-size-small});
+    height: var(--cedar-icon-size-small, #{tokens.$icon-size-small});
+    margin: 0;
+    background: var(--cedar-icon-color, var(--cedar-color-primary, #{tokens.$color-primary}));
+    -webkit-mask: $mask;
+    mask: $mask;
+    cursor: pointer;
+  }
+}
+
 // A native date or time picker shows a registry glyph in the icon role instead of the browser's
 // black indicator. Only the painting changes: the indicator keeps its hit area and opens the picker.
 // The icon box sits at the same inline inset as the select chevron.

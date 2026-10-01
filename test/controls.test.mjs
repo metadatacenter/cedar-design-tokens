@@ -121,3 +121,11 @@ test('the native-choices stylesheet themes selects and pickers beneath its root 
   assert.match(css, /\.cedar-native-choices :is\(input\[type=date\]/);
   assert.match(css, /\.cedar-native-choices input\[type=time\]::-webkit-calendar-picker-indicator/);
 });
+
+test('search fields clear with the registry close glyph in the icon role and keep the native button', () => {
+  const css = compile('input { @include controls.search-clear-indicator; }');
+  assert.match(css, /::-webkit-search-cancel-button/);
+  assert.match(css, /background: var\(--cedar-icon-color, var\(--cedar-color-primary, #0f7686\)\)/i);
+  assert.match(css, /mask: url\("?'?data:image\/svg\+xml/);
+  assert.doesNotMatch(css, /display: none/);
+});

@@ -145,10 +145,12 @@ changes the meaning of a shared name where no other surface can see it, and the 
 without exception. A component may only re-point a shared role at one of its own documented host
 properties, as the term picker does with `--cetp-*`.
 
-The source checks cannot see what a framework draws, so every registered menu, dialog and summary
-is also checked as rendered. The shared browser helper walks the open surface, shadow roots
+The source checks cannot see what a framework draws, so every registered page, menu, dialog and
+summary is also checked as rendered. The shared browser helper walks the open surface, shadow roots
 included, and fails on a font size, weight, family, text colour, letter spacing or corner that no
-token supplies. The allowed values resolve in the surface's own context, so a host theme override
+token supplies. A page surface (contract `page`) has no property rules of its own: the whole frame
+is walked against the scale. Another CEDAR component embedded in a surface is skipped, because its
+own repository checks it. The allowed values resolve in the surface's own context, so a host theme override
 passes. A reviewed exception is a `scaleDebt` entry on the surface (the property, the exact value
 and a reason), and a change cannot add one against its base revision.
 
@@ -524,7 +526,8 @@ icon sits at the `space-3` inline inset, and the select reserves that icon colum
 controls; `authoring.select-arrow` uses it.
 `controls.picker-indicator` masks the indicator with a registry glyph (`field-date`,
 or `field-time` for time inputs) in the icon role; the browser keeps the hit area
-and the picker. The masks are generated from the registry into `dist/_icon-masks.scss`.
+and the picker. `controls.search-clear-indicator` does the same for a search field's
+clear button, with the registry's `close` glyph. The masks are generated from the registry into `dist/_icon-masks.scss`.
 A select that places a registry icon beside itself declares `data-cedar-select-icon`
 and keeps that icon.
 Workspace uses this for Groups, Permissions, type filters and draft sharing.

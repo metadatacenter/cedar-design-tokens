@@ -17,3 +17,6 @@
 .cedar-native-choices input[type='time'] {
   @include controls.picker-indicator('field-time');
 }
+.cedar-native-choices input[type='search'] {
+  @include controls.search-clear-indicator;
+}
