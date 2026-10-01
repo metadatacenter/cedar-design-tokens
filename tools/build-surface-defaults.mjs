@@ -2,8 +2,11 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import * as sass from 'sass';
 const root = new URL('../', import.meta.url);
-const contracts = JSON.parse(readFileSync(new URL('surfaces/contracts.json', root), 'utf8')).contracts;
-const needed = new Set(Object.values(contracts).flatMap((rules) => Object.values(rules)));
+const { contracts, scale } = JSON.parse(readFileSync(new URL('surfaces/contracts.json', root), 'utf8'));
+const needed = new Set([
+  ...Object.values(contracts).flatMap((rules) => Object.values(rules)),
+  ...Object.values(scale).flat(),
+]);
 const css = sass.compile(new URL('tokens.entry.scss', root).pathname).css;
 const defaults = Object.fromEntries(
   [...css.matchAll(/(--cedar-[\w-]+):\s*([^;]+);/g)]

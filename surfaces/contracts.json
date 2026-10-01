@@ -43,5 +43,28 @@
     "authoring-table-cell": {
       "line-height": "--cedar-control-line-height-authoring"
     }
+  },
+  "scale": {
+    "font-family": ["--cedar-font-family", "--cedar-font-family-monospace"],
+    "font-size": [
+      "--cedar-font-size-small",
+      "--cedar-font-size",
+      "--cedar-font-size-element-heading",
+      "--cedar-font-size-heading",
+      "--cedar-font-size-artifact-title"
+    ],
+    "font-weight": ["--cedar-font-weight-regular", "--cedar-font-weight-medium"],
+    "color": [
+      "--cedar-text-primary",
+      "--cedar-text-muted",
+      "--cedar-text-title",
+      "--cedar-color-primary",
+      "--cedar-color-primary-strong",
+      "--cedar-color-on-primary",
+      "--cedar-status-error-text",
+      "--cedar-status-warning-text",
+      "--cedar-status-success-text"
+    ],
+    "border-radius": ["--cedar-radius", "--cedar-radius-pill"]
   }
 }

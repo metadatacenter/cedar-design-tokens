@@ -127,7 +127,7 @@ ordered stacking levels: sticky, menu, modal, overlay and tooltip.
 
 ## Holding the Line
 
-The vocabulary stays small only if adding to it, or working around it, is visible. Four checks
+The vocabulary stays small only if adding to it, or working around it, is visible. Five checks
 make it so.
 
 The package's `test/inventory.test.mjs` lists every token by group, and the build fails when the
@@ -144,6 +144,13 @@ A consumer may not give a shared token a local value: `--cedar-space-2: 6px` ins
 changes the meaning of a shared name where no other surface can see it, and the check rejects it
 without exception. A component may only re-point a shared role at one of its own documented host
 properties, as the term picker does with `--cetp-*`.
+
+The source checks cannot see what a framework draws, so every registered menu, dialog and summary
+is also checked as rendered. The shared browser helper walks the open surface, shadow roots
+included, and fails on a font size, weight, family, text colour, letter spacing or corner that no
+token supplies. The allowed values resolve in the surface's own context, so a host theme override
+passes. A reviewed exception is a `scaleDebt` entry on the surface (the property, the exact value
+and a reason), and a change cannot add one against its base revision.
 
 ## What Does Not Belong Here
 
@@ -586,7 +593,7 @@ attached to each Playwright result. Source validation remains offline: it does
 **not** claim that browser cases ran or that a deployed bundle is current.
 
 Current rendered contracts cover overlay colors/corners and validation-summary
-colors/type. Existing interaction/visual suites continue to cover keyboard access,
+colors/type, and every registered surface is checked against the shared scale. Existing interaction/visual suites continue to cover keyboard access,
 focus, saving, disabled controls and geometry. A registry entry is not a claim that
 every state or every property has been visually verified.
 

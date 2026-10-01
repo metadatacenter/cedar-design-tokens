@@ -94,6 +94,25 @@ class SurfaceCoverageTest(unittest.TestCase):
         self.save()
         self.assertTrue(any('cannot add or expand' in row['value'] for row in findings(self.repo, 'HEAD')))
 
+    def test_scale_debt_names_a_scale_property_value_and_reason(self):
+        surface = self.registry['surfaces'][0]
+        surface['scaleDebt'] = [{'property': 'font-size', 'value': '13px', 'reason': 'Material calendar header, pending adoption'}]
+        self.save()
+        self.assertEqual(validate(self.repo), [])
+        for bad in ([{'property': 'padding', 'value': '6px', 'reason': 'spacing is not a scale property'}],
+                    [{'property': 'font-size', 'value': '13px'}],
+                    [{'property': 'font-size', 'value': '13px', 'reason': 'one'}, {'property': 'font-size', 'value': '13px', 'reason': 'two'}]):
+            surface['scaleDebt'] = bad
+            self.save()
+            self.assertTrue(any('scale debt' in error for error in validate(self.repo)), bad)
+
+    def test_scale_debt_cannot_grow_against_base(self):
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'base'], check=True)
+        self.registry['surfaces'][0]['scaleDebt'] = [{'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Added in a feature change'}]
+        self.save()
+        self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
+
     def test_paths_must_stay_in_repository(self):
         self.registry['surfaces'][0]['source'][0]['file'] = '../outside.html'
         self.save()
