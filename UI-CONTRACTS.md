@@ -110,6 +110,13 @@ Hosts without Sass can load `custom-properties.css` and `validation-summary.css`
 `icons.svg` exposes the same icon registry as SVG symbols for those hosts. Main consumes
 these assets through its declared design-token dependency and stages them with `copy:tokens`.
 
+## Required marks
+
+A required label's asterisk uses `patterns.required-mark`. The mark is raised
+without enlarging the label's line box, so a required label's row has the same
+height as any other and the icons beside it stay centred on its text. CEE and CED
+apply the recipe to their field headings; their visual baselines cover both.
+
 ### Native choices in modern Workspace
 
 Checkboxes and radios inherit the shared native-choice stylesheet at the app root.
@@ -120,6 +127,10 @@ contract in Chromium and WebKit. It compares computed accent colours with the
 central role and checks a host palette override, rather than copying a hex value.
 The adoption checker independently rejects a missing root/import and explicit
 resets to browser-default accent colours; these findings cannot be waived.
+
+The same root class draws native single-select chevrons and date and time picker
+indicators from the icon registry in the primary role, at the shared inline inset.
+Do not restore the browser's indicators locally.
 
 ## Menu text
 

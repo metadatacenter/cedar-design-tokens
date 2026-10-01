@@ -87,6 +87,17 @@
   color: var(--cedar-status-error-text);
 }
 
+// The asterisk after a required label is raised without enlarging the label's line box, so the
+// icons beside a label stay centred on its text whether or not the field is required.
+@mixin required-mark {
+  position: relative;
+  inset-block-start: -0.4em;
+  vertical-align: baseline;
+  line-height: 0;
+  font-size: 1em;
+  color: inherit;
+}
+
 @mixin toolbar {
   display: flex;
   align-items: center;
@@ -106,6 +117,88 @@
     border-bottom: 2px solid var(--cedar-color-primary);
     margin-bottom: -1px;
   }
+}
+
+// A location trail: muted ancestors, the current location in medium weight, and separators without
+// spacing, so the trail reads as one path. A trail heading a listing takes the element-heading size.
+@mixin breadcrumbs($size: body) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: var(--cedar-space-2);
+  color: var(--cedar-text-muted);
+  @if $size == heading {
+    font-size: var(--cedar-font-size-element-heading);
+  } @else if $size != body {
+    @error 'Breadcrumb size must be body or heading; got #{$size}.';
+  }
+  [aria-current] {
+    font-weight: var(--cedar-font-weight-medium);
+  }
+}
+
+@mixin breadcrumb-separator {
+  display: inline-block;
+  margin-inline: 0;
+  color: var(--cedar-text-muted);
+}
+
+// A resource listing shown as cards, as many columns as fit. Workspace's grid view and OpenView's
+// folders share these recipes; selection, menus and drag behaviour stay with the host.
+@mixin resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--cedar-resource-card-min-width)), 1fr));
+  gap: calc(var(--cedar-space-2) + var(--cedar-space-1) / 2);
+}
+
+@mixin resource-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: calc(3 * var(--cedar-control-height-default) - var(--cedar-space-1) / 2);
+  padding: var(--cedar-space-2) calc(var(--cedar-space-3) + var(--cedar-space-1) / 2);
+  border: 1px solid var(--cedar-border-rule);
+  border-radius: calc(var(--cedar-control-radius-default) * 1.25);
+  gap: var(--cedar-space-1);
+  min-width: 0;
+}
+
+// The type icon heading a card, in a slot as tall as the card's first line.
+@mixin resource-card-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-1);
+  min-height: var(--cedar-space-6);
+}
+
+@mixin resource-card-icon {
+  display: flex;
+  flex: 0 0 var(--cedar-space-6);
+  align-self: flex-start;
+  align-items: center;
+  height: var(--cedar-space-6);
+  color: var(--cedar-color-primary);
+}
+
+// A name takes at most two lines and then ends in an ellipsis.
+@mixin resource-card-name {
+  display: -webkit-box;
+  overflow: hidden;
+  max-height: calc(2 * var(--cedar-font-size-heading));
+  line-height: var(--cedar-font-size-heading);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+// The quiet facts that close a card, such as its type, on its last line.
+@mixin resource-card-meta {
+  margin-top: auto;
+  overflow: hidden;
+  color: var(--cedar-text-muted);
+  font-size: var(--cedar-font-size-small);
+  text-overflow: ellipsis;
 }
 
 @mixin table-cell {

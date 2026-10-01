@@ -29,11 +29,14 @@ test('authoring labels and values use distinct shared weights without forcing la
   assert.doesNotMatch(css, /display:|margin:|font-style: italic/);
 });
 
-test('select arrows reserve trailing space and stay themed', () => {
-  const css = compile('select { @include authoring.select-arrow; }');
-  assert.match(css, /padding-right: calc\(3 \* var\(--cedar-space-2\)\)/);
-  assert.match(css, /var\(--cedar-color-primary\)/);
-  assert.match(css, /background-repeat: no-repeat/);
+test('the authoring select arrow is the shared native-select chevron at authoring density', () => {
+  const controls = sass.compileString(
+    `@use 'controls'; select { @include controls.select-indicator($density: authoring); }`,
+    {
+      loadPaths: [process.cwd()],
+    },
+  ).css;
+  assert.equal(compile('select { @include authoring.select-arrow; }'), controls);
 });
 
 test('settings dialog actions follow theme states without fixed content height', () => {

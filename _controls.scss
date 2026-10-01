@@ -1,5 +1,7 @@
 // Opt-in recipes: callers own their selectors and component behavior.
+@use 'sass:map';
 @use 'tokens';
+@use 'dist/icon-masks';
 
 @mixin focus-ring($color: tokens.$focus-ring-color) {
   outline: tokens.$focus-ring-width solid $color;
@@ -72,5 +74,62 @@
     outline: var(--cedar-focus-ring-width, #{tokens.$focus-ring-width}) solid
       var(--cedar-focus-ring-color, #{tokens.$focus-ring-color});
     outline-offset: var(--cedar-focus-ring-offset, #{tokens.$focus-ring-offset});
+  }
+}
+
+// A native single select draws the registry's chevron-down where a small icon sits at the
+// control's inline inset, the place every icon-led CEDAR control puts it. A select cannot hold an
+// SVG child, and a background image cannot follow a host's primary colour, so two gradient strokes
+// draw the glyph. Each arm spans 5px; the glyph keeps 3px of its icon box beyond the inset.
+// The select reserves the icon box and the inset on either side of it. Authoring density keeps
+// the tighter inset of its compact controls and lets the value run up to the icon box, so a
+// compact select is no wider than the browser's.
+$-chevron-arm: 5px;
+$-chevron-inset: 3px;
+
+@mixin select-indicator($density: default) {
+  $stroke: var(--cedar-color-primary, #{tokens.$color-primary});
+  $icon: var(--cedar-icon-size-small, #{tokens.$icon-size-small});
+  $inset: null;
+  $reserve: null;
+  @if $density == default {
+    $inset: var(--cedar-space-3, #{tokens.$space-3});
+    $reserve: calc(2 * #{$inset} + #{$icon});
+  } @else if $density == authoring {
+    $inset: var(--cedar-space-2, #{tokens.$space-2});
+    $reserve: calc(#{$inset} + #{$icon});
+  } @else {
+    @error 'Select density must be default or authoring; got #{$density}.';
+  }
+  appearance: none;
+  padding-inline-end: $reserve;
+  background-image:
+    linear-gradient(45deg, transparent 40%, $stroke 40%, $stroke 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, $stroke 40%, $stroke 60%, transparent 60%);
+  background-size: $-chevron-arm $-chevron-arm;
+  background-position:
+    right calc(#{$inset} + #{$-chevron-inset + $-chevron-arm}) center,
+    right calc(#{$inset} + #{$-chevron-inset}) center;
+  background-repeat: no-repeat;
+}
+
+// A native date or time picker shows a registry glyph in the icon role instead of the browser's
+// black indicator. Only the painting changes: the indicator keeps its hit area and opens the picker.
+// The icon box sits at the same inline inset as the select chevron.
+@mixin picker-indicator($icon: 'field-date') {
+  @if not map.has-key(icon-masks.$masks, $icon) {
+    @error 'Unknown CEDAR icon: #{$icon}.';
+  }
+  $mask: url('#{map.get(icon-masks.$masks, $icon)}') center / contain no-repeat;
+  padding-inline-end: var(--cedar-space-3, #{tokens.$space-3});
+  &::-webkit-calendar-picker-indicator {
+    width: var(--cedar-icon-size-small, #{tokens.$icon-size-small});
+    height: var(--cedar-icon-size-small, #{tokens.$icon-size-small});
+    padding: 0;
+    background: var(--cedar-icon-color, var(--cedar-color-primary, #{tokens.$color-primary}));
+    -webkit-mask: $mask;
+    mask: $mask;
+    opacity: 1;
+    cursor: pointer;
   }
 }

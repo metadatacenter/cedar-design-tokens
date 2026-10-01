@@ -320,8 +320,8 @@ The `compact-control` recipe preserves the existing `--cedar-control-*` host API
 `density` selects the authoring defaults without overriding explicit host values.
 
 The `controls` Sass export provides opt-in `focus-ring`, `action-states`,
-`primary-action` and `input-states` mixins. Applications supply selectors; the
-package supplies shared state values. Include primary styles after ordinary
+`primary-action`, `input-states`, `select-indicator` and `picker-indicator` mixins.
+Applications supply selectors; the package supplies shared state values. Include primary styles after ordinary
 action styles. `aria-disabled` styling does not disable behavior: the component
 must still block activation. Use native `disabled` where appropriate.
 
@@ -412,7 +412,8 @@ remain the reference, not snapshots to update to accommodate another component.
 
 Use `@use '@org.metadatacenter/cedar-design-tokens/patterns';` for opt-in Sass
 recipes: artifact titles, dialog surfaces/actions, menus/items, field labels/help/errors,
-toolbars, tabs, table cells and empty states. For example:
+required marks, toolbars, tabs, breadcrumbs, resource grids and cards, table cells and
+empty states. For example:
 
 ```scss
 @use '@org.metadatacenter/cedar-design-tokens/patterns';
@@ -422,7 +423,10 @@ toolbars, tabs, table cells and empty states. For example:
 ```
 
 Recipes emit no global selectors and use the same semantic roles as CEE. Consumers
-retain layout constraints and behavior. See [UI contracts](UI-CONTRACTS.md) for the
+retain layout constraints and behavior. Workspace's grid view and OpenView's folders
+share the `resource-grid` and `resource-card-*` recipes and the `breadcrumbs` trail, so
+a public folder reads like Workspace content; selection, menus and moves stay with
+Workspace. See [UI contracts](UI-CONTRACTS.md) for the
 interaction requirements, baseline procedure and the suites that enforce them.
 
 ## Candidate consumer CI
@@ -466,6 +470,19 @@ identifies the grid view alongside `list`.
 `cedar-native-choices` host class. Import it once and place that class on the
 modern application's root. This supplies primary accent and keyboard focus roles
 without replacing browser semantics, disabled treatment or control dimensions.
+
+The same stylesheet replaces the browser's black indicators on native single selects
+and date and time pickers. `controls.select-indicator` draws the registry's
+`chevron-down` with two gradient strokes, because a select cannot hold an SVG and a
+background image cannot follow a host's primary colour. The glyph sits where a small
+icon sits at the `space-3` inline inset, and the select reserves that icon column.
+`select-indicator($density: authoring)` keeps the `space-2` inset of compact authoring
+controls; `authoring.select-arrow` uses it.
+`controls.picker-indicator` masks the indicator with a registry glyph (`field-date`,
+or `field-time` for time inputs) in the icon role; the browser keeps the hit area
+and the picker. The masks are generated from the registry into `dist/_icon-masks.scss`.
+A select that places a registry icon beside itself declares `data-cedar-select-icon`
+and keeps that icon.
 Workspace uses this for Groups, Permissions, type filters and draft sharing.
 The runtime `--cedar-color-primary` and `--cedar-focus-ring-*` values remain authoritative.
 

@@ -60,6 +60,7 @@
     "dist/icons.d.ts",
     "icons/",
     "_controls.scss",
+    "dist/_icon-masks.scss",
     "_motion.scss",
     "dist/motion.css",
     "_patterns.scss",
