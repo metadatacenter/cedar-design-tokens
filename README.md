@@ -84,7 +84,7 @@ see: a host with `html { font-size: 62.5% }` would render rem-sized type at 62.5
 | `font-family`               | CEE Roboto stack          | All interface text                                  |
 | `font-family-monospace`     | System monospace stack    | Logs, identifiers and code                          |
 | `font-weight-regular`       | 400                       | Body text and values                                |
-| `font-weight-medium`        | 500                       | Labels, headings, tabs and the current crumb        |
+| `font-weight-medium`        | 500                       | Labels, headings and tabs                           |
 | `font-size-small`           | 12px                      | Hints, counts, versions and other secondary facts   |
 | `font-size`                 | 14px                      | Body text, controls, labels, menus and tabs         |
 | `font-size-element-heading` | 18px                      | A nested element's heading; a section inside a page |

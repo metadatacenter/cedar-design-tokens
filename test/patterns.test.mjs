@@ -129,14 +129,14 @@ test('a required mark is raised without enlarging the line box of its label', ()
   assert.match(css, /inset-block-start: -0\.4em/);
 });
 
-test('breadcrumbs take the element-heading size only when they head a listing', () => {
+test('breadcrumbs take the element-heading size only when they head a listing, at one weight', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; nav { @include patterns.breadcrumbs${args}; }`, {
       loadPaths: [process.cwd()],
     }).css;
   assert.doesNotMatch(compile(''), /font-size/);
   assert.match(compile('($size: heading)'), /font-size: var\(--cedar-font-size-element-heading\)/);
-  assert.match(compile(''), /\[aria-current\] \{\s*font-weight: var\(--cedar-font-weight-medium\)/);
+  assert.doesNotMatch(compile(''), /font-weight/);
   assert.throws(() => compile('($size: huge)'), /Breadcrumb size/);
 });
 

@@ -149,9 +149,7 @@
   } @else if $size != body {
     @error 'Breadcrumb size must be body or heading; got #{$size}.';
   }
-  [aria-current] {
-    font-weight: var(--cedar-font-weight-medium);
-  }
+  // The whole trail keeps one weight. A host that sets the current crumb apart does so by colour.
 }
 
 @mixin breadcrumb-separator {
