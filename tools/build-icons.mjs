@@ -36,6 +36,24 @@ await writeFile(
 await writeFile(new URL('icons/LICENSE', root), await readFile(new URL('node_modules/lucide-static/LICENSE', root)));
 console.log(`Built ${Object.keys(manifest).length} CEDAR icons from Lucide ${upstream.version}.`);
 
+// Sass recipes paint a registry glyph where a stylesheet cannot place an SVG element, such as a
+// native date picker's indicator. A mask carries only the shape, so the glyph keeps its theme role.
+await writeFile(
+  new URL('dist/_icon-masks.scss', root),
+  `// Generated from lucide-static ${upstream.version} by tools/build-icons.mjs; see icons/LICENSE.\n` +
+    '$masks: (\n' +
+    Object.keys(icons)
+      .map((name) => {
+        const svg =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          icons[name].body.replace(/\s+/g, ' ') +
+          '</svg>';
+        return `  '${name}': 'data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, '%27')}',\n`;
+      })
+      .join('') +
+    ');\n',
+);
+
 // The same registry is available to hosts without a JavaScript module loader.
 await writeFile(
   new URL('dist/icons.svg', root),

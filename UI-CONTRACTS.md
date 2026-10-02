@@ -89,7 +89,7 @@ browser tests enforce it at desktop and narrow widths and across nested elements
 ## Choice editors and default values
 
 Editable checkbox, radio and list options and their default-value controls share
-`controls.choice-text` and the `choice-row-height` role. Minimum row height is
+`controls.choice-text` and the `row-height-compact` role. Minimum row height is
 28px; wrapped labels grow. Consumers must not derive this height independently
 from ordinary-control density or layer utility text colors over the shared role.
 The CED real-CEF browser suite compares both renderers for every choice type;
@@ -109,3 +109,55 @@ Hosts without Sass can load `custom-properties.css` and `validation-summary.css`
 `.cedar-validation-summary`. The compiled stylesheet includes the shared regular font;
 `icons.svg` exposes the same icon registry as SVG symbols for those hosts. Main consumes
 these assets through its declared design-token dependency and stages them with `copy:tokens`.
+
+## Required marks
+
+A required label's asterisk uses `patterns.required-mark`. The mark is raised
+without enlarging the label's line box, so a required label's row has the same
+height as any other and the icons beside it stay centred on its text. CEE and CED
+apply the recipe to their field headings; their visual baselines cover both.
+
+### Native choices in modern Workspace
+
+Checkboxes and radios inherit the shared native-choice stylesheet at the app root.
+Keep native keyboard operation and disabled semantics; do not replace their
+appearance or geometry to apply brand colour. Groups, permission ownership,
+resource filters and create-draft sharing are covered by Workspace's browser
+contract in Chromium and WebKit. It compares computed accent colours with the
+central role and checks a host palette override, rather than copying a hex value.
+The adoption checker independently rejects a missing root/import and explicit
+resets to browser-default accent colours; these findings cannot be waived.
+
+The same root class draws native single-select chevrons and date and time picker
+indicators from the icon registry in the primary role, at the shared inline inset.
+Do not restore the browser's indicators locally.
+
+## Menu text
+
+Menu icons must use the same primary theme colour as their labels, including CEE's
+Material download icons. Black icon defaults are not permitted.
+
+Every menu surface and action uses `patterns.menu-text` (included by `menu-surface`
+and `menu-item`): the shared font family, body size, regular weight, control line height
+and primary theme colour. Framework adapters, including Material menu labels, use
+the same recipe. Do not override these properties locally, including on nested labels
+or selected actions; selection remains visible through the existing background/checkmark.
+Disabled actions retain their disabled affordance. Section headings and empty-menu
+messages inherit the same text style; input placeholders retain their input affordance. Registered menu browser contracts check the
+rendered surface, action labels and icons, including an alternate host theme, so local drift fails.
+
+## Icon foreground and surfaces
+
+Ordinary UI icons use the current theme primary colour and have transparent glyph
+backgrounds, without a shadow. This is enforced by `icon-contract` for shared SVG,
+Material and legacy font-icon adapters. Its deliberate `!important` declarations
+prevent text utilities and framework defaults from overriding the glyph role.
+Consumers select a role with `data-cedar-icon-tone` (`primary`, `inverse`, `error`,
+`warning`, `success`) or a scoped `--cedar-icon-color` referencing the corresponding
+shared token. Filled controls use inverse icons; semantic feedback retains its
+status colour; disabled controls retain their role and central disabled opacity.
+Logos and authored imagery are outside this UI-glyph contract.
+
+Person and settings glyphs are flat, not decorative shaded circular badges.
+Selection/hover backgrounds, focus rings, status surfaces and overlay elevation
+remain separate surface roles. Do not remove them with a global shadow reset.

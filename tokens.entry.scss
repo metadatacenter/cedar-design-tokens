@@ -1,180 +1,20 @@
 // The same values as custom properties, for a consumer that is not written in Sass.
 //
-// The designer's stylesheet is plain CSS — Tailwind's `@theme` reads custom
-// properties, not Sass variables — so it cannot `@use` the partial beside this
-// file. Rather than let it keep a hand translation, which is what drifted before,
-// this compiles the partial into the declarations it needs. The generated
-// `tokens.css` is therefore not a second source: it is the first one, emitted.
+// The designer's stylesheet is plain CSS (Tailwind's `@theme` reads custom properties, not Sass
+// variables), and CEE's shadow roots resolve these at run time. The generated
+// `custom-properties.css` is therefore not a second source: it is the first one, emitted.
 //
-// `:host` as well as `:root`, because a CEDAR component renders inside a shadow
-// root when it is embedded and `:root` matches the document element, which is
-// outside it. With only the second selector every property below resolves to
-// nothing and the component renders unstyled.
+// Every scalar in the Sass module is emitted under its own name with a `--cedar-` prefix, by
+// iteration, so a value added to the module cannot be forgotten here and a value removed there
+// cannot linger. The palette maps and the Material font string are adapter inputs and are not
+// emitted.
 //
-// The names carry the `--cedar-` prefix the Sass variables drop. A custom
-// property has no module alias to be scoped by; it is global to whatever tree
-// declares it, and an unprefixed `--font-size` in an embedder's page is a
-// collision waiting to happen.
+// `:host` as well as `:root`, because a CEDAR component renders inside a shadow root when it is
+// embedded and `:root` matches the document element, which is outside it.
 
-@use 'sass:map';
-@use 'sass:meta';
-@use 'tokens';
+@use 'custom-properties';
 
 :root,
 :host {
-  // `meta.inspect` rather than plain interpolation, which drops the quotes around
-  // a family whose name has a space in it. Unquoted is legal CSS and every browser
-  // accepts it, but the declaration then no longer reads like the value it came
-  // from, and a family added later with a comma in its name would not survive.
-  --cedar-font-family: #{meta.inspect(tokens.$font-family)};
-
-  --cedar-font-weight-regular: #{tokens.$font-weight-regular};
-  --cedar-font-weight-medium: #{tokens.$font-weight-medium};
-  --cedar-font-family-monospace: #{meta.inspect(tokens.$font-family-monospace)};
-  --cedar-font-size-display: #{tokens.$font-size-display};
-
-  --cedar-font-size: #{tokens.$font-size};
-  --cedar-font-size-small: #{tokens.$font-size-small};
-  --cedar-font-size-lead: #{tokens.$font-size-lead};
-  --cedar-font-size-element-heading: #{tokens.$font-size-element-heading};
-  --cedar-font-size-heading: #{tokens.$font-size-heading};
-
-  // Every hue of both palettes, by the name the palette gives it. Emitted by
-  // iteration rather than listed, so a palette that gains a step gains a property
-  // without anyone editing this file. `contrast` is a nested map and not a colour,
-  // so it is emitted separately below.
-  @each $hue, $value in map.remove(tokens.$brand-primary, contrast) {
-    --cedar-primary-#{$hue}: #{$value};
-  }
-  @each $hue, $value in map.remove(tokens.$brand-accent, contrast) {
-    --cedar-accent-#{$hue}: #{$value};
-  }
-  @each $hue, $value in map.get(tokens.$brand-primary, contrast) {
-    --cedar-on-primary-#{$hue}: #{$value};
-  }
-  @each $hue, $value in map.get(tokens.$brand-accent, contrast) {
-    --cedar-on-accent-#{$hue}: #{$value};
-  }
-
-  --cedar-color-primary: #{tokens.$color-primary};
-  --cedar-color-on-primary: #{tokens.$color-on-primary};
-  --cedar-color-accent: #{tokens.$color-accent};
-  --cedar-color-warn: #{tokens.$color-warn};
-  --cedar-color-warning: #{tokens.$color-warning};
-  --cedar-color-icon-hover: #{tokens.$color-icon-hover};
-  --cedar-color-component-title: #{tokens.$color-component-title};
-
-  --cedar-border-control: #{tokens.$border-control};
-  --cedar-border-rule: #{tokens.$border-rule};
-  --cedar-border-rule-light: #{tokens.$border-rule-light};
-  --cedar-surface-panel: #{tokens.$surface-panel};
-  --cedar-surface-tinted: #{tokens.$surface-tinted};
-  --cedar-text-primary: #{tokens.$text-primary};
-  --cedar-text-muted: #{tokens.$text-muted};
-
-  --cedar-choice-row-height: #{tokens.$choice-row-height};
-  --cedar-choice-font-size: #{tokens.$choice-font-size};
-  --cedar-choice-line-height: #{tokens.$choice-line-height};
-  --cedar-choice-font-weight: #{tokens.$choice-font-weight};
-  --cedar-choice-letter-spacing: #{tokens.$choice-letter-spacing};
-  --cedar-choice-text-color: #{tokens.$choice-text-color};
-  --cedar-choice-padding-block: #{tokens.$choice-padding-block};
-
-  --cedar-control-height-default: #{tokens.$control-height-default};
-  --cedar-control-line-height-default: #{tokens.$control-line-height-default};
-  --cedar-control-radius-default: #{tokens.$control-radius-default};
-  --cedar-control-border-default: #{tokens.$control-border-default};
-  --cedar-control-height-authoring: #{tokens.$control-height-authoring};
-  --cedar-control-font-size-authoring: #{tokens.$control-font-size-authoring};
-  --cedar-control-line-height-authoring: #{tokens.$control-line-height-authoring};
-  --cedar-control-radius-authoring: #{tokens.$control-radius-authoring};
-  --cedar-control-border-authoring: #{tokens.$control-border-authoring};
-  --cedar-textarea-min-rows-default: #{tokens.$textarea-min-rows-default};
-  --cedar-color-error: #{tokens.$color-error};
-  --cedar-color-on-error: #{tokens.$color-on-error};
-  --cedar-surface-advisory: #{tokens.$surface-advisory};
-  --cedar-surface-authoring: #{tokens.$surface-authoring};
-  --cedar-text-authoring: #{tokens.$text-authoring};
-  --cedar-icon-size-small: #{tokens.$icon-size-small};
-  --cedar-icon-size-default: #{tokens.$icon-size-default};
-  --cedar-icon-size-large: #{tokens.$icon-size-large};
-  --cedar-icon-stroke-width: #{tokens.$icon-stroke-width};
-  --cedar-space-1: #{tokens.$space-1};
-  --cedar-space-2: #{tokens.$space-2};
-  --cedar-space-3: #{tokens.$space-3};
-  --cedar-space-4: #{tokens.$space-4};
-  --cedar-space-6: #{tokens.$space-6};
-  --cedar-focus-ring-color: #{tokens.$focus-ring-color};
-  --cedar-focus-ring-width: #{tokens.$focus-ring-width};
-  --cedar-focus-ring-offset: #{tokens.$focus-ring-offset};
-  --cedar-control-disabled-opacity: #{tokens.$control-disabled-opacity};
-  --cedar-action-hover-surface: #{tokens.$action-hover-surface};
-  --cedar-action-pressed-surface: #{tokens.$action-pressed-surface};
-  --cedar-action-primary-surface: #{tokens.$action-primary-surface};
-  --cedar-action-primary-text: #{tokens.$action-primary-text};
-  --cedar-action-primary-hover-surface: #{tokens.$action-primary-hover-surface};
-  --cedar-action-primary-pressed-surface: #{tokens.$action-primary-pressed-surface};
-  --cedar-control-invalid-border: #{tokens.$control-invalid-border};
-  --cedar-control-readonly-surface: #{tokens.$control-readonly-surface};
-  --cedar-dialog-radius: #{tokens.$dialog-radius};
-  --cedar-dialog-padding: #{tokens.$dialog-padding};
-  --cedar-dialog-action-gap: #{tokens.$dialog-action-gap};
-  --cedar-dialog-shadow: #{tokens.$dialog-shadow};
-  --cedar-dialog-backdrop: #{tokens.$dialog-backdrop};
-  --cedar-menu-radius: #{tokens.$menu-radius};
-  --cedar-menu-shadow: #{tokens.$menu-shadow};
-  --cedar-menu-padding: #{tokens.$menu-padding};
-  --cedar-menu-item-height: #{tokens.$menu-item-height};
-  --cedar-menu-item-padding-block: #{tokens.$menu-item-padding-block};
-  --cedar-menu-item-padding-inline: #{tokens.$menu-item-padding-inline};
-  --cedar-overlay-surface: #{tokens.$overlay-surface};
-  --cedar-overlay-border: #{tokens.$overlay-border};
-  --cedar-surface-canvas: #{tokens.$surface-canvas};
-  --cedar-surface-raised: #{tokens.$surface-raised};
-  --cedar-surface-row-hover: #{tokens.$surface-row-hover};
-  --cedar-drag-preview-shadow: #{tokens.$drag-preview-shadow};
-  --cedar-selection-marquee-surface: #{tokens.$selection-marquee-surface};
-  --cedar-surface-selected: #{tokens.$surface-selected};
-  --cedar-text-selected: #{tokens.$text-selected};
-  --cedar-border-selected: #{tokens.$border-selected};
-  --cedar-text-readonly: #{tokens.$text-readonly};
-  --cedar-text-destructive: #{tokens.$text-destructive};
-  --cedar-status-error-text: #{tokens.$status-error-text};
-  --cedar-status-error-surface: #{tokens.$status-error-surface};
-  --cedar-status-unsaved-dot: #{tokens.$status-unsaved-dot};
-  --cedar-status-warning-text: #{tokens.$status-warning-text};
-  --cedar-status-warning-surface: #{tokens.$status-warning-surface};
-  --cedar-status-success-text: #{tokens.$status-success-text};
-  --cedar-status-success-surface: #{tokens.$status-success-surface};
-  --cedar-status-info-text: #{tokens.$status-info-text};
-  --cedar-status-info-surface: #{tokens.$status-info-surface};
-  --cedar-selection-tint-percentage: #{tokens.$selection-tint-percentage};
-  --cedar-form-label-gap: #{tokens.$form-label-gap};
-  --cedar-form-help-gap: #{tokens.$form-help-gap};
-  --cedar-form-field-gap: #{tokens.$form-field-gap};
-  --cedar-form-section-gap: #{tokens.$form-section-gap};
-  --cedar-form-help-size: #{tokens.$form-help-size};
-  --cedar-form-help-line-height: #{tokens.$form-help-line-height};
-  --cedar-table-cell-padding-block: #{tokens.$table-cell-padding-block};
-  --cedar-table-cell-padding-inline: #{tokens.$table-cell-padding-inline};
-  --cedar-table-cell-padding-block-authoring: #{tokens.$table-cell-padding-block-authoring};
-  --cedar-table-cell-padding-inline-authoring: #{tokens.$table-cell-padding-inline-authoring};
-  --cedar-table-row-height: #{tokens.$table-row-height};
-  --cedar-table-row-height-authoring: #{tokens.$table-row-height-authoring};
-  --cedar-table-header-weight: #{tokens.$table-header-weight};
-  --cedar-table-divider: #{tokens.$table-divider};
-  --cedar-empty-state-padding: #{tokens.$empty-state-padding};
-  --cedar-motion-duration-fast: #{tokens.$motion-duration-fast};
-  --cedar-motion-duration-normal: #{tokens.$motion-duration-normal};
-  --cedar-motion-duration-spinner: #{tokens.$motion-duration-spinner};
-  --cedar-motion-ease-standard: #{tokens.$motion-ease-standard};
-  --cedar-motion-ease-enter: #{tokens.$motion-ease-enter};
-  --cedar-layer-sticky: #{tokens.$layer-sticky};
-  --cedar-layer-menu: #{tokens.$layer-menu};
-  --cedar-layer-modal: #{tokens.$layer-modal};
-  --cedar-layer-overlay: #{tokens.$layer-overlay};
-  --cedar-layer-tooltip: #{tokens.$layer-tooltip};
-  --cedar-font-size-artifact-title: #{tokens.$font-size-artifact-title};
-  --cedar-color-artifact-title: #{tokens.$color-artifact-title};
-  --cedar-line-height-artifact-title: #{tokens.$line-height-artifact-title};
+  @include custom-properties.declare;
 }

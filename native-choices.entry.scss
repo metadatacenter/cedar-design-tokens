@@ -1,0 +1,22 @@
+@use 'controls';
+
+// Hosts opt in at their application root; legacy hosts can opt in one page only.
+.cedar-native-choices input[type='checkbox'],
+.cedar-native-choices input[type='radio'] {
+  @include controls.native-choice;
+}
+
+// Native selects and pickers draw registry glyphs rather than the browser's black indicators.
+// A select that already places a registry icon beside itself declares data-cedar-select-icon.
+.cedar-native-choices select:not([multiple]):not([size]):not([data-cedar-select-icon]) {
+  @include controls.select-indicator;
+}
+.cedar-native-choices :is(input[type='date'], input[type='datetime-local'], input[type='month'], input[type='week']) {
+  @include controls.picker-indicator('field-date');
+}
+.cedar-native-choices input[type='time'] {
+  @include controls.picker-indicator('field-time');
+}
+.cedar-native-choices input[type='search'] {
+  @include controls.search-clear-indicator;
+}

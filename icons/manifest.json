@@ -20,6 +20,8 @@
   "check": "check",
   "add": "plus",
   "copy": "copy",
+  "move": "folder-input",
+  "publish": "upload",
   "download": "download",
   "save": "save",
   "new-record": "file-plus-2",

@@ -28,6 +28,25 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_native_choice_resets_in_bound_styles_are_gated(self):
+        (self.repo / 'src/control.html').write_text('<input spellcheck="false" [style.accent-color]="colour">')
+        rows = list(check.scan_styles(self.repo, 2))
+        self.assertTrue(any(row['rule'] == 'dynamic-style' for row in rows))
+        for value in ['auto', 'revert-layer', 'INITIAL !IMPORTANT']:
+            rows = list(check.findings('x.scss', 'input { accent-color: ' + value + '; }'))
+            self.assertEqual(('native-choice-reset', 'gate'), (rows[0]['rule'], rows[0]['severity']))
+
+    def test_native_choice_contracts_cannot_be_baselined_or_excepted(self):
+        self.style.write_text('input { accent-color: auto; }')
+        self.run_report(initialize=True)
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        key = next(iter(baseline['findings']))
+        baseline['exceptions'] = {key: 'No native browser defaults'}
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', self.run_report()['findings'][0]['status'])
+        self.assertEqual('native-choice-reset', self.run_report()['findings'][0]['rule'])
+
     def test_manual_resize_is_always_forbidden_even_in_baselines_and_exceptions(self):
         self.style.write_text('textarea { resize: vertical; }')
         self.run_report(initialize=True)
@@ -175,6 +194,7 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual('differs from checkout/lock', self.run_report()['versionStatus'])
 
     def test_reasoned_exceptions_apply_to_exact_finding(self):
+        self.style.write_text('a { color: red; }')
         self.run_report(initialize=True)
         self.style.write_text('a { color: red; color: blue; }')
         result = self.run_report()
@@ -198,6 +218,25 @@ class AdoptionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'allowance increased'):
             self.run_report(ref='HEAD')
 
+    def test_a_local_run_compares_with_the_upstream_branch(self):
+        # CI compares a push with the remote's previous head, so a local run refuses what CI would.
+        self.run_report(initialize=True)
+        self.commit()
+        self.assertIsNone(check.upstream_ref(self.repo))
+        remote = self.root / 'remote.git'
+        subprocess.run(['git', 'init', '-q', '--bare', str(remote)], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'remote', 'add', 'origin', str(remote)], check=True)
+        subprocess.run(['git', '-C', str(self.repo), 'push', '-q', '-u', 'origin', 'HEAD:main'], check=True)
+        head = subprocess.run(['git', '-C', str(self.repo), 'rev-parse', 'HEAD'], check=True, capture_output=True, text=True)
+        self.assertEqual(head.stdout.strip(), check.upstream_ref(self.repo))
+        self.style.write_text('a { color: purple; }')
+        (self.repo / check.BASELINE).unlink()
+        self.run_report(initialize=True)
+        errors = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(errors):
+            self.assertEqual(2, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+        self.assertIn('allowance increased', errors.getvalue())
+
     def commit(self):
         subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-qm', 'fixture'], check=True)
@@ -217,9 +256,32 @@ class AdoptionTest(unittest.TestCase):
             if 'dist' in path.parts:
                 raise FileNotFoundError('Clean checkouts have no dist')
             return read(path, *args, **kwargs)
-        self.style.write_text('a { color: var(--cedar-text-primary); background: var(--cedar-primary-50); border-color: var(--cedar-on-accent-A200); }')
+        self.style.write_text('a { color: var(--cedar-text-primary); background: var(--cedar-surface-selected); border-radius: var(--cedar-radius); }')
         with patch.object(Path, 'read_text', without_dist):
             self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_retired_tokens_name_their_replacement(self):
+        self.style.write_text('a { color: var(--cedar-color-component-title); background: var(--cedar-primary-50); }')
+        rows = [r for r in check.scan_styles(self.repo, 2) if r['rule'] == 'unknown-token']
+        self.assertEqual({'--cedar-color-component-title': 'text-title'},
+                         {r['value']: r['replacement'] for r in rows if r['value'].endswith('title')})
+        self.assertEqual(2, len(rows))
+
+    def test_consumers_cannot_redefine_shared_tokens(self):
+        self.style.write_text('.table { --cedar-space-2: 6px; --cedar-icon-color: var(--cedar-status-error-text); }')
+        rows = [r for r in check.scan_styles(self.repo, 2) if r['rule'] == 'token-override']
+        self.assertEqual(['--cedar-space-2'], [r['value'] for r in rows])
+        self.style.write_text('.a { color: #fff; }')
+        self.run_report(initialize=True)
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.style.write_text('.table { --cedar-space-2: 6px; }')
+        row = next(r for r in self.run_report()['findings'] if r['rule'] == 'token-override')
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['findings'][row['id']] = dict(row, count=1)
+        path.write_text(json.dumps(baseline))
+        self.assertEqual('new', next(r for r in self.run_report()['findings'] if r['rule'] == 'token-override')['status'])
 
     def test_unknown_tokens_cannot_be_excepted_or_baselined(self):
         self.run_report(initialize=True)
@@ -282,6 +344,88 @@ class AdoptionTest(unittest.TestCase):
         self.style.write_text('a {}')
         with self.assertRaisesRegex(ValueError, 'allowance increased'):
             self.run_report(ref='HEAD')
+
+    def test_reasoned_exception_cannot_authorize_extra_copies(self):
+        result = self.run_report(initialize=True)
+        key = next(r['id'] for r in result['findings'] if r['rule'] == 'color')
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['exceptions'] = {key: 'External swatch keeps its source color in this one location'}
+        path.write_text(json.dumps(baseline))
+        self.style.write_text(self.style.read_text() + '.extra { color: #fff; }')
+        colors = [r['status'] for r in self.run_report()['findings'] if r['rule'] == 'color']
+        self.assertEqual(['exception', 'new'], colors)
+
+    def test_all_css_named_colours_and_alternative_spacing_units_gate(self):
+        for color in ('rebeccapurple', 'aliceblue', 'fuchsia', 'DarkSlateGrey'):
+            self.assertEqual(['color'], [r['rule'] for r in check.findings('x.scss', f'a {{ background: {color}; }}', 2)])
+        for value in ('3vh', '2ch', '4vw', '1pt'):
+            self.assertEqual(['spacing'], [r['rule'] for r in check.findings('x.scss', f'a {{ padding: {value}; }}', 2)])
+
+    def test_sass_aliases_are_resolved_through_local_modules(self):
+        for source in ('$size: 17px; a { font-size: $size; }',
+                       '$gutter: 13px; a { padding: $gutter; }',
+                       '$size: 17px; a { font-size: #{$size}; }',
+                       '$size: 14px; $size: 17px; a { font-size: $size; }',
+                       '$first: $second; $second: 17px; a { font-size: $first; }'):
+            self.style.write_text(source)
+            self.assertTrue(list(check.scan_styles(self.repo, 2)), source)
+        (self.repo / 'src/_private.scss').write_text('$size: 17px;')
+        self.style.write_text("@use 'private' as tokens; a { font-size: tokens.$size; }")
+        self.assertTrue(any(r['rule'] == 'typography' for r in check.scan_styles(self.repo, 2)))
+        self.style.write_text("@use '@org.metadatacenter/cedar-design-tokens/tokens'; $size: tokens.$font-size; a { font-size: $size; }")
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_spacing_arithmetic_is_not_a_baseline_escape(self):
+        self.style.write_text('a { padding: calc(var(--cedar-space-1) * 3.25); }')
+        self.run_report(initialize=True)
+        rows = self.run_report()['findings']
+        self.assertEqual(('spacing-expression', 'new'), (rows[0]['rule'], rows[0]['status']))
+        self.style.write_text('a { --gap: calc(var(--cedar-space-1) * 3.25); padding: var(--gap); }')
+        self.assertTrue(any(r['rule'] == 'spacing-expression' for r in check.scan_styles(self.repo, 2)))
+
+    def test_cetp_bridge_has_exact_owner_file_and_pairs(self):
+        self.style.write_text('a { --cedar-space-1: var(--cetp-invented); --cetp-invented: 13px; }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+        self.style.unlink()
+        adapter = self.repo / 'src/app/cedar-embeddable-term-picker.scss'
+        adapter.parent.mkdir()
+        adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-color-primary: var(--cetp-color-primary); }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+        (self.repo / 'package.json').write_text('{"name":"cedar-embeddable-term-picker"}')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+        adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-space-1: var(--cetp-color-primary); }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+
+    def test_runtime_token_writes_are_unconditionally_rejected(self):
+        self.style.write_text('')
+        snippets = [
+            ('html', '<div [style.--cedar-space-1]="gutter"></div>'),
+            ('html', '<div [style.--cedar-space-1.px]="gutter"></div>'),
+            ('ts', "el.style.setProperty('--cedar-space-1', gutter);"),
+            ('ts', "renderer.setStyle(el, '--cedar-space-1', gutter);"),
+            ('ts', "el.style['--cedar-space-1'] = gutter;"),
+            ('ts', "@HostBinding('style.--cedar-space-1') gutter = '13px';"),
+            ('ts', "@Component({host: {'[style.--cedar-space-1]': 'gutter'}})"),
+        ]
+        for extension, source in snippets:
+            with self.subTest(source=source):
+                p = self.repo / ('src/control.' + extension)
+                p.write_text(source)
+                self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+                p.unlink()
+
+    def test_sass_module_token_assignments_are_rejected(self):
+        self.style.write_text("@use '@org.metadatacenter/cedar-design-tokens/tokens' as shared; shared.$font-size: 17px; a { font-size: shared.$font-size; }")
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+
+    def test_runtime_local_alias_cannot_hide_dynamic_paint(self):
+        self.style.write_text('a { padding: var(--local-gap); }')
+        (self.repo / 'src/control.html').write_text('<div [style.--local-gap]="gutter"></div>')
+        self.assertTrue(any(r['rule'] == 'dynamic-style' for r in check.scan_styles(self.repo, 2)))
+        self.style.write_text('a { grid-template-columns: var(--columns); }')
+        (self.repo / 'src/control.html').write_text('<div [style.--columns]="columns"></div>')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
 
     def test_default_scan_includes_modern_workspace(self):
         self.repo.rename(self.root / 'cedar-workspace')

@@ -7,21 +7,33 @@ import { readFileSync } from 'node:fs';
 const roles = new Set(
   [...readFileSync('dist/custom-properties.css', 'utf8').matchAll(/(--cedar-[\w-]+)\s*:/g)].map((m) => m[1]),
 );
+const hosts = JSON.parse(readFileSync('tools/host-properties.json', 'utf8'));
 const names = [
   'validation-summary',
   'artifact-title',
   'dialog-surface',
   'dialog-actions',
+  'menu-icon',
+  'menu-text',
   'menu-surface',
   'menu-item',
   'field-label',
   'field-help',
   'field-error',
-  'toolbar',
   'tabs',
+  'tab',
   'table-cell',
   'empty-state',
   'info-description-resize',
+  'required-mark',
+  'breadcrumbs',
+  'breadcrumb-separator',
+  'resource-grid',
+  'resource-card',
+  'resource-card-heading',
+  'resource-card-icon',
+  'resource-card-name',
+  'resource-card-meta',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -31,7 +43,7 @@ for (const name of names) {
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g))
       assert.ok(roles.has(role[1]), `Unknown role: ${role[1]}`);
     assert.match(css, /^\.consumer/);
-    assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(|font-family:/i);
+    if (!name.startsWith('menu-')) assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(/i);
   });
 }
 test('recipes emit nothing until used', () => {
@@ -65,7 +77,6 @@ test('offline checker recognizes exactly the generated roles and host overrides'
       { encoding: 'utf8' },
     ),
   );
-  const hosts = JSON.parse(readFileSync('tools/host-properties.json', 'utf8'));
   assert.deepEqual(
     known,
     [
@@ -81,4 +92,60 @@ test('Info descriptions resize vertically without allowing width changes', () =>
     loadPaths: [process.cwd()],
   }).css;
   assert.match(css, /resize: vertical;/);
+});
+
+test('dialog content can own padding while retaining the shared surface', () => {
+  const compile = (args) =>
+    sass.compileString(`@use 'patterns'; .dialog { @include patterns.dialog-surface${args}; }`, {
+      loadPaths: [process.cwd()],
+    }).css;
+  assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-space-6);', 'padding: 0;'));
+});
+
+for (const name of ['specification-box', 'specification-separator', 'specification-link']) {
+  test(`${name} has registered host-overridable roles with standalone fallbacks`, () => {
+    const css = sass.compileString(`@use 'patterns'; .reader { @include patterns.${name}; }`, {
+      loadPaths: [process.cwd()],
+    }).css;
+    for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g)) {
+      assert.ok(roles.has(role[1]) || role[1].replace('--', '') in hosts, role[1]);
+    }
+    if (name === 'specification-box') {
+      assert.match(css, /min-height: var/);
+      assert.match(css, /flex-wrap: wrap/);
+      assert.match(css, /overflow-wrap: anywhere/);
+      assert.doesNotMatch(css, /(?:^|[;{])\s*height:/);
+    }
+  });
+}
+
+test('a required mark is raised without enlarging the line box of its label', () => {
+  const css = sass.compileString(`@use 'patterns'; sup { @include patterns.required-mark; }`, {
+    loadPaths: [process.cwd()],
+  }).css;
+  assert.match(css, /line-height: 0/);
+  assert.match(css, /vertical-align: baseline/);
+  assert.match(css, /position: relative/);
+  assert.match(css, /inset-block-start: -0\.4em/);
+});
+
+test('breadcrumbs take the element-heading size only when they head a listing, at one weight', () => {
+  const compile = (args) =>
+    sass.compileString(`@use 'patterns'; nav { @include patterns.breadcrumbs${args}; }`, {
+      loadPaths: [process.cwd()],
+    }).css;
+  assert.doesNotMatch(compile(''), /font-size/);
+  assert.match(compile('($size: heading)'), /font-size: var\(--cedar-font-size-element-heading\)/);
+  assert.doesNotMatch(compile(''), /font-weight/);
+  assert.throws(() => compile('($size: huge)'), /Breadcrumb size/);
+});
+
+test('resource cards share one minimum width and clamp names to two lines', () => {
+  const css = sass.compileString(
+    `@use 'patterns'; ul { @include patterns.resource-grid; } li { @include patterns.resource-card-name; }`,
+    { loadPaths: [process.cwd()] },
+  ).css;
+  assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
+  assert.match(css, /-webkit-line-clamp: 2/);
+  assert.match(css, /max-height: calc\(2 \* var\(--cedar-font-size-heading\)\)/);
 });

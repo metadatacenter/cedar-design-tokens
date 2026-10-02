@@ -11,6 +11,8 @@ import sys
 from check_icons import scan as icon_findings
 from style_sources import sources, STYLE_PROPERTIES
 from check_spellcheck import findings as spellcheck_findings
+from check_native_choices import findings as native_choice_findings
+from check_surfaces import findings as surface_findings, sync as sync_surfaces, markdown as surface_markdown, load as load_surfaces
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -22,6 +24,9 @@ EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
 DECL = re.compile(r'(?:^|[;{}])\s*([\w$-]+)\s*:\s*([^;{}]+)', re.M)
 COLOR = re.compile(r'#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\(|(?<![\w$@.-])(?:white|black|red|blue|gray|grey|orange|yellow|green|teal|purple|pink|hotpink)(?![\w-])', re.I)
+# CSS named colours, including aliases; transparent/currentColor are semantic, not palette values.
+NAMED_COLORS = set('aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgrey darkgreen darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray grey green greenyellow honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgrey lightgreen lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'.split())
+NAMED_COLOR = re.compile(r'(?<![\w$@.-])(?:' + '|'.join(sorted(NAMED_COLORS)) + r')(?![\w-])', re.I)
 DIMENSION = re.compile(r'(?<![\w.-])(?:\d*\.)?\d+(?:px|rem|em)\b')
 EXACT_VERSION = re.compile(r'\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?')
 TOKEN_LITERALS = dict(re.findall(r'^\$([\w-]+):\s*([^;]+);',
@@ -52,6 +57,16 @@ def git(repo, *args):
     return subprocess.check_output(['git', '-C', str(repo), *args], text=True)
 
 
+def upstream_ref(repo):
+    """The revision CI compares a push with: the upstream branch's head, once it holds a baseline."""
+    def quiet(*args):
+        return subprocess.run(['git', '-C', str(repo), *args], capture_output=True, text=True)
+    revision = quiet('rev-parse', '--verify', '--quiet', '@{upstream}')
+    if revision.returncode or quiet('cat-file', '-e', f'{revision.stdout.strip()}:{BASELINE}').returncode:
+        return None
+    return revision.stdout.strip()
+
+
 def source_files(repo, policy=1, ref=None):
     # Includes new local files but never ignored build products or dependencies.
     names = (git(repo, 'ls-tree', '-rz', '--name-only', ref) if ref else git(repo, 'ls-files', '-z', '--cached', '--others', '--exclude-standard')).split('\0')
@@ -60,7 +75,7 @@ def source_files(repo, policy=1, ref=None):
         parts = path.parts[1:] if path.parts and path.parts[0].endswith('-src') else path.parts
         if (parts and parts[0] in ('src', 'app')
                 and (path.suffix in ('.scss', '.css', '.less') or
-                     (policy >= 2 and path.suffix in ('.html', '.ts') and '.spec.' not in name
+                     (policy >= 2 and path.suffix in ('.html', '.ts', '.js', '.mjs') and '.spec.' not in name
                       and (parts[0] == 'src' or json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-template-designer')))
                 and not EXCLUDED.intersection(path.parts)
                 and not path.name.startswith('styles-Material-Icons')
@@ -71,6 +86,7 @@ def source_files(repo, policy=1, ref=None):
 def findings(path, source, policy=1):
     # Preserve newlines so diagnostics retain original source locations.
     clean = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
+    clean = re.sub(r'#\{([^{}]*)\}', lambda m: '  ' + m[1] + ' ', clean)
     clean = re.sub(r'''(["'])(?:\\.|(?!\1).)*?\1''',
                    lambda m: re.sub(r'[;{}]', ' ', m[0]), clean)
     for match in DECL.finditer(clean):
@@ -81,17 +97,23 @@ def findings(path, source, policy=1):
         rule = None
         if prop.lower() == 'resize' and re.sub(r'\s*!important$', '', value, flags=re.I).lower() != 'none':
             rule = 'manual-resize'
-        elif value == 'uninspectable-binding':
+        elif prop == 'accent-color' and re.sub(r'\s*!important$', '', value, flags=re.I).strip().lower() in ('auto', 'initial', 'unset', 'revert', 'revert-layer'):
+            rule = 'native-choice-reset'
+        elif value == 'uninspectable-binding' and not prop.startswith('--'):
             rule = 'dynamic-style'
         elif prop == 'utility-style':
             rule = 'utility-style'
-        elif COLOR.search(inspected):
+        elif COLOR.search(inspected) or NAMED_COLOR.search(inspected):
             rule = 'color'
         elif prop in ('font', 'font-family', 'font-size', 'font-weight', 'font-stretch', 'line-height', 'letter-spacing'):
             if literal_typography(prop, value):
                 rule = 'typography'
         elif re.fullmatch(r'(?:margin|padding)(?:-[\w-]+)?|(?:row-|column-)?gap', prop):
             if DIMENSION.search(value):
+                rule = 'spacing'
+            elif re.search(r'\b(?:calc|min|max|clamp)\(|[*/+]|\s-\s', value):
+                rule = 'spacing-expression'
+            elif re.search(r'(?<![\w.-])(?:\d*\.)?\d+(?:(?:vh|vw|vmin|vmax|ch|ex|cqi|cqw|pt|cm|mm|in)\b|%)', value):
                 rule = 'spacing'
         elif prop in ('transition', 'animation', 'transition-duration', 'animation-duration', 'transition-delay', 'animation-delay') and any(float(n) for n in re.findall(r'(?<![\w.-])(\d*\.?\d+)(?:ms|s)\b', value)):
             rule = 'geometry'
@@ -102,28 +124,43 @@ def findings(path, source, policy=1):
             yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
                    'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
                    'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize') else 'advisory'}
+                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
 
+
+
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+RETIRED = json.loads((Path(__file__).parent / 'retired-tokens.json').read_text())
+HOSTS = {name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text())}
+
+
+
+# The only host adapter allowed to redirect shared defaults. Names and owning file are exact.
+CETP_BRIDGE = {shared: 'var(--cetp-' + host + ')' for shared, host in {
+    'color-primary': 'color-primary', 'color-on-primary': 'color-on-primary',
+    'text-title': 'color-heading', 'text-primary': 'color-text', 'text-muted': 'color-muted',
+    'surface-subtle': 'color-surface', 'border-rule': 'color-border',
+    'status-warning-text': 'color-warning', 'font-family': 'font-family',
+    'font-size': 'font-size', 'font-size-small': 'font-size-small',
+}.items()}
+
+def shared_tokens():
+    """Every scalar of the Sass module, which tokens.entry.scss emits under its own name."""
+    source = COMMENT.sub('', (PACKAGE_ROOT / '_tokens.scss').read_text())
+    return {name for name, value in re.findall(r'^\$([\w-]+):\s*(.)', source, re.M)
+            if value != '(' and name != 'font-family-string'}
 
 
 def known_css_properties():
-    known = set(re.findall(r'--cedar-([\w-]+)\s*:', (Path(__file__).resolve().parents[1] / 'tokens.entry.scss').read_text()))
-    # Palette properties are emitted by the entry point's four Sass map loops.
-    token_source = (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text()
-    for palette in ('primary', 'accent'):
-        body = re.search(r'\$brand-' + palette + r':\s*\((.*?)^\);', token_source, re.S | re.M)[1]
-        for hue in re.findall(r'^\s+(A?\d+):', body, re.M):
-            known.update((f'{palette}-{hue}', f'on-{palette}-{hue}'))
-    known.update(name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text()))
-    return known
+    return shared_tokens() | HOSTS
 
 
 def scan_styles(repo, policy=1, ref=None):
+    yield from native_choice_findings(lambda name: git(repo, 'show', f'{ref}:{name}') if ref else (repo / name).read_text())
     known = known_css_properties()
     authored = []
     for path in source_files(repo, max(policy, 2), ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
-        authored.append((path, source, [COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), snippet)
+        authored.append((path, source, [re.sub(r'#\{([^{}]*)\}', lambda m: '  ' + m[1] + ' ', COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), snippet))
                                        for snippet in sources(path, source)]))
     # Local aliases remain valid: their declarations are inspected by the same
     # literal-value rules. Framework defaults are not implicit token contracts.
@@ -136,6 +173,36 @@ def scan_styles(repo, policy=1, ref=None):
                 if match[1].startswith('--'):
                     definitions.setdefault(match[1], []).append((path, match[2], snippet[:match.start(1)].count('\n') + 1))
     checked_aliases = set()
+    # Resolve local Sass aliases through their actual @use module, never by trusting
+    # a namespace spelling such as "tokens". Ambiguous/missing modules fail closed.
+    sass_sources = {str(path): source for path, source, _ in authored if path.suffix == '.scss'}
+    sass_reference = re.compile(r'(?:(?P<module>[\w-]+)\.)?\$(?P<name>[\w-]+)')
+
+    def resolve_sass(path, value, visited=frozenset()):
+        source = sass_sources.get(str(path), '')
+        def resolve(match):
+            module, name = match['module'], match['name']
+            key = (str(path), module, name)
+            if key in visited:
+                return 'unresolved-sass-alias'
+            owner = path
+            if module:
+                imports = re.findall(r"@use\s+['\"]([^'\"]+)['\"](?:\s+as\s+([\w-]+))?", source)
+                target = next((target for target, alias in imports
+                               if (alias or Path(target).name) == module), None)
+                if target and target.startswith(PACKAGE + '/'):
+                    return match[0]
+                candidates = [p for p in sass_sources if target and
+                              (Path(p).stem.lstrip('_') == Path(target).name.lstrip('_') or
+                               str(Path(p).with_suffix('')).endswith(target))]
+                if len(candidates) != 1:
+                    return 'unresolved-sass-alias'
+                owner = Path(candidates[0])
+            definition = re.findall(r'(?:^|[;{}])\s*\$' + re.escape(name) + r'\s*:\s*([^;]+);',
+                                   sass_sources.get(str(owner), ''), re.M)
+            return resolve_sass(owner, definition[0], visited | {key}) if len(definition) == 1 else 'unresolved-sass-alias'
+        return sass_reference.sub(resolve, value)
+
 
     def inspect_alias(name, prop, visited):
         if name in visited:
@@ -148,7 +215,12 @@ def scan_styles(repo, policy=1, ref=None):
             # Literal colors are already checked at their declaration. Inspect
             # numeric aliases in the context of the property consuming them.
             if not list(findings(path, f'{{{name}:{value};}}', policy)):
-                for row in findings(path, f'{{{prop}:{value};}}', policy):
+                expanded = resolve_sass(path, value)
+                if 'unresolved-sass-alias' in expanded:
+                    yield {'id': hashlib.sha256(f'{path}|sass-alias|{prop}|{value}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': line, 'rule': 'sass-alias',
+                           'property': prop, 'value': value, 'severity': 'gate'}
+                for row in findings(path, f'{{{prop}:{expanded};}}', policy):
                     row['line'] = line
                     yield row
             for reference in re.findall(r'var\(\s*(--[\w-]+)', value):
@@ -156,7 +228,7 @@ def scan_styles(repo, policy=1, ref=None):
 
     for path, source, snippets in authored:
         yield from spellcheck_findings(path, source)
-        if policy < 2 and path.suffix in ('.html', '.ts'):
+        if policy < 2 and path.suffix in ('.html', '.ts', '.js', '.mjs'):
             continue
         for snippet in snippets:
             yield from findings(path, snippet, policy)
@@ -164,6 +236,16 @@ def scan_styles(repo, policy=1, ref=None):
                 continue
             for declaration in DECL.finditer(snippet):
                 prop, value = declaration.groups()
+                if re.fullmatch(STYLE_PROPERTIES, prop) and sass_reference.search(value):
+                    expanded = resolve_sass(path, value)
+                    if expanded != value and not list(findings(path, '{' + prop + ':' + value + ';}', policy)):
+                        for row in findings(path, '{' + prop + ':' + expanded + ';}', policy):
+                            row['line'] = snippet[:declaration.start(1)].count('\n') + 1
+                            yield row
+                        if 'unresolved-sass-alias' in expanded:
+                            yield {'id': hashlib.sha256(f'{path}|sass-alias|{prop}|{value}'.encode()).hexdigest()[:20],
+                                   'file': str(path), 'line': snippet[:declaration.start(1)].count('\n') + 1,
+                                   'rule': 'sass-alias', 'property': prop, 'value': value, 'severity': 'gate'}
                 if not (prop.startswith('--') or re.fullmatch(STYLE_PROPERTIES, prop)):
                     continue
                 for match in re.finditer(r'var\(\s*(--[\w-]+)', value):
@@ -180,9 +262,49 @@ def scan_styles(repo, policy=1, ref=None):
             for match in re.finditer(r'var\(\s*--cedar-([\w-]+)', clean):
                 if match[1] not in known:
                     value = '--cedar-' + match[1]
-                    yield {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
+                    row = {'id': hashlib.sha256(f'{path}|unknown-token|{value}'.encode()).hexdigest()[:20],
                            'file': str(path), 'line': clean[:match.start()].count('\n') + 1,
                            'rule': 'unknown-token', 'property': 'var', 'value': value, 'severity': 'gate'}
+                    if match[1] in RETIRED:
+                        row['replacement'] = RETIRED[match[1]]
+                    yield row
+            # A consumer must not give a shared token a local value: no other surface can see it.
+            shared = shared_tokens()
+            for exported, module in re.findall(r"@use\s+['\"]" + re.escape(PACKAGE) + r"/([\w-]+)['\"](?:\s+as\s+([\w-]+))?", clean):
+                alias = module or exported
+                for assignment in re.finditer(re.escape(alias) + r'\.\$([\w-]+)\s*:', clean):
+                    value = alias + '.$' + assignment[1]
+                    yield {'id': hashlib.sha256(f'{path}|token-override|{value}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': clean[:assignment.start()].count('\n') + 1,
+                           'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
+            for match in re.finditer(r'(?<![\w-])--cedar-([\w-]+)\s*:\s*([^;{}]*)', '\n'.join(snippets)):
+                # A component may re-point a shared role to its own documented host property, as the
+                # term picker does with `--cetp-*`, so shared recipes follow what an embedder sets.
+                if (str(path) == 'src/app/cedar-embeddable-term-picker.scss'
+                        and json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-embeddable-term-picker'
+                        and CETP_BRIDGE.get(match[1]) == match[2].strip()):
+                    continue
+                if match[1] in shared or match[1] in RETIRED:
+                    value = '--cedar-' + match[1]
+                    yield {'id': hashlib.sha256(f'{path}|token-override|{value}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': clean[:match.start()].count('\n') + 1,
+                           'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
+
+
+def unused_tokens(root):
+    """Shared tokens that no consumer and no package recipe references; None unless every consumer is checked out."""
+    if not all((root / name).exists() for name in REPOS):
+        return None
+    texts = [path.read_text() for path in PACKAGE_ROOT.glob('*.scss')
+             if path.name not in ('_tokens.scss', 'tokens.entry.scss')]
+    for name in REPOS:
+        repo = root / name
+        texts.extend((repo / path).read_text() for path in source_files(repo, 2))
+    used = set()
+    for text in texts:
+        used.update(re.findall(r'--cedar-([\w-]+)', text))
+        used.update(re.findall(r'\b[\w-]+\.\$([\w-]+)', text))
+    return sorted(shared_tokens() - used)
 
 
 def upgrade_policy(repo):
@@ -258,7 +380,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     remaining = Counter({key: item['count'] for key, item in baseline['findings'].items()})
     for row in rows:
         key = row['id']
-        row['status'] = ('new' if row['rule'] in ('unknown-token', 'unknown-variable', 'manual-resize', 'spellcheck') else 'exception' if key in baseline.get('exceptions', {}) else
+        row['status'] = ('new' if row['rule'] in ('sass-alias', 'spacing-expression', 'unknown-token', 'token-override', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) and remaining[key] > 0 else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     nested = sorted(repo.glob('*-src/package.json'))
@@ -275,11 +397,15 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
         locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
     dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
-    return {'repo': repo.name, 'baseline': exists, 'pin': pin, 'locked': locked,
+    surface_registry = load_surfaces(repo) if (repo / '.ui-surfaces.json').exists() else None
+    surface_counts = {'registered': len(surface_registry['surfaces']),
+                      'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
+                      'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
+    return {'surfaces': surface_counts, 'repo': repo.name, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': 'not adopted' if not pin else
             'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
-            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)),
+            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 
@@ -287,10 +413,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
+    parser.add_argument('--sync-surfaces', action='store_true', help='Refresh generated browser contracts from the central implementation')
+    parser.add_argument('--surface-inventory', type=Path, help='Generate the maintained Markdown surface hierarchy (requires all registered repositories)')
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
     parser.add_argument('--json', action='store_true', help='Machine-readable report')
     parser.add_argument('--all', action='store_true', help='Show existing findings as well as new ones')
-    parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base)')
+    parser.add_argument('--baseline-ref', help='Read baseline/exceptions from a trusted Git revision (CI PR base); defaults to the upstream branch')
     action = parser.add_mutually_exclusive_group()
     action.add_argument('--upgrade-policy', action='store_true', help='Record existing committed debt and enable complete style gates')
     action.add_argument('--init-baseline', action='store_true', help='Create a baseline once; never replace one')
@@ -307,14 +435,28 @@ def main(argv=None):
         if not repo.exists() and not args.repo:
             continue
         try:
+            if args.sync_surfaces:
+                sync_surfaces(repo)
             if args.upgrade_policy:
                 upgrade_policy(repo)
-            reports.append(report(repo, expected, args.baseline_ref, args.init_baseline, args.prune_baseline))
+            # A run that writes a baseline reads the working tree; any other run compares with the
+            # revision CI would, so a refusal CI would give a push appears before the push.
+            ref = args.baseline_ref
+            if ref is None and not (args.upgrade_policy or args.init_baseline or args.prune_baseline):
+                ref = upstream_ref(repo)
+            reports.append(report(repo, expected, ref, args.init_baseline, args.prune_baseline))
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             errors.append(f'{name}: {error}')
     if not reports and not errors:
         errors.append('No frontend repositories found')
-    output = {'schema': 1, 'reports': reports, 'errors': errors}
+    if args.surface_inventory:
+        try:
+            inventory = surface_markdown(args.root)
+            args.surface_inventory.write_text(inventory)
+        except (OSError, ValueError, KeyError) as error:
+            errors.append(f'Surface inventory: {error}')
+    unused = unused_tokens(args.root) if not args.repo else None
+    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused}
     if args.json:
         print(json.dumps(output, indent=2))
     else:
@@ -326,17 +468,25 @@ def main(argv=None):
             advisory = sum(r['severity'] == 'advisory' for r in rows)
             print(f"{result['repo']}: {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
             print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
+            if result['base']:
+                print(f"  compared with {result['base'][:12]}")
+            if result.get('surfaces'):
+                coverage = result['surfaces']
+                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / {coverage['debt']} existing differences; browser execution is a separate gate")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:
                 print('  INVALID token dependency; use an exact version with a matching lockfile')
             for row in rows:
                 if args.all or row['status'] == 'new':
-                    print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']})")
+                    hint = f"; use {row['replacement']}" if row.get('replacement') else ''
+                    print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']}){hint}")
+        if unused:
+            print(f"Unused shared tokens ({len(unused)}): {', '.join(unused)}; adopt or remove them")
         for error in errors:
             print(error, file=sys.stderr)
-    return 2 if errors else int(args.strict and any(
-        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports))
+    return 2 if errors else int(args.strict and (bool(unused) or any(
+        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
 
 
 if __name__ == '__main__':

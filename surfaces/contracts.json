@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "contracts": {
+    "menu": {
+      "background-color": "--cedar-surface-raised",
+      "border-top-left-radius": "--cedar-radius",
+      "color": "--cedar-color-primary",
+      "font-family": "--cedar-font-family",
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-regular",
+      "line-height": "--cedar-control-line-height-default"
+    },
+    "dialog": {
+      "background-color": "--cedar-surface-raised",
+      "border-top-left-radius": "--cedar-radius"
+    },
+    "error-summary": {
+      "color": "--cedar-status-error-text",
+      "background-color": "--cedar-status-error-surface",
+      "font-size": "--cedar-font-size"
+    },
+    "warning-summary": {
+      "color": "--cedar-status-warning-text",
+      "background-color": "--cedar-status-warning-surface",
+      "font-size": "--cedar-font-size"
+    },
+    "calendar": {
+      "background-color": "--cedar-surface-subtle",
+      "border-top-left-radius": "--cedar-radius"
+    },
+    "error-alert": {
+      "color": "--cedar-status-error-text",
+      "background-color": "--cedar-status-error-surface"
+    },
+    "authoring-label": {
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-medium"
+    },
+    "authoring-control": {
+      "font-size": "--cedar-font-size",
+      "font-weight": "--cedar-font-weight-regular"
+    },
+    "authoring-table-cell": {
+      "line-height": "--cedar-control-line-height-authoring"
+    },
+    "page": {}
+  },
+  "scale": {
+    "font-family": ["--cedar-font-family", "--cedar-font-family-monospace"],
+    "font-size": [
+      "--cedar-font-size-small",
+      "--cedar-font-size",
+      "--cedar-font-size-element-heading",
+      "--cedar-font-size-heading",
+      "--cedar-font-size-artifact-title"
+    ],
+    "font-weight": ["--cedar-font-weight-regular", "--cedar-font-weight-medium"],
+    "color": [
+      "--cedar-text-primary",
+      "--cedar-text-muted",
+      "--cedar-text-title",
+      "--cedar-color-primary",
+      "--cedar-color-primary-strong",
+      "--cedar-color-on-primary",
+      "--cedar-status-error-text",
+      "--cedar-status-warning-text",
+      "--cedar-status-success-text"
+    ],
+    "border-radius": ["--cedar-radius", "--cedar-radius-pill"]
+  }
+}

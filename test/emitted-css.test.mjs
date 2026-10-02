@@ -8,28 +8,14 @@ import * as sass from 'sass';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const css = readFileSync(join(root, 'dist/custom-properties.css'), 'utf8');
 
-// Ask Sass for the module's evaluated values. This covers derived scalars and
-// every palette/contrast entry without a regex tied to the source's formatting.
+// Ask Sass for the module's evaluated values: every scalar is emitted under its own name; the
+// palette maps and the Material font string are adapter inputs and are not.
 const expected = new Map();
 sass.compileString(
   `@use 'sass:meta';
-   @use 'sass:string';
    @use 'tokens';
    @each $name, $value in meta.module-variables('tokens') {
-     @if $name == 'font-family-string' {
-       // Material-only representation, not a CSS property.
-     } @else if meta.type-of($value) == 'map' {
-       $palette: string.slice($name, 7);
-       @each $hue, $color in $value {
-         @if $hue == contrast {
-           @each $step, $on-color in $color {
-             $_: audit-token('on-#{$palette}-#{$step}', meta.inspect($on-color));
-           }
-         } @else {
-           $_: audit-token('#{$palette}-#{$hue}', meta.inspect($color));
-         }
-       }
-     } @else {
+     @if meta.type-of($value) != 'map' and $name != 'font-family-string' {
        $_: audit-token($name, meta.inspect($value));
      }
    }`,
@@ -54,9 +40,9 @@ function assertTokens(stylesheet) {
   assert.deepEqual(actual, expected, 'each property must carry its own evaluated Sass value');
 }
 
-test('every evaluated token and contrast entry is emitted under its own name', () => {
-  assert.ok(expected.size >= 70, 'the Sass module must expose the complete token set');
+test('every evaluated token is emitted under its own name, and nothing else is', () => {
   assertTokens(css);
+  assert.doesNotMatch(css, /--cedar-(?:primary|accent|on-primary|on-accent)-/, 'palette steps are adapter inputs');
 });
 
 test('swapped sizes cannot pass by appearing elsewhere in the stylesheet', () => {
@@ -67,8 +53,8 @@ test('swapped sizes cannot pass by appearing elsewhere in the stylesheet', () =>
   assert.throws(() => assertTokens(swapped));
 });
 
-test('a missing derived value or contrast entry is detected', () => {
-  for (const name of ['color-primary', 'on-primary-500']) {
+test('a missing derived value is detected', () => {
+  for (const name of ['color-primary', 'color-primary-strong']) {
     const missing = css.replace(new RegExp(`--cedar-${name}: [^;]+;`), '');
     assert.notEqual(missing, css);
     assert.throws(() => assertTokens(missing));
