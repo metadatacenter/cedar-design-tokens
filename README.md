@@ -645,3 +645,29 @@ links, rather than replacing them with generic disabled text.
 An adoption baseline is a record of existing debt, not an approval. Reasoned
 exceptions are exact and count-limited by their baseline allowance: another copy is
 new drift. Pruning removed findings must not leave a reusable exception budget.
+
+### Enforced source boundaries
+
+Consumer spacing arithmetic belongs in the finite `spacing` recipes, selected with
+`@include spacing.apply(padding, compact-row)`. The recipe owns the complete
+measurement; callers cannot pass a pixel value or multiplier. The compact rows,
+control insets and glyph alignment recipes preserve existing geometry without
+adding public tokens. Add or change a recipe here when geometry needs to change,
+with its consumer and rendered checks. Do not reconstruct measurements by
+multiplying a token in a consumer or hiding the expression in a local alias.
+
+The adoption check resolves local Sass aliases through their `@use` modules,
+including interpolated aliases, and inspects design utilities inside `@apply`.
+CSS named colours and alternative length units receive the same scrutiny as hex
+colours and pixel values. Structural utility resets remain local.
+
+Shared-token assignments in Angular bindings, HostBinding, DOM style setters and
+Renderer2 are rejected like CSS declarations. Dynamic local layout properties are
+allowed only where their consuming property is layout; a local alias consumed as
+paint, typography or spacing is still checked. Documented embedding properties
+remain the host API. The term picker may redirect only its exact approved shared
+roles in its owning adapter stylesheet; the `--cetp-` prefix grants no exception
+elsewhere. New boundary violations cannot be hidden by growing a baseline.
+
+Candidate-token CI runs OpenView's rendered page suite in addition to building it,
+so central changes exercise those contracts before a consumer pin advances.

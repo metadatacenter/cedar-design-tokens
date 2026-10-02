@@ -24,7 +24,7 @@ class EmbeddedStylesTest(unittest.TestCase):
             'x.ts', "@Component({styles: ['textarea { resize: vertical; }']})")))
         self.assertTrue(any(row['rule'] == 'manual-resize' for row in self.rules(
             'x.css', 'textarea { @apply resize-y; }')))
-        self.assertEqual([], self.rules('x.scss', '.existing { @apply text-sm p-3; }'))
+        self.assertEqual(['utility-style', 'utility-style'], [row['rule'] for row in self.rules('x.scss', '.existing { @apply text-sm p-3; }')])
         self.assertEqual([], self.rules('x.html', '<textarea class="resize-none" style="resize:none"></textarea>'))
 
     def test_component_styles_and_template_preserve_locations(self):
@@ -62,3 +62,14 @@ class EmbeddedStylesTest(unittest.TestCase):
             self.assertEqual('utility-style', self.rules('x.html', '<div '+attribute+'></div>')[0]['rule'])
         self.assertEqual(2, len(self.rules('x.scss', 'a { transition: color 150ms; animation-duration: .2s; }')))
         self.assertEqual([], self.rules('x.scss', 'a { transition: color var(--cedar-motion-duration-fast); }'))
+
+    def test_imperative_bulk_style_writes_fail_closed(self):
+        for source in ("el.setAttribute('style', css)", "Object.assign(el.style, theme)",
+                       "el.style[name] = value", "el.style.cssText = css", "@HostBinding('style') theme"):
+            self.assertTrue(any(r['rule'] == 'dynamic-style' for r in self.rules('x.ts', source)), source)
+        self.assertEqual([], self.rules('x.ts', "el.style.left = x; el.style.setProperty('top', y);"))
+
+    def test_camel_case_bindings_and_axis_gaps_are_checked(self):
+        for source in ('<div [style.fontSize]="size"></div>', '<div [style.backgroundColor]="colour"></div>',
+                       '<div [style.row-gap]="gap"></div>'):
+            self.assertTrue(any(r['rule'] == 'dynamic-style' for r in self.rules('x.html', source)))

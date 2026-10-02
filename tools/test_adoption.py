@@ -356,6 +356,77 @@ class AdoptionTest(unittest.TestCase):
         colors = [r['status'] for r in self.run_report()['findings'] if r['rule'] == 'color']
         self.assertEqual(['exception', 'new'], colors)
 
+    def test_all_css_named_colours_and_alternative_spacing_units_gate(self):
+        for color in ('rebeccapurple', 'aliceblue', 'fuchsia', 'DarkSlateGrey'):
+            self.assertEqual(['color'], [r['rule'] for r in check.findings('x.scss', f'a {{ background: {color}; }}', 2)])
+        for value in ('3vh', '2ch', '4vw', '1pt'):
+            self.assertEqual(['spacing'], [r['rule'] for r in check.findings('x.scss', f'a {{ padding: {value}; }}', 2)])
+
+    def test_sass_aliases_are_resolved_through_local_modules(self):
+        for source in ('$size: 17px; a { font-size: $size; }',
+                       '$gutter: 13px; a { padding: $gutter; }',
+                       '$size: 17px; a { font-size: #{$size}; }',
+                       '$size: 14px; $size: 17px; a { font-size: $size; }',
+                       '$first: $second; $second: 17px; a { font-size: $first; }'):
+            self.style.write_text(source)
+            self.assertTrue(list(check.scan_styles(self.repo, 2)), source)
+        (self.repo / 'src/_private.scss').write_text('$size: 17px;')
+        self.style.write_text("@use 'private' as tokens; a { font-size: tokens.$size; }")
+        self.assertTrue(any(r['rule'] == 'typography' for r in check.scan_styles(self.repo, 2)))
+        self.style.write_text("@use '@org.metadatacenter/cedar-design-tokens/tokens'; $size: tokens.$font-size; a { font-size: $size; }")
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
+    def test_spacing_arithmetic_is_not_a_baseline_escape(self):
+        self.style.write_text('a { padding: calc(var(--cedar-space-1) * 3.25); }')
+        self.run_report(initialize=True)
+        rows = self.run_report()['findings']
+        self.assertEqual(('spacing-expression', 'new'), (rows[0]['rule'], rows[0]['status']))
+        self.style.write_text('a { --gap: calc(var(--cedar-space-1) * 3.25); padding: var(--gap); }')
+        self.assertTrue(any(r['rule'] == 'spacing-expression' for r in check.scan_styles(self.repo, 2)))
+
+    def test_cetp_bridge_has_exact_owner_file_and_pairs(self):
+        self.style.write_text('a { --cedar-space-1: var(--cetp-invented); --cetp-invented: 13px; }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+        self.style.unlink()
+        adapter = self.repo / 'src/app/cedar-embeddable-term-picker.scss'
+        adapter.parent.mkdir()
+        adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-color-primary: var(--cetp-color-primary); }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+        (self.repo / 'package.json').write_text('{"name":"cedar-embeddable-term-picker"}')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+        adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-space-1: var(--cetp-color-primary); }')
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+
+    def test_runtime_token_writes_are_unconditionally_rejected(self):
+        self.style.write_text('')
+        snippets = [
+            ('html', '<div [style.--cedar-space-1]="gutter"></div>'),
+            ('html', '<div [style.--cedar-space-1.px]="gutter"></div>'),
+            ('ts', "el.style.setProperty('--cedar-space-1', gutter);"),
+            ('ts', "renderer.setStyle(el, '--cedar-space-1', gutter);"),
+            ('ts', "el.style['--cedar-space-1'] = gutter;"),
+            ('ts', "@HostBinding('style.--cedar-space-1') gutter = '13px';"),
+            ('ts', "@Component({host: {'[style.--cedar-space-1]': 'gutter'}})"),
+        ]
+        for extension, source in snippets:
+            with self.subTest(source=source):
+                p = self.repo / ('src/control.' + extension)
+                p.write_text(source)
+                self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+                p.unlink()
+
+    def test_sass_module_token_assignments_are_rejected(self):
+        self.style.write_text("@use '@org.metadatacenter/cedar-design-tokens/tokens' as shared; shared.$font-size: 17px; a { font-size: shared.$font-size; }")
+        self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
+
+    def test_runtime_local_alias_cannot_hide_dynamic_paint(self):
+        self.style.write_text('a { padding: var(--local-gap); }')
+        (self.repo / 'src/control.html').write_text('<div [style.--local-gap]="gutter"></div>')
+        self.assertTrue(any(r['rule'] == 'dynamic-style' for r in check.scan_styles(self.repo, 2)))
+        self.style.write_text('a { grid-template-columns: var(--columns); }')
+        (self.repo / 'src/control.html').write_text('<div [style.--columns]="columns"></div>')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+
     def test_default_scan_includes_modern_workspace(self):
         self.repo.rename(self.root / 'cedar-workspace')
         with contextlib.redirect_stdout(io.StringIO()) as output:

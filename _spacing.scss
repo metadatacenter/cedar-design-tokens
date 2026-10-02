@@ -1,0 +1,159 @@
+// Finite spacing recipes for compact rows and control/glyph alignment.
+// Consumers select a recipe; they cannot pass a size, multiplier or arbitrary expression.
+// These preserve the existing geometry while keeping every derived measurement central.
+@use 'sass:map';
+@use 'sass:math';
+@use 'sass:list';
+@use 'tokens';
+
+// Shared measurements for the header glyph slots and their aligned toolbar/pager.
+$header-action-slot: 40px;
+$property-slot: 18px;
+$form-toolbar-size: 30px;
+
+$-recipes: (
+  split-column-gutter: (1%),
+  inset-status-panel: (4.55%),
+  form-header: (
+    tokens.$space-2 clamp(12px, 3cqi, 32px),
+  ),
+  form-content: (
+    0 clamp(12px, 3cqi, 32px) tokens.$space-6,
+  ),
+  outline-row: (
+    calc(var(--cedar-space-1) / 2) 0,
+  ),
+  control-content-inset: (calc((var(--_cedar-height) - var(--_cedar-line-height)) / 2)),
+  control-icon-inset: (calc((var(--_cedar-height) - 24px) / 2)),
+  compact-static: (calc(tokens.$space-1 / 2)),
+  outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
+  element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
+  form-action-alignment: (
+    math.div($property-slot - tokens.$icon-size-small, 2) - math.div($form-toolbar-size - tokens.$icon-size-default, 2),
+  ),
+  occurrence-action-inset: (
+    tokens.$space-3 * 0.5,
+  ),
+  editable-occurrence-alignment: (
+    calc(
+      #{$header-action-slot} + #{tokens.$icon-size-small} + #{tokens.$space-1} +
+        var(--_cee-element-heading-inset) - var(--_cee-element-body-inset) + #{tokens.$space-2}
+    )
+  ),
+  read-only-occurrence-alignment: (
+    calc(
+      var(--_cee-element-heading-inset) - var(--_cee-element-body-inset) + 2 * #{tokens.$icon-size-small} +
+        #{tokens.$space-1}
+    )
+  ),
+  narrow-occurrence-alignment: (
+    tokens.$space-2 0 tokens.$space-3 calc(var(--_cee-element-heading-inset) - var(--_cee-element-body-inset)),
+  ),
+  header-action-reserve: (
+    $header-action-slot + tokens.$space-2,
+  ),
+  compact: (calc(var(--cedar-space-1) / 2)),
+  compact-cell: (
+    calc(var(--cedar-space-1) / 2) var(--cedar-space-1),
+  ),
+  compact-row: (
+    calc(var(--cedar-space-1) / 2) var(--cedar-space-2),
+  ),
+  control-row: (
+    calc(var(--cedar-space-3) / 2) var(--cedar-space-3),
+  ),
+  preview-select: (
+    calc(var(--cedar-space-1) * 0.75) calc(var(--cedar-space-2) * 3.75) calc(var(--cedar-space-1) * 0.75)
+      calc(var(--cedar-space-2) * 1.25),
+  ),
+  element-header: (
+    calc(var(--cedar-space-3) / 2) var(--cedar-space-4),
+  ),
+  nested-heading-alignment: (calc(var(--element-child-inset) / 2)),
+  element-toggle-reserve: (calc(var(--cedar-space-3) + var(--cedar-space-6))),
+  control-inset: (calc(var(--cedar-space-3) / 2)),
+  field-action-outdent: (calc(-1 * var(--cedar-space-1))),
+  field-label: (
+    var(--cedar-space-4) 0 calc(var(--cedar-space-1) / 2),
+  ),
+  field-heading: (
+    var(--cedar-space-1) calc(var(--cedar-space-3) / 2),
+  ),
+  field-control: (
+    calc(var(--cedar-space-3) / 2) var(--cedar-space-2),
+  ),
+  field-error: (
+    calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0,
+  ),
+  compact-break: (
+    calc(var(--cedar-space-1) / 2) 0 var(--cedar-space-1),
+  ),
+  compact-footer: (
+    var(--cedar-space-2) 0 calc(var(--cedar-space-1) / 2),
+  ),
+  inline-mark: (
+    0 calc(var(--cedar-space-1) / 2),
+  ),
+  search-hit-gap: (
+    calc(var(--cedar-space-1) / 2) var(--cedar-space-3),
+  ),
+  compact-status: (
+    calc(var(--cedar-space-1) / 2) 0 0 0,
+  ),
+  nested-search-hit: (
+    calc(var(--cedar-space-1) / 2) var(--cedar-space-2) var(--cedar-space-1) var(--cedar-space-6),
+  ),
+  search-chip: (
+    var(--cedar-space-2) calc(var(--cedar-space-1) / 2),
+  ),
+  constraint-row: (
+    calc(#{tokens.$space-1} / 2) tokens.$space-2,
+  ),
+  dialog-close-alignment: (calc((var(--cedar-icon-size-default) - var(--cedar-control-height-default)) / 2)),
+  view-switch: (
+    calc(var(--cedar-space-1) * 1.25) var(--cedar-space-2),
+  ),
+  resource-list-inset: (
+    var(--cedar-space-3) calc(var(--cedar-space-1) / 4) calc(2 * var(--cedar-space-4)),
+  ),
+  resource-card-inset: (calc(var(--cedar-space-1) + var(--cedar-space-1) / 2)),
+  resource-action-reserve: (calc(var(--cedar-space-4) + var(--cedar-space-6) + var(--cedar-space-1))),
+  resource-two-action-reserve: (calc(var(--cedar-space-4) + 2 * (var(--cedar-space-6) + var(--cedar-space-1)))),
+  select-clearance: (
+    var(--cedar-space-3) calc(2 * var(--cedar-space-3) + var(--cedar-icon-size-small)),
+  ),
+  page-footer: (calc(2 * var(--cedar-space-6))),
+);
+
+@mixin apply($property, $recipe) {
+  @if not
+    list.index(
+      (
+        --_cedar-padding,
+        --_cee-element-heading-inset,
+        --element-child-inset,
+        gap,
+        margin,
+        margin-bottom,
+        margin-inline,
+        margin-inline-end,
+        margin-left,
+        margin-right,
+        margin-top,
+        padding,
+        padding-block,
+        padding-bottom,
+        padding-inline,
+        padding-left,
+        padding-right
+      ),
+      $property
+    )
+  {
+    @error "Not a spacing property: #{$property}";
+  }
+  @if not map.has-key($-recipes, $recipe) {
+    @error "Unknown spacing recipe: #{$recipe}";
+  }
+  #{$property}: map.get($-recipes, $recipe);
+}

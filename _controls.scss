@@ -1,6 +1,7 @@
 // Opt-in recipes: callers own their selectors and component behavior.
 @use 'sass:map';
 @use 'tokens';
+@use 'spacing';
 @use 'dist/icon-masks';
 
 @mixin focus-ring($color: tokens.$color-primary) {
@@ -148,4 +149,9 @@ $-chevron-inset: 3px;
     opacity: 1;
     cursor: pointer;
   }
+}
+
+// The metadata form toolbar hugs its icons without changing ordinary control density.
+@mixin form-toolbar-height {
+  --_cedar-height: #{spacing.$form-toolbar-size};
 }
