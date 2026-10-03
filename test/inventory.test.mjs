@@ -1,6 +1,7 @@
 // The complete shared vocabulary. A token joins this list only for a role no existing token covers,
-// and together with the consumer that needs it: `cedarcli check design-tokens --strict` fails on a
-// token that nothing reads. A consumer that wants a value between two of these uses the nearer one.
+// and together with the consumers that need it: `cedarcli check design-tokens --strict` fails on a
+// token that fewer than two consumers read. A consumer that wants a value between two of these uses
+// the nearer one.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

@@ -547,6 +547,66 @@ class AdoptionTest(unittest.TestCase):
                 (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
                 self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
 
+    def test_a_token_needs_two_readers_counting_the_recipes_each_includes(self):
+        tokens = self.root / 'tokens'
+        for path, text in {
+            'scss/_tokens.scss': ''.join(f'${name}: 1px;\n' for name in (
+                'space-1', 'space-2', 'radius', 'status-error-text', 'status-warning-text', 'shadow', 'only-one', 'nobody')),
+            'scss/_custom-properties.scss': "@use 'tokens';\n@mixin declare { --cedar-#{$name}: 1px; }\n",
+            'scss/_patterns.scss': ("@use 'tokens';\n@use 'spacing';\n"
+                                    "@mixin inner { border-radius: var(--cedar-radius); }\n"
+                                    "@mixin outer { @include inner; @include spacing.apply(padding, gutter); }\n"
+                                    "@mixin tone($tone) { color: var(--cedar-status-#{$tone}-text); }\n"
+                                    "@mixin floating { box-shadow: var(--cedar-shadow); }\n"),
+            'scss/_spacing.scss': "@use 'tokens';\n$row: tokens.$space-2 * 2;\n$-recipes: (\n  gutter: (var(--cedar-space-1)),\n);\n",
+            'css/floating.scss': "@use '../scss/patterns';\n.cedar-floating { @include patterns.floating; }\n",
+        }.items():
+            (tokens / path).parent.mkdir(parents=True, exist_ok=True)
+            (tokens / path).write_text(text)
+        sources = {
+            'cedar-embeddable-editor': "@use '@org.metadatacenter/cedar-design-tokens/patterns' as p;\n"
+                                       "a { @include p.outer; @include p.tone(error); width: var(--cedar-only-one); }",
+            'cedar-workspace': "@use '@org.metadatacenter/cedar-design-tokens/spacing';\n"
+                               "@import '@org.metadatacenter/cedar-design-tokens/floating.css';\n"
+                               "a { @include spacing.apply(margin, gutter); height: spacing.$row; }",
+            'cedar-openview': "a { border-radius: var(--cedar-radius); /* var(--cedar-nobody) */ }\n"
+                              "b { box-shadow: var(--cedar-shadow); }",
+        }
+        for name in check.REPOS:
+            repo = self.root / name
+            (repo / 'src').mkdir(parents=True, exist_ok=True)
+            subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+            (repo / 'src/style.scss').write_text(sources.get(name, ''))
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            readers = check.token_readers(self.root)
+            self.assertEqual({
+                'space-1': ['cedar-embeddable-editor', 'cedar-workspace'],
+                'space-2': ['cedar-workspace'],
+                'radius': ['cedar-embeddable-editor', 'cedar-openview'],
+                'status-error-text': ['cedar-embeddable-editor'],
+                'status-warning-text': ['cedar-embeddable-editor'],
+                'shadow': ['cedar-workspace', 'cedar-openview'],
+                'only-one': ['cedar-embeddable-editor'],
+                'nobody': [],
+            }, readers)
+            # Every consumer's own report is clean, so the reader count alone decides the exit.
+            clean = {'baseline': True, 'dependencyValid': True, 'pinMissingTokens': [], 'pinUnknown': False,
+                     'staleAllowances': 0, 'findings': []}
+            with patch.object(check, 'report', return_value=clean), patch.object(check, 'upstream_ref', return_value=None), \
+                    patch.object(check, 'published_version', return_value='1.0.0'):
+                with contextlib.redirect_stdout(io.StringIO()) as out:
+                    self.assertEqual(1, check.main(['--root', str(self.root), '--strict', '--json']))
+                report = json.loads(out.getvalue())
+                self.assertEqual(['nobody'], report['unusedTokens'])
+                self.assertEqual({'space-2': 'cedar-workspace', 'status-error-text': 'cedar-embeddable-editor',
+                                  'status-warning-text': 'cedar-embeddable-editor', 'only-one': 'cedar-embeddable-editor'},
+                                 report['singleReaderTokens'])
+                with patch.object(check, 'token_readers', return_value={'radius': ['a', 'b']}), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(0, check.main(['--root', str(self.root), '--strict', '--json']))
+            (self.root / 'cedar-openview').rename(self.root / 'moved')
+            self.assertIsNone(check.token_readers(self.root))
+
     def test_a_pin_from_before_the_sources_moved_still_names_its_tokens(self):
         tokens, (head,) = self.token_checkout(['space-2', 'radius'])
         subprocess.run(['git', '-C', str(tokens), 'mv', 'scss/_tokens.scss', '_tokens.scss'], check=True)

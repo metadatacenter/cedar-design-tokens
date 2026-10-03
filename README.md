@@ -134,10 +134,12 @@ The package's `test/inventory.test.mjs` lists every token by group, and the buil
 emitted set differs from it. A new token is added there, for a role no existing token covers, in
 the same change as the consumer that needs it.
 
-`cedarcli check design-tokens --strict` fails on a token that no consumer and no recipe reads, so
-an unused token is removed rather than kept in reserve. Only a run that sees every consumer can
-tell, so the `Unused tokens` workflow runs it after each change here and daily, since a consumer can
-drop the last reader of a token without touching this repository.
+`cedarcli check design-tokens --strict` fails on a token that fewer than two consumers read, so an
+unused token is removed rather than kept in reserve, and a value only one component holds moves
+into that component. A consumer reads a token by naming it, or through a recipe it includes or a
+compiled stylesheet it imports. Only a run that sees every consumer can tell, so the
+`Token readers` workflow runs it after each change here and daily, since a consumer can drop a
+reader of a token without touching this repository.
 
 The same check rejects a reference to a retired name and states its replacement, from
 `tools/retired-tokens.json`. Retired names cannot be baselined.

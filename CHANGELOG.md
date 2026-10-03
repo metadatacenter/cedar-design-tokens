@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `--strict` fails on a token that only one consumer reads, counting the recipes each consumer
+  includes and the compiled stylesheets it imports. The JSON report names each such token and its
+  reader under `singleReaderTokens`. The `Unused tokens` workflow is now `Token readers`.
 - `shadow-dialog` is retired for `shadow-overlay`, so a dialog floats like a menu. Its backdrop already
   separates it from the page.
 - `status-unsaved-dot` is retired for `status-warning-text`. The save-state mark turns from yellow

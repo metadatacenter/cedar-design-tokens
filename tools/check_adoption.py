@@ -390,20 +390,115 @@ def scan_styles(repo, policy=1, ref=None):
                            'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
 
 
-def unused_tokens(root):
-    """Shared tokens that no consumer and no package recipe references; None unless every consumer is checked out."""
+# A token read in a recipe: a custom property, whose name an interpolation such as
+# `status-#{$tone}-text` may complete, or a variable of the package's own `tokens` module.
+RECIPE_READ = re.compile(r'--cedar-((?:[\w-]|#\{[^{}]*\})+)|\btokens\.\$([\w-]+)')
+PACKAGE_USE = re.compile(r"@use\s+['\"]" + re.escape(PACKAGE) + r"/([\w-]+)['\"](?:\s+as\s+([\w-]+))?")
+SPACING_APPLY = re.compile(r'@include\s+([\w-]+)\.apply\(\s*[^,()]+,\s*([\w-]+)\s*\)')
+
+
+def braced(text, start):
+    """The text from `start` through the brace that closes the first one after it."""
+    depth = 0
+    for index in range(text.index('{', start), len(text)):
+        depth += {'{': 1, '}': -1}.get(text[index], 0)
+        if depth == 0:
+            return text[start:index + 1]
+    raise ValueError('Unbalanced braces')
+
+
+class Recipes:
+    """What each package recipe reads: a mixin, through every mixin it includes; a public module
+    variable; a `spacing` recipe; and each compiled stylesheet, by the mixins its source includes.
+    `custom-properties.declare` declares every token rather than reading one, so it reads none."""
+
+    def __init__(self):
+        self.shared = shared_tokens()
+        self.modules = {}
+        for path in sorted(PACKAGE_ROOT.glob('scss/_*.scss')):
+            module = path.stem.lstrip('_')
+            if module not in ('tokens', 'custom-properties'):
+                self.modules[module] = COMMENT.sub('', path.read_text())
+        self.mixins = {(module, match[1]): braced(text, match.start())
+                       for module, text in self.modules.items()
+                       for match in re.finditer(r'@mixin\s+([\w-]+)', text)}
+        self.variables = {(module, name): value for module, text in self.modules.items()
+                          for name, value in re.findall(r'^\$(?!-)([\w-]+)\s*:\s*([^;]+);', text, re.M)}
+        spacing = self.modules.get('spacing', '')
+        table = spacing[spacing.index('$-recipes:'):] if '$-recipes:' in spacing else ''
+        table = table[table.index('(') + 1:] if table else ''
+        self.spacing = dict(re.findall(r'^  ([\w-]+):(.*?)(?=^  [\w-]+:|^\);)', table, re.M | re.S))
+        self.stylesheets = {path.stem: self.source(COMMENT.sub('', path.read_text()), None)
+                            for path in sorted(PACKAGE_ROOT.glob('css/*.scss')) if path.stem != 'custom-properties'}
+
+    def names(self, text):
+        found = set()
+        for written, variable in RECIPE_READ.findall(text):
+            pattern = re.compile(r'[\w-]+'.join(map(re.escape, re.split(r'#\{[^{}]*\}', written or variable))))
+            found.update(token for token in self.shared if pattern.fullmatch(token))
+        return found
+
+    def mixin(self, module, name, seen=frozenset()):
+        if (module, name) in seen or (module, name) not in self.mixins:
+            return set()
+        return self.source(self.mixins[module, name], module, seen | {(module, name)})
+
+    def source(self, text, module, seen=frozenset()):
+        """What a stylesheet in the package reads; `module` names the module a bare include resolves in."""
+        aliases = {Path(target).name.lstrip('_'): Path(target).name.lstrip('_')
+                   for target in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]", text)}
+        aliases.update({alias: Path(target).name.lstrip('_')
+                        for target, alias in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]\s+as\s+([\w-]+)", text)})
+        if module:
+            aliases.update({Path(target).name.lstrip('_'): Path(target).name.lstrip('_')
+                            for target in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]", self.modules.get(module, ''))})
+        return self.names(text) | self.resolve(text, aliases, module, seen)
+
+    def resolve(self, text, aliases, module=None, seen=frozenset()):
+        """Tokens read through the recipes `text` selects, given the modules its aliases name."""
+        found = set()
+        for alias, name in re.findall(r'@include\s+(?:([\w-]+)\.)?([\w-]+)', text):
+            target = aliases.get(alias) if alias else module
+            if target == 'spacing' and name == 'apply':
+                continue
+            if target:
+                found |= self.mixin(target, name, seen)
+        for alias, recipe in SPACING_APPLY.findall(text):
+            if aliases.get(alias) == 'spacing':
+                found |= self.names(self.spacing.get(recipe, ''))
+        for alias, name in re.findall(r'\b([\w-]+)\.\$([\w-]+)', text):
+            if aliases.get(alias) in self.modules:
+                found |= self.names(self.variables.get((aliases[alias], name), ''))
+        return found
+
+    def consumer(self, text):
+        """What a consumer's source reads: tokens it names, the recipes it includes from the package
+        and the compiled stylesheets it imports, links or stages."""
+        found = {name for name in re.findall(r'--cedar-([\w-]+)', text) + re.findall(r'\b[\w-]+\.\$([\w-]+)', text)
+                 if name in self.shared}
+        aliases = {alias or module: module for module, alias in PACKAGE_USE.findall(text)}
+        found |= self.resolve(text, aliases)
+        for name, reads in self.stylesheets.items():
+            if re.search(r'(?<![\w-])' + re.escape(name) + r'\.css\b', text):
+                found |= reads
+        return found
+
+
+def token_readers(root):
+    """The consumers that read each shared token, directly or through a package recipe; None unless
+    every consumer is checked out. A token belongs in the vocabulary only when two of them read it."""
     if not all((root / name).exists() for name in REPOS):
         return None
-    texts = [path.read_text() for path in sorted(PACKAGE_ROOT.glob('scss/*.scss')) + sorted(PACKAGE_ROOT.glob('css/*.scss'))
-             if path.name not in ('_tokens.scss', 'custom-properties.scss')]
+    recipes = Recipes()
+    readers = {token: [] for token in sorted(recipes.shared)}
     for name in REPOS:
         repo = root / name
-        texts.extend((repo / path).read_text() for path in source_files(repo, 2))
-    used = set()
-    for text in texts:
-        used.update(re.findall(r'--cedar-([\w-]+)', text))
-        used.update(re.findall(r'\b[\w-]+\.\$([\w-]+)', text))
-    return sorted(shared_tokens() - used)
+        reads = set()
+        for path in source_files(repo, LATEST_POLICY):
+            reads |= recipes.consumer(COMMENT.sub('', (repo / path).read_text()))
+        for token in sorted(reads):
+            readers[token].append(name)
+    return readers
 
 
 def upgrade_policy(repo):
@@ -645,8 +740,10 @@ def main(argv=None):
             args.surface_inventory.write_text(inventory)
         except (OSError, ValueError, KeyError) as error:
             errors.append(f'Surface inventory: {error}')
-    unused = unused_tokens(args.root) if not args.repo else None
-    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused}
+    readers = token_readers(args.root) if not args.repo else None
+    unused = [token for token, names in readers.items() if not names] if readers is not None else None
+    single = {token: names[0] for token, names in readers.items() if len(names) == 1} if readers is not None else None
+    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused, 'singleReaderTokens': single}
     if args.json:
         print(json.dumps(output, indent=2))
     else:
@@ -677,9 +774,12 @@ def main(argv=None):
                     print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']}){hint}")
         if unused:
             print(f"Unused shared tokens ({len(unused)}): {', '.join(unused)}; adopt or remove them")
+        if single:
+            print(f"Shared tokens with one reader ({len(single)}): "
+                  f"{', '.join(f'{token} ({name})' for token, name in single.items())}; move each value into its reader")
         for error in errors:
             print(error, file=sys.stderr)
-    return 2 if errors else int(args.strict and (bool(unused) or any(
+    return 2 if errors else int(args.strict and (bool(unused) or bool(single) or any(
         not r['baseline'] or not r['dependencyValid'] or r['pinMissingTokens'] or r['pinUnknown'] or r['staleAllowances']
         or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
 
