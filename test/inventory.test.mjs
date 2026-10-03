@@ -51,7 +51,7 @@ const inventory = {
   ],
   space: ['space-1', 'space-2', 'space-3', 'space-4', 'space-6'],
   shape: ['radius', 'radius-pill', 'icon-size-small', 'icon-size-default', 'icon-size-large', 'shadow-overlay'],
-  motion: ['motion-duration-fast', 'motion-duration-normal', 'motion-duration-spinner', 'motion-ease-standard'],
+  motion: ['motion-duration-fast', 'motion-duration-normal', 'motion-ease-standard'],
   layers: ['layer-sticky', 'layer-menu', 'layer-modal', 'layer-overlay', 'layer-tooltip'],
 };
 

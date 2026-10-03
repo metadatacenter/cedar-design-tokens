@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `patterns.spinner` draws the continuous progress indicator OpenView and Monitoring each copied,
+  and owns its rotation, so `motion-duration-spinner` is retired. Its arc takes the theme colour;
+  Monitoring's had been grey.
 - `patterns.icon-button($size)` draws an icon-only button's box: `small` (24px) for row actions and
   handles, `default` at the control height.
 - The `spacing` export names the box sizes no role describes, for the designer, Workspace and the

@@ -40,6 +40,7 @@ const names = [
   'tooltip-surface',
   'section-heading',
   'notice',
+  'spinner',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -208,4 +209,13 @@ test('a tooltip keeps the shared surface in a shadow root whose host declares no
   assert.match(css, /background: var\(--cedar-surface-raised, #ffffff\)/);
   assert.match(css, /color: var\(--cedar-text-primary, rgba\(0, 0, 0, 0\.87\)\)/);
   assert.match(css, /border: 1px solid var\(--cedar-border-rule, #d7e0df\)/);
+});
+
+test('the spinner turns its own keyframes and draws its arc in the theme colour', () => {
+  const css = patterns('.ring { @include patterns.spinner; }');
+  assert.match(
+    css,
+    /\.ring \{[^}]*border-top-color: var\(--cedar-color-primary\)[^}]*animation: cedar-spinner-turn 2s linear infinite/,
+  );
+  assert.match(css, /^@keyframes cedar-spinner-turn \{/m);
 });

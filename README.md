@@ -122,7 +122,7 @@ rejects. Every box
 has the `radius` corner (4px); chips and pills take `radius-pill`. Icons are 16, 20 or 24px. Menus,
 popovers, tooltips, drag previews and dialogs take the one shadow, `shadow-overlay`.
 
-Motion is two interaction durations, a spinner duration and one easing curve. Layers are five
+Motion is two interaction durations and one easing curve. Layers are five
 ordered stacking levels: sticky, menu, modal, overlay and tooltip.
 
 ## Holding the Line
@@ -495,8 +495,8 @@ properties (for example a computed grid column definition) remain local.
 
 ### Motion and Overlay Layers
 
-Use the fast and normal duration roles with the shared easing curve. Continuous
-progress indicators use the spinner duration role. Literal transition/animation
+Use the fast and normal duration roles with the shared easing curve. A continuous
+progress indicator includes `patterns.spinner`, which owns its rotation. Literal transition/animation
 durations and style utility classes in Angular bindings are gated as well. Include
 `motion.reduced-motion` once per application/shadow root, or import `motion.css`.
 The reduced-motion recipe finishes animations promptly rather than removing them,
@@ -548,6 +548,10 @@ element the `cedar-tooltip` class. Both leave position and visibility to the hos
 `icon-button` draws the box of an icon-only button. The `small` size, 24px, is a 16px icon with a
 `space-1` inset, for row actions and handles. The `default` size is the control height and honours
 `--cedar-control-height`. The host keeps the button's colours, border and states.
+
+`spinner` draws a continuous progress indicator: a 24px ring whose arc, in the theme colour, turns
+once every two seconds. The recipe brings its own `cedar-spinner-turn` keyframes; the host places
+the ring.
 
 `save-state-dot` and `save-state-dot-modified` draw the mark beside an editor's save state: a
 hollow ring while nothing is unsaved and a filled dot once something is, both in `status-warning-text`.

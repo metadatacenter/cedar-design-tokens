@@ -211,8 +211,6 @@ $shadow-overlay: 0 4px 18px rgba(0, 0, 0, 0.13);
 
 $motion-duration-fast: 120ms;
 $motion-duration-normal: 200ms;
-// Continuous progress indicators use a calm full rotation rather than interaction timing.
-$motion-duration-spinner: 2s;
 $motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
 // Ordered within a host's stacking context.

@@ -366,6 +366,25 @@ $-save-state-dot-size: 8px;
   background: var(--cedar-status-warning-text);
 }
 
+// A continuous progress indicator: a ring whose arc, in the theme colour, turns once every two
+// seconds, a calm full rotation rather than interaction timing. The host places the ring; reduced
+// motion stops it with every other animation.
+@mixin spinner {
+  width: var(--cedar-icon-size-large);
+  height: var(--cedar-icon-size-large);
+  border: 4px solid var(--cedar-surface-subtle);
+  border-top-color: var(--cedar-color-primary);
+  border-radius: 50%;
+  animation: cedar-spinner-turn 2s linear infinite;
+  @at-root {
+    @keyframes cedar-spinner-turn {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}
+
 // The box of an icon-only button: `small` for a row action or a handle, `default` at the control
 // height. Hosts keep the button's colours, border and states.
 @mixin icon-button($size: small) {
