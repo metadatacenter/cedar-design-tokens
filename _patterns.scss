@@ -327,3 +327,20 @@ $specification-padding-inline: 14px;
     text-decoration: underline solid var(--cedar-specification-text, var(--cedar-text-muted, #{tokens.$text-muted}));
   }
 }
+
+// The mark beside an editor's save state: a hollow ring while nothing is unsaved, whether the
+// artifact is unmodified or saved, and a filled dot once it is modified. A host draws it in a
+// `::before` beside the state's text and chooses the state with its own selectors.
+@mixin save-state-dot {
+  content: '';
+  box-sizing: border-box;
+  flex: 0 0 var(--cedar-space-2);
+  height: var(--cedar-space-2);
+  border: 2px solid var(--cedar-status-unsaved-dot);
+  border-radius: var(--cedar-radius-pill);
+  background: transparent;
+}
+
+@mixin save-state-dot-modified {
+  background: var(--cedar-status-unsaved-dot);
+}

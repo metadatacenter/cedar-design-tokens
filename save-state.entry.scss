@@ -1,0 +1,10 @@
+@use 'patterns';
+
+// The save-state mark for a host written in plain CSS. The element carries the class and the state
+// in `data-save-state` and `data-dirty`; a Sass host includes the two recipes itself.
+.cedar-save-state[data-save-state='true']::before {
+  @include patterns.save-state-dot;
+}
+.cedar-save-state[data-save-state='true'][data-dirty='true']::before {
+  @include patterns.save-state-dot-modified;
+}

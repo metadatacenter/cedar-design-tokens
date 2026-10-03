@@ -53,7 +53,8 @@
     },
     "./spacing": {
       "sass": "./_spacing.scss"
-    }
+    },
+    "./save-state.css": "./dist/save-state.css"
   },
   "files": [
     "_tokens.scss",
@@ -78,10 +79,11 @@
     "_authoring.scss",
     "_icon-contract.scss",
     "dist/icon-contract.css",
-    "_spacing.scss"
+    "_spacing.scss",
+    "dist/save-state.css"
   ],
   "scripts": {
-    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css && sass --no-source-map --style=expanded validation-summary.entry.scss dist/validation-summary.css && sass --no-source-map --style=expanded native-choices.entry.scss dist/native-choices.css && sass --no-source-map --style=expanded icon-contract.entry.scss dist/icon-contract.css",
+    "build": "sass --no-source-map --style=expanded tokens.entry.scss dist/custom-properties.css && node tools/build-icons.mjs && sass --no-source-map --style=expanded motion.entry.scss dist/motion.css && sass --no-source-map --style=expanded validation-summary.entry.scss dist/validation-summary.css && sass --no-source-map --style=expanded native-choices.entry.scss dist/native-choices.css && sass --no-source-map --style=expanded icon-contract.entry.scss dist/icon-contract.css && sass --no-source-map --style=expanded save-state.entry.scss dist/save-state.css",
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",

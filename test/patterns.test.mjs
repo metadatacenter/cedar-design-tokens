@@ -34,6 +34,8 @@ const names = [
   'resource-card-icon',
   'resource-card-name',
   'resource-card-meta',
+  'save-state-dot',
+  'save-state-dot-modified',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
