@@ -135,7 +135,9 @@ emitted set differs from it. A new token is added there, for a role no existing 
 the same change as the consumer that needs it.
 
 `cedarcli check design-tokens --strict` fails on a token that no consumer and no recipe reads, so
-an unused token is removed rather than kept in reserve.
+an unused token is removed rather than kept in reserve. Only a run that sees every consumer can
+tell, so the `Unused tokens` workflow runs it after each change here and daily, since a consumer can
+drop the last reader of a token without touching this repository.
 
 The same check rejects a reference to a retired name and states its replacement, from
 `tools/retired-tokens.json`. Retired names cannot be baselined.
@@ -147,8 +149,13 @@ properties, as the term picker does with `--cetp-*`.
 
 The source checks cannot see what a framework draws, so every registered page, menu, dialog and
 summary is also checked as rendered. The shared browser helper walks the open surface, shadow roots
-included, and fails on a font size, weight, family, text colour, letter spacing or corner that no
-token supplies. A page surface (contract `page`) has no property rules of its own: the whole frame
+included, and fails on a font size, weight, family, text colour, letter spacing, paint colour or
+corner that no token supplies. Paint covers backgrounds, borders, outlines and box shadows, which
+take only the vocabulary's colours. Text that a `::before` or `::after` generates, a placeholder and
+an SVG `<text>` label are checked as text. The shared family must also have a loaded face for each
+weight the surface uses: a computed style names the requested family even when the browser draws a
+fallback, so a page that never registers the faces passes every other test. Text kept for assistive
+technology in a clipped one-pixel box is not drawn, and the walk skips it. A page surface (contract `page`) has no property rules of its own: the whole frame
 is walked against the scale. Another CEDAR component embedded in a surface is skipped, because its
 own repository checks it. The walk also skips glyphs: icons and the box Material draws as a
 checkbox's mark. That box keeps Material's 2px corner, which matches the mark the browser paints for
@@ -176,6 +183,12 @@ The package is consumed at build time and nothing published references it at run
 `devDependency` and never reaches a public consumer. There is no npmjs release: the scoped name
 routes to the CEDAR Nexus registry, which `.npmrc` configures, and a dev snapshot is what consumers
 resolve.
+
+`cedarcli publish components --component tokens --apply` publishes a pushed `develop` head as
+`<base>-dev.<date>.<head>`: the base version `package.json` carries, the UTC date of the head commit
+and its first eight hexadecimal digits. Nothing is committed for it, so the version in
+`package.json` says only the base. Versions published on one day do not sort by time; the
+registry's `dev` tag names the newest.
 
 Consumers pin an exact snapshot in `package.json` and their lockfiles. A token
 change reaches them by publishing a new version, updating those pins, and
@@ -221,9 +234,14 @@ component repository's new and existing gated style findings,
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
 one repository; `--all` includes existing findings; `--json` supports dashboards.
 `--strict` fails on new paint, typography, spacing, control geometry, layer, motion
-or utility-style findings, unknown shared properties, missing baselines, or a missing,
-ranged or lockfile-mismatched token dependency. It does not require every consumer
-to match the token checkout's version before that version has been published. No network,
+or utility-style findings, unknown shared properties, missing baselines, baseline
+allowances the code no longer needs, or a missing, ranged or lockfile-mismatched token
+dependency. It also fails when the pinned package lacks a token the repository reads,
+because an unset custom property falls back silently and no build reports it, and when a
+pin names a commit the token checkout does not have. The version report compares each pin
+with the version the token checkout's head publishes under and counts the token commits a
+pin is behind. Lagging alone does not fail: a token change reaches a consumer only once it
+is published and the pin advances. No network,
 Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
 shells remain excluded; their styles are not migration targets.
 
@@ -232,11 +250,16 @@ It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored ne
 files. Vendor/assets, generated/ignored files, fixtures and the Material icon
 font are excluded. Policy 2 also inspects Angular component styles/templates,
 HTML inline styles, style bindings and utility classes in static or bound classes.
-It rejects dynamic paint/style bindings that cannot be inspected. Arbitrary
+It rejects dynamic paint/style bindings that cannot be inspected. Policy 3 also reads
+focus outlines and their offsets, single-corner radii, an opacity between hidden and
+shown, a curve or keyword easing, `color-mix()`, a z-index marked important and negative
+lengths. `--upgrade-policy` moves a repository up one policy from a clean checkout. It
+records the debt the committed sources already hold, and CI accepts the move because it
+scans the base revision under the new policy too. Arbitrary
 JavaScript-generated styles are not fully analyzed; browser contracts remain
-necessary alongside this source heuristic. A matching dependency version
-means agreement with the token checkout's version, not proof that unpublished
-source changes have reached Nexus or the served bundle. Use `cedarcli check
+necessary alongside this source heuristic. A pin that matches the checkout names
+the version the checkout's head publishes under; it does not prove that version is
+on Nexus or in the served bundle. Use `cedarcli check
 components` to check served component freshness.
 
 Each frontend owns `.design-tokens-baseline.json`. Entries identify the file,
@@ -247,7 +270,8 @@ not a claim that every literal must be replaced.
 
 - Prefer a semantic token; don't select a role just because its current hex matches.
 - After fixing findings, run `cedarcli check design-tokens --repo <repo>
---prune-baseline`. This can only decrease allowances. Commit the smaller baseline.
+--prune-baseline`. This can only decrease allowances. Commit the smaller baseline;
+  `--strict` fails until it is pruned, so an allowance cannot outlive its literal.
 - Add intentional shared values as semantic roles in this package. CI rejects
   new or altered exceptions against its trusted base; existing exceptions match
   exact declarations, never entire files or rules. Unknown roles and icon drift
@@ -473,6 +497,12 @@ empty states. For example:
   @include patterns.dialog-surface;
 }
 ```
+
+`save-state-dot` and `save-state-dot-modified` draw the mark beside an editor's save state: a
+hollow ring while nothing is unsaved and a filled dot once something is. A host includes them on a
+`::before` and chooses the state with its own selectors. A host written in plain CSS imports
+`save-state.css` instead and gives the element the `cedar-save-state` class with `data-save-state`
+and `data-dirty` attributes.
 
 Recipes emit no global selectors and use the same semantic roles as CEE. Consumers
 retain layout constraints and behavior. Workspace's grid view and OpenView's folders

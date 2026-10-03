@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+- The rendered surface check also reads paint: backgrounds, borders, outlines and box shadows take
+  only the vocabulary's colours. Generated `::before` and `::after` text, placeholders and SVG
+  labels are checked as text, the shared family needs a loaded face for each weight a surface uses,
+  and visually hidden text is skipped.
+- Adoption policy 3 reads focus outlines, single-corner radii, opacity, easing, `color-mix()`, a
+  z-index marked important and negative lengths. `--upgrade-policy` moves a repository up one step.
+- `--strict` fails on baseline allowances the code no longer needs, on a pinned package that lacks
+  a token the repository reads, and on a pin naming a commit the checkout does not have. The
+  version report compares pins with the version the checkout's head publishes under.
+- The `Unused tokens` workflow checks every consumer for a reader of each token.
+- `patterns.save-state-dot` and `save-state-dot-modified`, and `save-state.css` for plain-CSS hosts,
+  draw the hollow and filled save-state mark.
+- The authoring recipes take their weight fallbacks from the tokens, and the settings badge and
+  check use the pill radius and the small icon size; the emitted values are unchanged.
+- The breadcrumb trail keeps one weight, and every tab and authoring label is muted medium. A tab
+  row's first label starts on the content edge.
+- The `spacing` export holds the finite spacing recipes, and the adoption check rejects spacing
+  arithmetic and unresolved Sass aliases in consumers.
+- Registered pages, menus, dialogs and summaries are walked against the scale as rendered.
+  Checkbox marks count as glyphs.
+- `controls.search-clear-indicator` themes a search field's clear button.
+- A local adoption run compares each repository with its upstream branch, as CI does.
 - The vocabulary is 61 tokens, down from 196. The palette steps, the accent and contrast entries,
   and every component-tier alias are no longer emitted; the recipes read the spacing scale and the
   colour roles directly. `tools/retired-tokens.json` names the replacement for each retired token.
@@ -18,7 +40,9 @@
 - The adoption check rejects a consumer that redefines a shared token, names the replacement for a
   retired one, and fails when a token has no consumer.
 
-- First release. CEDAR's font stack, type scale, brand palettes and neutrals, extracted from the
+## First Snapshot (2026-09-15)
+
+- CEDAR's font stack, type scale, brand palettes and neutrals, extracted from the
   three copies that had been holding them: the embeddable editor's `_cee-tokens.scss`, the term
   picker's verbatim copy of it, and the designer's hand translation into CSS custom properties.
 - The advisory colour is `#b45309`. The editor chose it deliberately, where the picker's copy had

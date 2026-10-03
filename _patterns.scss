@@ -98,7 +98,7 @@
   color: inherit;
 }
 
-// A row of tabs over a rule. A tab is muted body text; the selected tab is primary and medium,
+// A row of tabs over a rule. Every tab is muted medium text; the selected tab is primary,
 // underlined in primary. The first label starts on the content edge, like the heading above it, and
 // a tab is as tall as a control. Hosts own `aria-selected`, keyboard movement and the panels.
 @mixin tabs {
@@ -136,8 +136,8 @@
   }
 }
 
-// A location trail: muted ancestors, the current location in medium weight, and separators without
-// spacing, so the trail reads as one path. A trail heading a listing takes the element-heading size.
+// A location trail in one weight, with separators without spacing, so the trail reads as one
+// path. A trail heading a listing takes the element-heading size.
 @mixin breadcrumbs($size: body) {
   display: flex;
   flex-wrap: wrap;
