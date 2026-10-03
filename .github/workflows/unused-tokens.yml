@@ -1,0 +1,47 @@
+name: Unused tokens
+
+# Every shared token needs a reader. Only a checkout of every consumer can show that, and a consumer's
+# own adoption job checks that consumer alone, so the check runs here: after each change to the tokens
+# and daily, because a consumer can drop the last reader of a token without touching this repository.
+on:
+  push:
+    branches: [develop]
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: cedar-design-tokens
+          fetch-depth: 0
+      - name: Check out every consumer
+        run: |
+          for repo in cedar-embeddable-editor cedar-embeddable-designer cedar-embeddable-term-picker \
+              cedar-workspace cedar-openview cedar-monitoring cedar-bridging cedar-template-designer; do
+            git clone --quiet --branch develop "https://github.com/metadatacenter/$repo.git" "$repo"
+          done
+      - name: Fail on a token no consumer or recipe reads
+        run: |
+          python3 cedar-design-tokens/tools/check_adoption.py --root . --json > adoption.json
+          python3 - <<'PY'
+          import json, sys
+          unused = json.load(open('adoption.json'))['unusedTokens']
+          if unused is None:
+              sys.exit('Not every consumer was checked out')
+          if unused:
+              sys.exit('Unused shared tokens: ' + ', '.join(unused) + '; adopt or remove them')
+          print('Every shared token has a reader')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unused-tokens
+          path: adoption.json
