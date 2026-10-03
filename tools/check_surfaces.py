@@ -11,6 +11,11 @@ REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-ed
 SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace', 'OpenView')
 CONTRACTS = json.loads((HOME / 'surfaces/contracts.json').read_text())['contracts']
 SCALE = json.loads((HOME / 'surfaces/contracts.json').read_text())['scale']
+# The contracts that may check each kind of element the parser finds. A page contract walks a whole
+# frame, so it may hold any of them; a registered menu or summary needs its own rules or a page.
+KINDS = {'dialog': {'dialog', 'error-alert', 'page', 'calendar'}, 'menu': {'menu', 'page'},
+         'summary': {'error-summary', 'warning-summary', 'page'}}
+
 # The walk's version. A rule the walk gains finds drift that the committed sources already hold, so
 # the change that moves a consumer to a new walk may record those findings as scale debt, as a
 # policy upgrade records existing literals. Every later change is refused new debt.
@@ -165,6 +170,9 @@ def validate(repo):
                 source['file'] == name and source['anchor'] in found['anchor'] for source in s.get('source', []))]
             if not registered:
                 errors.append(f'{name}:{found["line"]}: unregistered {found["kind"]}')
+            # A menu checked as a dialog, or a summary as a page, passes rules written for something else.
+            elif not any(s['contract'] in KINDS[found['kind']] for s in registered):
+                errors.append(f'{name}:{found["line"]}: {found["kind"]} registered under {sorted({s["contract"] for s in registered})}')
     if not data.get('browserHelper'):
         return errors
     generated = safe_file(repo, data['browserHelper'])
@@ -187,6 +195,16 @@ def findings(repo, ref=None):
                 shown = subprocess.run(['git', '-C', str(repo), 'show', f'{ref}:{helper}'], capture_output=True, text=True) if helper else None
                 walked = re.search(r'^// Walk (\d+)\.$', shown.stdout, re.M) if shown and shown.returncode == 0 else None
                 migrating = (int(walked[1]) if walked else 1) < WALK
+                # A contracted surface whose source is still there keeps its contract: dropping the
+                # surface or its contract would stop the walk without any drift being fixed.
+                current = {s['id']: s for s in load(repo)['surfaces']}
+                for surface in base:
+                    if not surface.get('contract'):
+                        continue
+                    alive = [source for source in surface.get('source', []) if (repo / source['file']).is_file()
+                             and source['anchor'] in (repo / source['file']).read_text()]
+                    if alive and not current.get(surface['id'], {}).get('contract'):
+                        errors.append(f"{surface['id']}: its source remains, so it keeps a rendered contract")
                 old = {s['id']: s.get('debt', {}) for s in base}
                 old_scale = {s['id']: {(d['property'], d['value']) for d in s.get('scaleDebt', [])} for s in base}
                 for surface in load(repo)['surfaces']:

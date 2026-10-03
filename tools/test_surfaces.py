@@ -131,6 +131,27 @@ class SurfaceCoverageTest(unittest.TestCase):
         self.save()
         self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
 
+    def commit_base(self):
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'base'], check=True)
+
+    def test_a_contract_stays_while_its_source_remains(self):
+        self.commit_base()
+        del self.registry['surfaces'][0]['contract']
+        self.save()
+        self.assertTrue(any('keeps a rendered contract' in f['value'] for f in findings(self.repo, 'HEAD')))
+        self.registry['surfaces'] = []
+        self.save()
+        (self.repo / 'src/view.html').write_text('<p>No dialog any more</p>')
+        self.assertFalse(any('keeps a rendered contract' in f['value'] for f in findings(self.repo, 'HEAD')))
+
+    def test_a_contract_matches_the_kind_of_element_it_checks(self):
+        (self.repo / 'src/view.html').write_text('<div role="menu" aria-label="Rename"></div>')
+        self.assertTrue(any('menu registered under' in error for error in validate(self.repo)))
+        self.registry['surfaces'][0]['contract'] = 'menu'
+        self.save()
+        self.assertFalse(any('registered under' in error for error in validate(self.repo)))
+
     def test_paths_must_stay_in_repository(self):
         self.registry['surfaces'][0]['source'][0]['file'] = '../outside.html'
         self.save()
