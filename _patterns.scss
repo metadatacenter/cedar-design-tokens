@@ -393,3 +393,41 @@ $specification-padding-inline: 14px;
   overflow-wrap: anywhere;
   white-space: normal;
 }
+
+// A heading for a section inside a page, a panel or a dialog: the element-heading size in the
+// title colour. Hosts own its margins.
+@mixin section-heading {
+  font-size: var(--cedar-font-size-element-heading);
+  font-weight: var(--cedar-font-weight-medium);
+  line-height: var(--cedar-line-height-heading);
+  color: var(--cedar-text-title);
+}
+
+// A message across a page or a panel: the status surface with its text colour, and information in
+// the theme's strong colour on the selection surface. `$inset` aligns the text with the host's
+// content edge; a boxed notice inside content takes the shared corner. Hosts own placement and
+// dismissal, and pair the colour with words or an icon.
+@mixin notice($tone: info, $inset: var(--cedar-space-4), $boxed: false) {
+  margin: 0;
+  padding: var(--cedar-space-2) $inset;
+  font-size: var(--cedar-font-size);
+  line-height: var(--cedar-control-line-height-default);
+  @if $boxed {
+    border-radius: var(--cedar-radius);
+  }
+  @include notice-tone($tone);
+}
+
+@mixin notice-tone($tone) {
+  @if $tone == info {
+    --cedar-icon-color: var(--cedar-color-primary-strong);
+    color: var(--cedar-color-primary-strong);
+    background: var(--cedar-surface-selected);
+  } @else if $tone == error or $tone == warning or $tone == success {
+    --cedar-icon-color: var(--cedar-status-#{$tone}-text);
+    color: var(--cedar-status-#{$tone}-text);
+    background: var(--cedar-status-#{$tone}-surface);
+  } @else {
+    @error 'Notice tone must be info, error, warning or success; got #{$tone}.';
+  }
+}

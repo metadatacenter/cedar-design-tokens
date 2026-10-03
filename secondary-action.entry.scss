@@ -1,0 +1,6 @@
+@use 'controls';
+
+// The secondary action for a host written in plain CSS; a Sass host includes the recipe itself.
+.cedar-secondary-action {
+  @include controls.secondary-action;
+}

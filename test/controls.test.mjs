@@ -129,3 +129,11 @@ test('search fields clear with the registry close glyph in the icon role and kee
   assert.match(css, /mask: url\("?'?data:image\/svg\+xml/);
   assert.doesNotMatch(css, /display: none/);
 });
+
+test('the secondary action keeps host control overrides and the shared hover', () => {
+  const css = compile('button { @include controls.secondary-action; }');
+  assert.match(css, /min-height: var\(--cedar-control-height, var\(--cedar-control-height-default\)\)/);
+  assert.match(css, /border: 1px solid var\(--cedar-control-border, var\(--cedar-control-border-default\)\)/);
+  assert.match(css, /color: #0f7686/);
+  assert.match(css, /:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)/);
+});

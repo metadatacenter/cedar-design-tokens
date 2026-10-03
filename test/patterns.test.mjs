@@ -38,6 +38,8 @@ const names = [
   'save-state-dot-modified',
   'visually-hidden',
   'tooltip-surface',
+  'section-heading',
+  'notice',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -152,4 +154,30 @@ test('resource cards share one minimum width and clamp names to two lines', () =
   assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
   assert.match(css, /-webkit-line-clamp: 2/);
   assert.match(css, /max-height: calc\(2 \* var\(--cedar-font-size-heading\)\)/);
+});
+
+const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: [process.cwd()] }).css;
+
+test('a trail mutes its ancestors, links included, and colours the current location', () => {
+  const css = patterns('.trail { @include patterns.breadcrumbs; }');
+  assert.match(css, /\.trail a:not\(\[aria-current\]\) \{\s*color: var\(--cedar-text-muted\)/);
+  assert.match(css, /\.trail \[aria-current\] \{\s*color: var\(--cedar-color-primary\)/);
+});
+
+test('summary issue lines take no hover fill over a host button rule', () => {
+  const css = patterns('.summary { @include patterns.validation-summary; }');
+  assert.match(css, /\.summary button:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)[^{]*\{\s*background: none/);
+});
+
+test('notices take a status pair or the information roles, and refuse other tones', () => {
+  const css = patterns('.a { @include patterns.notice; } .b { @include patterns.notice(error, $boxed: true); }');
+  assert.match(
+    css,
+    /\.a \{[^}]*color: var\(--cedar-color-primary-strong\);[^}]*background: var\(--cedar-surface-selected\)/,
+  );
+  assert.match(
+    css,
+    /\.b \{[^}]*border-radius: var\(--cedar-radius\);[^}]*background: var\(--cedar-status-error-surface\)/,
+  );
+  assert.throws(() => patterns('.c { @include patterns.notice(alarm); }'), /Notice tone/);
 });
