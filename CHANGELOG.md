@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- `patterns.section-heading`, `patterns.notice` with `notice.css`, and `controls.secondary-action`
+  with `secondary-action.css`.
+- The breadcrumb trail mutes its ancestors, links included, and colours the current location.
+- Validation-summary issue lines take no control box and no hover fill.
+- The duplicate `compact-static` and `constraint-row` spacing recipes are gone; use `compact` and
+  `compact-row`.
 - Adoption policy 4 reads Material's theme inputs, styles that skip the template scan, Tailwind's
   arbitrary properties and further utility families, `className` attributes, SVG text attributes,
   and `.sass`, `.tsx` and `.jsx` files. An interpolated or `@property` override of a shared token is

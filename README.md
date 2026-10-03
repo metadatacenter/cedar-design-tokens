@@ -170,10 +170,13 @@ a summary a summary contract or `page`).
 
 ## What Does Not Belong Here
 
-A value only one component has. The editor's layout constants (the trailing slot in a title row,
-the card's inline gutter, the size of a toolbar control) stay in the editor. A shared package that
-carried them would hand two other components measurements of a card they do not draw. Geometry
-that a shared recipe needs, such as the minimum width of a resource card, lives in the recipe.
+A token only one component reads. The vocabulary is what every surface shares, so a value only one
+component has never becomes a custom property. Derived measurements are another matter: a consumer
+does no arithmetic on tokens, so every half step, multiple and inset lives here as a named recipe
+in the `spacing` export, including those only one component uses, such as the editor's header slot,
+its property slot and its toolbar size. They are recipe inputs, never emitted as properties, and a
+recipe no consumer selects is removed. Geometry a shared pattern needs, such as the minimum width of
+a resource card, lives in the pattern.
 
 Anything from `@angular/material`. These values are CEDAR's, and expressing them in the vocabulary
 of a framework that renames that vocabulary every couple of releases means each rename edits the
@@ -513,6 +516,15 @@ empty states. For example:
   @include patterns.dialog-surface;
 }
 ```
+
+`section-heading` heads a section inside a page, a panel or a dialog at the element-heading size in
+the title colour. `notice` draws a message across a page or a panel, in the information roles or a
+status pair; `$inset` aligns its text with the host's content edge and `$boxed` gives it the shared
+corner inside content. The breadcrumb trail mutes its ancestors, links included, and colours the
+current location, which the host marks with `aria-current`. `controls.secondary-action` draws the
+ordinary bordered button beside a primary one. A host written in plain CSS imports `notice.css` or
+`secondary-action.css` and uses the `cedar-notice` class (with `data-tone` for a status) or the
+`cedar-secondary-action` class.
 
 `visually-hidden` keeps text for assistive technology without drawing it. `tooltip-surface` draws a
 help label beside its control; a host written in plain CSS imports `tooltip.css` and gives the
