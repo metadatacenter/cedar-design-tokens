@@ -154,8 +154,8 @@ test('resource cards share one minimum width and clamp names to two lines', () =
   ).css;
   assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
   assert.match(css, /-webkit-line-clamp: 2/);
-  assert.match(css, /line-height: calc\(var\(--cedar-space-4\) \+ var\(--cedar-space-1\)\)/);
-  assert.match(css, /max-height: calc\(2 \* \(var\(--cedar-space-4\) \+ var\(--cedar-space-1\)\)\)/);
+  assert.match(css, /line-height: var\(--cedar-control-line-height-default\)/);
+  assert.match(css, /max-height: calc\(2 \* var\(--cedar-control-line-height-default\)\)/);
 });
 
 const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: ['scss'] }).css;

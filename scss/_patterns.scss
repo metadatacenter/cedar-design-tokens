@@ -202,12 +202,12 @@
   color: var(--cedar-color-primary);
 }
 
-// A name takes at most two lines, each 20px, and then ends in an ellipsis.
+// A name takes at most two lines of body text and then ends in an ellipsis.
 @mixin resource-card-name {
   display: -webkit-box;
   overflow: hidden;
-  max-height: calc(2 * (var(--cedar-space-4) + var(--cedar-space-1)));
-  line-height: calc(var(--cedar-space-4) + var(--cedar-space-1));
+  max-height: calc(2 * var(--cedar-control-line-height-default));
+  line-height: var(--cedar-control-line-height-default);
   white-space: normal;
   overflow-wrap: anywhere;
   -webkit-line-clamp: 2;

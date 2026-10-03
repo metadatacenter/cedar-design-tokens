@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- A resource card's name sits on the 21px body text line, like other 14px text, rather than the 20px
+  line it had carried since it was a Workspace literal.
 - `patterns.spinner` draws the continuous progress indicator OpenView and Monitoring each copied,
   and owns its rotation, so `motion-duration-spinner` is retired. Its arc takes the theme colour;
   Monitoring's had been grey.
