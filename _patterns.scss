@@ -137,7 +137,8 @@
 }
 
 // A location trail in one weight, with separators without spacing, so the trail reads as one
-// path. A trail heading a listing takes the element-heading size.
+// path: muted ancestors, links included, and the current location in the theme colour. A trail
+// heading a listing takes the element-heading size. Hosts mark the current crumb with aria-current.
 @mixin breadcrumbs($size: body) {
   display: flex;
   flex-wrap: wrap;
@@ -149,7 +150,12 @@
   } @else if $size != body {
     @error 'Breadcrumb size must be body or heading; got #{$size}.';
   }
-  // The whole trail keeps one weight. A host that sets the current crumb apart does so by colour.
+  a:not([aria-current]) {
+    color: var(--cedar-text-muted);
+  }
+  [aria-current] {
+    color: var(--cedar-color-primary);
+  }
 }
 
 @mixin breadcrumb-separator {
