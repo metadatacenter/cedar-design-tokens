@@ -117,8 +117,10 @@ names, and the adapters read an override first. A choice option and an authoring
 `row-height-compact` (28px); an ordinary listing row is `table-row-height` (44px: a control with a
 small gutter above and below).
 
-Space, shape and elevation are each one short scale. Every padding, margin and gap is a step of
-`space-1/2/3/4/6` (4, 8, 12, 16 and 24px), with `calc()` for a half step or a multiple. Every box
+Space, shape and elevation are each one short scale. Every padding, margin and gap in a consumer is a
+step of `space-1/2/3/4/6` (4, 8, 12, 16 and 24px). A half step, a multiple or a derived inset comes from
+a named recipe in the `spacing` export, never from arithmetic in the consumer, which the adoption check
+rejects. Every box
 has the `radius` corner (4px); chips and pills take `radius-pill`. Icons are 16, 20 or 24px. Menus,
 popovers, tooltips and drag previews take `shadow-overlay`; dialogs take `shadow-dialog`.
 
@@ -144,7 +146,7 @@ The same check rejects a reference to a retired name and states its replacement,
 
 A consumer may not give a shared token a local value: `--cedar-space-2: 6px` inside a component
 changes the meaning of a shared name where no other surface can see it, and the check rejects it
-without exception. A component may only re-point a shared role at one of its own documented host
+without exception, whether the name is written out, interpolated or registered with `@property`. A component may only re-point a shared role at one of its own documented host
 properties, as the term picker does with `--cetp-*`.
 
 The source checks cannot see what a framework draws, so every registered page, menu, dialog and
@@ -161,7 +163,10 @@ own repository checks it. The walk also skips glyphs: icons and the box Material
 checkbox's mark. That box keeps Material's 2px corner, which matches the mark the browser paints for
 a native checkbox. The allowed values resolve in the surface's own context, so a host theme override
 passes. A reviewed exception is a `scaleDebt` entry on the surface (the property, the exact value
-and a reason), and a change cannot add one against its base revision.
+and a reason), and a change cannot add one against its base revision, except the change that moves
+the consumer to a new walk. The registry cannot be weakened either: a surface whose source remains
+keeps its contract, and a contract must suit the element it checks (a menu takes `menu` or `page`,
+a summary a summary contract or `page`).
 
 ## What Does Not Belong Here
 
@@ -179,8 +184,9 @@ Monitoring and Bridging.
 
 ## Releasing
 
-The package is consumed at build time and nothing published references it at run time, so it is a
-`devDependency` and never reaches a public consumer. There is no npmjs release: the scoped name
+The package is consumed at build time and nothing published references it at run time, so the
+components list it as a `devDependency` and it never reaches a public consumer. Workspace and the
+legacy template editor, which publish no package, list it as an ordinary dependency. There is no npmjs release: the scoped name
 routes to the CEDAR Nexus registry, which `.npmrc` configures, and a dev snapshot is what consumers
 resolve.
 
@@ -221,11 +227,13 @@ foreground/background combinations.
 ## Embedded Fonts
 
 `@use '@org.metadatacenter/cedar-design-tokens/fonts'` emits the self-contained
-Roboto 300/400/500 font faces shared by the editor and designer. Include it in
+Roboto 400 and 500 font faces shared by the editor and designer. Include it in
 the component's unencapsulated font registrar: browsers do not register font
 faces inside shadow roots. The export contains no selectors or network URLs.
 The font family remains `CEE Roboto`; consumers no longer keep copies of the
-font source. Each built bundle still embeds the fonts it needs.
+font source. Each built bundle still embeds the fonts it needs. `fonts/regular` and `fonts/medium`
+emit one weight each, for an application that registers the faces itself, as Workspace, OpenView,
+Monitoring and Bridging do.
 
 ## Monitor Adoption
 
@@ -253,7 +261,13 @@ HTML inline styles, style bindings and utility classes in static or bound classe
 It rejects dynamic paint/style bindings that cannot be inspected. Policy 3 also reads
 focus outlines and their offsets, single-corner radii, an opacity between hidden and
 shown, a curve or keyword easing, `color-mix()`, a z-index marked important and negative
-lengths. `--upgrade-policy` moves a repository up one policy from a clean checkout. It
+lengths. Policy 4 reads Material's theme inputs (`--mat-*` and `--mdc-*` sizes, weights,
+line heights, corners and heights, and `mat.*-overrides` maps), styles that skip the
+template scan (host metadata, a bound style attribute, a styles entry that is not literal
+text, Lit `css` templates and constructed stylesheets), Tailwind's arbitrary properties
+and its outline, SVG paint, decoration, caret, accent, divider, gradient, opacity and motion
+utilities, `className` attributes, SVG text's presentation attributes, and `.sass`, `.tsx`
+and `.jsx` files. `--upgrade-policy` moves a repository up one policy from a clean checkout. It
 records the debt the committed sources already hold, and CI accepts the move because it
 scans the base revision under the new policy too. Arbitrary
 JavaScript-generated styles are not fully analyzed; browser contracts remain
@@ -431,8 +445,8 @@ tint.
 ## Forms and Table Density
 
 The field recipes set form rhythm from the spacing scale: a label sits `space-2` above its control
-and help text `space-1` below it. Help and error text share the small type role and an 18px line
-box. Validation timing and accessible descriptions remain component
+and help text `space-1` below it. Help and error text share the small type role and take their
+line height from the surrounding text. Validation timing and accessible descriptions remain component
 responsibilities.
 
 Form recipes default to the small type role for existing consumers. Larger-text forms
@@ -441,8 +455,10 @@ and `patterns.field-error($size: body)`. This uses the shared body role while ke
 each recipe's spacing, weight and semantic color. Use this variant instead of adding
 a local font-size override after the mixin. Only `small` and `body` are supported.
 
-Ordinary tables use 44px minimum rows with 4px/12px cell padding; authoring tables
-use 28px minimum rows with 2px/8px padding. Authoring headers fit their text; rows
+`table-cell` gives an ordinary table's cells 4px/12px padding and a rule, and the host sets its rows to
+`table-row-height` (44px). `authoring.compact-table` gives authoring tables 28px rows
+(`row-height-compact`) with 2px block padding; their inline padding stays with the host. Authoring
+headers fit their text; rows
 grow for wrapped values or larger controls. The ordinary profile fits its controls
 plus both vertical gutters, an invariant checked by package tests. Column widths, scrolling limits and responsive layout stay local.
 
@@ -497,6 +513,10 @@ empty states. For example:
   @include patterns.dialog-surface;
 }
 ```
+
+`visually-hidden` keeps text for assistive technology without drawing it. `tooltip-surface` draws a
+help label beside its control; a host written in plain CSS imports `tooltip.css` and gives the
+element the `cedar-tooltip` class. Both leave position and visibility to the host.
 
 `save-state-dot` and `save-state-dot-modified` draw the mark beside an editor's save state: a
 hollow ring while nothing is unsaved and a filled dot once something is. A host includes them on a

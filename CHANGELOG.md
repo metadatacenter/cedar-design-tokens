@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Adoption policy 4 reads Material's theme inputs, styles that skip the template scan, Tailwind's
+  arbitrary properties and further utility families, `className` attributes, SVG text attributes,
+  and `.sass`, `.tsx` and `.jsx` files. An interpolated or `@property` override of a shared token is
+  refused like a written one.
+- A change cannot drop a contracted surface whose source remains, and a contract must suit the kind
+  of element it checks.
+- `patterns.visually-hidden` and `patterns.tooltip-surface`, with `tooltip.css` for plain-CSS hosts.
+- The `fonts` export embeds the 400 and 500 faces only; nothing used the 300 weight.
 - The rendered surface check also reads paint: backgrounds, borders, outlines and box shadows take
   only the vocabulary's colours. Generated `::before` and `::after` text, placeholders and SVG
   labels are checked as text, the shared family needs a loaded face for each weight a surface uses,
