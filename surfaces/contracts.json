@@ -51,8 +51,7 @@
     "font-size": [
       "--cedar-font-size-small",
       "--cedar-font-size",
-      "--cedar-font-size-element-heading",
-      "--cedar-font-size-heading",
+      "--cedar-font-size-large",
       "--cedar-font-size-artifact-title"
     ],
     "font-weight": ["--cedar-font-weight-regular", "--cedar-font-weight-medium"],

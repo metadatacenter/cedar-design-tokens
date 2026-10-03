@@ -13,8 +13,7 @@ const inventory = {
     'font-weight-medium',
     'font-size-small',
     'font-size',
-    'font-size-element-heading',
-    'font-size-heading',
+    'font-size-large',
     'font-size-artifact-title',
     'line-height-heading',
     'line-height-tight',
@@ -80,8 +79,8 @@ test('the emitted tokens are exactly the reviewed inventory', () => {
   assert.deepEqual([...emitted].sort(), Object.values(inventory).flat().sort());
 });
 
-test('the type scale has five sizes and two weights', () => {
-  assert.equal(inventory.typography.filter((name) => name.startsWith('font-size')).length, 5);
+test('the type scale has four sizes and two weights', () => {
+  assert.equal(inventory.typography.filter((name) => name.startsWith('font-size')).length, 4);
   assert.equal(inventory.typography.filter((name) => name.startsWith('font-weight')).length, 2);
 });
 

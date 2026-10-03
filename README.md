@@ -1,7 +1,7 @@
 # CEDAR Design Tokens
 
 CEDAR's interface is plain text and boxes, and this package holds every value that decides how it
-looks: one font, five type sizes, two weights, one theme colour, three text colours, two rule
+looks: one font, four type sizes, two weights, one theme colour, three text colours, two rule
 colours, three surfaces, one spacing scale and one corner radius. The
 [embeddable editor](https://github.com/metadatacenter/cedar-embeddable-editor), the
 [embeddable designer](https://github.com/metadatacenter/cedar-embeddable-designer), the
@@ -72,27 +72,30 @@ contains the compiled CSS, prepared before packing.
 
 ## The Vocabulary
 
-Sixty-two tokens, in seven groups. A value between two of them is not on the scale; a consumer uses
+Sixty-one tokens, in seven groups. A value between two of them is not on the scale; a consumer uses
 the nearer one.
 
-Typography is one family, five sizes, two weights and two line heights. The sizes are in px rather
+Typography is one family, four sizes, two weights and two line heights. The sizes are in px rather
 than rem, because `rem` resolves against the embedding page's root element, which a component
 neither sets nor can see: a host with `html { font-size: 62.5% }` would render rem-sized type at
 62.5% of its size.
 
-| Token                       | Value                     | Role                                                |
-| --------------------------- | ------------------------- | --------------------------------------------------- |
-| `font-family`               | CEE Roboto stack          | All interface text                                  |
-| `font-family-monospace`     | System monospace stack    | Logs, identifiers and code                          |
-| `font-weight-regular`       | 400                       | Body text and values                                |
-| `font-weight-medium`        | 500                       | Labels, headings and tabs                           |
-| `font-size-small`           | 12px                      | Hints, counts, versions and other secondary facts   |
-| `font-size`                 | 14px                      | Body text, controls, labels, menus and tabs         |
-| `font-size-element-heading` | 18px                      | A nested element's heading; a section inside a page |
-| `font-size-heading`         | 20px                      | A section break; the largest heading inside a form  |
-| `font-size-artifact-title`  | `clamp(19px, 3cqi, 26px)` | The title of a page, an artifact or a dialog        |
-| `line-height-heading`       | 1.25                      | Every heading and title                             |
-| `line-height-tight`         | 1                         | An icon, caret, badge or one-line label's own box   |
+| Token                      | Value                     | Role                                                                 |
+| -------------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `font-family`              | CEE Roboto stack          | All interface text                                                   |
+| `font-family-monospace`    | System monospace stack    | Logs, identifiers and code                                           |
+| `font-weight-regular`      | 400                       | Body text and values                                                 |
+| `font-weight-medium`       | 500                       | Labels, headings and tabs                                            |
+| `font-size-small`          | 12px                      | Hints, counts, versions and other secondary facts                    |
+| `font-size`                | 14px                      | Body text, controls, labels, menus and tabs                          |
+| `font-size-large`          | 18px                      | A heading below a title, such as a section break; a prominent number |
+| `font-size-artifact-title` | `clamp(20px, 3cqi, 26px)` | The title of a page, an artifact or a dialog                         |
+| `line-height-heading`      | 1.25                      | Every heading and title                                              |
+| `line-height-tight`        | 1                         | An icon, caret, badge or one-line label's own box                    |
+
+The title is the one size that varies. It grows with the width of the nearest query container, or
+of the viewport where the host declares none, and its 20px floor keeps it above every heading
+beneath it.
 
 Colour is one theme colour with a stronger variant, three text colours, two rules and three
 surfaces. Status colours come in pairs, each tested for normal-text contrast against its surface,
@@ -530,8 +533,8 @@ empty states. For example:
 }
 ```
 
-`section-heading` heads a section inside a page, a panel or a dialog at the element-heading size in
-the title colour. `notice` draws a message across a page or a panel, in the information roles or a
+`section-heading` heads a section inside a page, a panel or a dialog at the large size in the title
+colour. `notice` draws a message across a page or a panel, in the information roles or a
 status pair; `$inset` aligns its text with the host's content edge and `$boxed` gives it the shared
 corner inside content. The breadcrumb trail mutes its ancestors, links included, and colours the
 current location, which the host marks with `aria-current`. `controls.secondary-action` draws the

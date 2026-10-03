@@ -78,7 +78,7 @@ export async function checkSurface(page, surface, state, expect, testInfo) {
   }
 }
 
-// Everything a surface draws comes from the shared vocabulary: its two families, five sizes and two
+// Everything a surface draws comes from the shared vocabulary: its two families, four sizes and two
 // weights with Roboto's own spacing, its text colours, its paint (backgrounds, borders, outlines and
 // shadows take only the vocabulary's colours), and the one corner, the pill and a circle. Generated
 // text in `::before` and `::after`, placeholders and SVG labels are text like any other. The family a

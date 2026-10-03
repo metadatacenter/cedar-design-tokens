@@ -135,13 +135,13 @@ test('a required mark is raised without enlarging the line box of its label', ()
   assert.match(css, /inset-block-start: -0\.4em/);
 });
 
-test('breadcrumbs take the element-heading size only when they head a listing, at one weight', () => {
+test('breadcrumbs take the large size only when they head a listing, at one weight', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; nav { @include patterns.breadcrumbs${args}; }`, {
       loadPaths: [process.cwd()],
     }).css;
   assert.doesNotMatch(compile(''), /font-size/);
-  assert.match(compile('($size: heading)'), /font-size: var\(--cedar-font-size-element-heading\)/);
+  assert.match(compile('($size: heading)'), /font-size: var\(--cedar-font-size-large\)/);
   assert.doesNotMatch(compile(''), /font-weight/);
   assert.throws(() => compile('($size: huge)'), /Breadcrumb size/);
 });
@@ -153,7 +153,8 @@ test('resource cards share one minimum width and clamp names to two lines', () =
   ).css;
   assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
   assert.match(css, /-webkit-line-clamp: 2/);
-  assert.match(css, /max-height: calc\(2 \* var\(--cedar-font-size-heading\)\)/);
+  assert.match(css, /line-height: calc\(var\(--cedar-space-4\) \+ var\(--cedar-space-1\)\)/);
+  assert.match(css, /max-height: calc\(2 \* \(var\(--cedar-space-4\) \+ var\(--cedar-space-1\)\)\)/);
 });
 
 const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: [process.cwd()] }).css;

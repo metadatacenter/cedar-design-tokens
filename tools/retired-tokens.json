@@ -51,6 +51,8 @@
   "empty-state-padding": "patterns.empty-state",
   "focus-ring-color": "color-primary",
   "font-size-display": "font-size-artifact-title",
+  "font-size-element-heading": "font-size-large",
+  "font-size-heading": "font-size-large",
   "font-size-lead": "font-size",
   "form-field-gap": "space-4",
   "form-help-gap": "space-1",

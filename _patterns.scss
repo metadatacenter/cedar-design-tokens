@@ -138,7 +138,7 @@
 
 // A location trail in one weight, with separators without spacing, so the trail reads as one
 // path: muted ancestors, links included, and the current location in the theme colour. A trail
-// heading a listing takes the element-heading size. Hosts mark the current crumb with aria-current.
+// heading a listing takes the large size. Hosts mark the current crumb with aria-current.
 @mixin breadcrumbs($size: body) {
   display: flex;
   flex-wrap: wrap;
@@ -146,7 +146,7 @@
   row-gap: var(--cedar-space-2);
   color: var(--cedar-text-muted);
   @if $size == heading {
-    font-size: var(--cedar-font-size-element-heading);
+    font-size: var(--cedar-font-size-large);
   } @else if $size != body {
     @error 'Breadcrumb size must be body or heading; got #{$size}.';
   }
@@ -201,12 +201,12 @@
   color: var(--cedar-color-primary);
 }
 
-// A name takes at most two lines and then ends in an ellipsis.
+// A name takes at most two lines, each 20px, and then ends in an ellipsis.
 @mixin resource-card-name {
   display: -webkit-box;
   overflow: hidden;
-  max-height: calc(2 * var(--cedar-font-size-heading));
-  line-height: var(--cedar-font-size-heading);
+  max-height: calc(2 * (var(--cedar-space-4) + var(--cedar-space-1)));
+  line-height: calc(var(--cedar-space-4) + var(--cedar-space-1));
   white-space: normal;
   overflow-wrap: anywhere;
   -webkit-line-clamp: 2;
@@ -394,10 +394,10 @@ $specification-padding-inline: 14px;
   white-space: normal;
 }
 
-// A heading for a section inside a page, a panel or a dialog: the element-heading size in the
-// title colour. Hosts own its margins.
+// A heading for a section inside a page, a panel or a dialog: the large size in the title colour.
+// Hosts own its margins.
 @mixin section-heading {
-  font-size: var(--cedar-font-size-element-heading);
+  font-size: var(--cedar-font-size-large);
   font-weight: var(--cedar-font-weight-medium);
   line-height: var(--cedar-line-height-heading);
   color: var(--cedar-text-title);

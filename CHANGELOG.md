@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The type scale is four sizes. `font-size-large` (18px) replaces `font-size-element-heading` and
+  the 20px `font-size-heading`, so a section break takes the size of a nested element's heading and
+  no longer outranks the element that contains it. Both names are retired.
+- The artifact title's floor rises from 19px to 20px, keeping a title above every heading on a
+  narrow host.
 - `line-height-tight`, 1, for an icon, caret, badge or one-line label whose box is exactly its type
   size. CEE, CED, CETP and Monitoring each set that value locally.
 - `patterns.section-heading`, `patterns.notice` with `notice.css`, and `controls.secondary-action`
