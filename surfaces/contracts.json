@@ -85,7 +85,6 @@
       "--cedar-status-warning-surface",
       "--cedar-status-success-text",
       "--cedar-status-success-surface",
-      "--cedar-status-unsaved-dot",
       "--cedar-dialog-backdrop"
     ],
     "shadow": ["--cedar-shadow-overlay", "--cedar-shadow-dialog"]

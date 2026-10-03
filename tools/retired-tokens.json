@@ -121,6 +121,7 @@
   "selection-tint-percentage": "surface-selected",
   "status-info-surface": "surface-selected",
   "status-info-text": "color-primary-strong",
+  "status-unsaved-dot": "status-warning-text",
   "surface-advisory": "status-warning-surface",
   "surface-authoring": "surface-subtle",
   "surface-canvas": "surface-subtle",

@@ -105,7 +105,7 @@ and always accompany a label or icon. Information uses the primary roles.
 | `surface-subtle`                             | Panels, read-only values, hovered rows and canvases       |
 | `surface-selected`                           | Selected rows and hovered actions                         |
 | `status-error-*`, `-warning-*`, `-success-*` | `-text` and `-surface` pairs                              |
-| `status-unsaved-dot`, `dialog-backdrop`      | The unsaved-changes dot; the scrim behind a modal dialog  |
+| `dialog-backdrop`                            | The scrim behind a modal dialog                           |
 
 Controls have two densities. The `-default` tokens describe the 36px control with a 21px line; the
 `-authoring` tokens the 32px control with an 18px line that authoring surfaces use. The
@@ -452,8 +452,6 @@ Read-only surfaces remain distinct from native disabled behavior. CETP derives i
 from the documented host primary override, so a host that re-points the primary gets a matching
 tint.
 
-`--cedar-status-unsaved-dot` supplies the yellow filled indicator beside an unsaved-changes label.
-
 ## Forms and Table Density
 
 The field recipes set form rhythm from the spacing scale: a label sits `space-2` above its control
@@ -540,7 +538,8 @@ help label beside its control; a host written in plain CSS imports `tooltip.css`
 element the `cedar-tooltip` class. Both leave position and visibility to the host.
 
 `save-state-dot` and `save-state-dot-modified` draw the mark beside an editor's save state: a
-hollow ring while nothing is unsaved and a filled dot once something is. A host includes them on a
+hollow ring while nothing is unsaved and a filled dot once something is, both in `status-warning-text`.
+A host includes them on a
 `::before` and chooses the state with its own selectors. A host written in plain CSS imports
 `save-state.css` instead and gives the element the `cedar-save-state` class with `data-save-state`
 and `data-dirty` attributes.

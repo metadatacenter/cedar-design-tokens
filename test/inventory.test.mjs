@@ -36,7 +36,6 @@ const inventory = {
     'status-warning-surface',
     'status-success-text',
     'status-success-surface',
-    'status-unsaved-dot',
     'dialog-backdrop',
   ],
   controls: [

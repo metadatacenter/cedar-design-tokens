@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `status-unsaved-dot` is retired for `status-warning-text`. The save-state mark turns from yellow
+  `#eab308` to amber `#b45309`, and its contrast on white rises from 1.9:1 to 5.0:1.
 - `motion-ease-enter` is retired for `motion-ease-standard`. Only the designer read it, for three
   fade-ins, and both curves decelerate.
 - `table-row-height` is retired for `spacing.$table-row-height`, the same 44px derived from the
