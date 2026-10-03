@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -448,6 +449,56 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual(1, invoke('--strict')[0])
         (self.repo / check.BASELINE).write_text('invalid')
         self.assertEqual(2, invoke()[0])
+
+    def vendor(self, version, files):
+        """Replace the npm manifests with a vendored copy of the given files under src."""
+        for name in ('package.json', 'package-lock.json'):
+            (self.repo / name).unlink()
+        folder = self.repo / 'src/main/resources/web' / check.VENDORED
+        folder.parent.mkdir(parents=True)
+        for name, text in files.items():
+            (folder.parent / name).write_text(text)
+        folder.write_text(json.dumps({'package': check.PACKAGE, 'version': version, 'files': {
+            name: hashlib.sha256(text.encode()).hexdigest() for name, text in files.items()}}))
+        return folder.parent
+
+    def test_a_vendored_copy_pins_and_locks_a_consumer_without_npm(self):
+        copy = self.vendor('1.0.0', {'custom-properties.css': ':root { --cedar-space-2: 8px; }'})
+        result = self.run_report(initialize=True)
+        self.assertEqual(('1.0.0', '1.0.0', True), (result['pin'], result['locked'], result['dependencyValid']))
+        # The vendored stylesheets are the package's, not the consumer's, and are not scanned.
+        self.assertEqual([Path('src/style.scss')], list(check.source_files(self.repo)))
+        (copy / 'custom-properties.css').write_text(':root { --cedar-space-2: 9px; }')
+        result = self.run_report()
+        self.assertEqual(('differs from lock', False), (result['versionStatus'], result['dependencyValid']))
+        (copy / 'manifest.json').unlink()
+        with self.assertRaisesRegex(ValueError, 'pins no token version'):
+            self.run_report()
+
+    def test_a_vendored_copy_declares_the_token_set_its_version_names(self):
+        tokens, (head,) = self.token_checkout(['space-2', 'radius'])
+        version = f'0.1.0-dev.20260101.{head}'
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            copy = self.vendor(version, {'custom-properties.css': ':root { --cedar-space-2: 8px; --cedar-radius: 4px; }'})
+            self.assertTrue(check.report(self.repo, version, initialize=True)['dependencyValid'])
+            declared = ':root { --cedar-space-2: 8px; }'
+            (copy / 'custom-properties.css').write_text(declared)
+            manifest = json.loads((copy / 'manifest.json').read_text())
+            manifest['files']['custom-properties.css'] = hashlib.sha256(declared.encode()).hexdigest()
+            (copy / 'manifest.json').write_text(json.dumps(manifest))
+            self.assertFalse(check.report(self.repo, version)['dependencyValid'])
+
+    def test_a_repository_may_be_named_by_its_path_under_root(self):
+        nested = self.root / 'mcp'
+        nested.mkdir()
+        self.repo.rename(nested / 'consumer')
+        self.run_report = lambda **kwargs: check.report(nested / 'consumer', '1.0.0', **kwargs)
+        self.run_report(initialize=True)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(0, check.main(['--root', str(self.root), '--repo', 'mcp/consumer', '--strict']))
+        for name in ('../consumer', '/consumer', 'mcp/../consumer'):
+            with self.subTest(name=name), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                check.main(['--root', str(self.root), '--repo', name])
 
     def token_checkout(self, *revisions):
         """A token repository whose commits hold the given token sets, newest last; returns their short names."""

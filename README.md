@@ -243,7 +243,8 @@ Monitoring and Bridging do.
 Run `cedarcli check design-tokens` from the CEDAR workspace. It reports each
 component repository's new and existing gated style findings,
 resolved debt, and token manifest/lock versions. `--repo cedar-embeddable-designer` selects
-one repository; `--all` includes existing findings; `--json` supports dashboards.
+one repository by its path under the workspace, so `--repo mcp/cedar-cee-mcp` selects one in a
+folder; `--all` includes existing findings; `--json` supports dashboards.
 `--strict` fails on new paint, typography, spacing, control geometry, layer, motion
 or utility-style findings, unknown shared properties, missing baselines, baseline
 allowances the code no longer needs, or a missing, ranged or lockfile-mismatched token
@@ -252,7 +253,17 @@ because an unset custom property falls back silently and no build reports it, an
 pin names a commit the token checkout does not have. The version report compares each pin
 with the version the token checkout's head publishes under and counts the token commits a
 pin is behind. Lagging alone does not fail: a token change reaches a consumer only once it
-is published and the pin advances. No network,
+is published and the pin advances.
+
+A consumer without npm cannot pin the package in a manifest. The session page that
+`cedar-cee-mcp` serves is one: a Maven build that fetched a development version from Nexus would
+break once the registry's cleanup removed that version. Such a consumer vendors the compiled
+stylesheets it links, in a `vendor/cedar-design-tokens` directory under `src`, with a
+`manifest.json` that names the package, the version the files came from and each file's SHA-256
+digest. The manifest's version is the pin. The copy locks it only while every file matches its
+digest and the copy's `custom-properties.css` declares exactly the tokens held at the commit the
+version names; otherwise the check reports a lockfile mismatch. Like any vendor directory, the copy
+is not scanned. No network,
 Nexus credential or frontend build is needed. The modern Angular Workspace is included. The retiring AngularJS application
 shells remain excluded; their styles are not migration targets.
 
@@ -260,7 +271,7 @@ This is a source heuristic, not an adoption percentage or an accessibility audit
 It scans first-party CSS/SCSS/Less under `src` and `app`, including unignored new
 files. Vendor/assets, generated/ignored files, fixtures and the Material icon
 font are excluded. Policy 2 also inspects Angular component styles/templates,
-HTML inline styles, style bindings and utility classes in static or bound classes.
+HTML inline styles, a page's style elements and inline scripts, style bindings and utility classes in static or bound classes.
 It rejects dynamic paint/style bindings that cannot be inspected. Policy 3 also reads
 focus outlines and their offsets, single-corner radii, an opacity between hidden and
 shown, a curve or keyword easing, `color-mix()`, a z-index marked important and negative

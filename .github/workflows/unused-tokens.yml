@@ -28,6 +28,7 @@ jobs:
               cedar-workspace cedar-openview cedar-monitoring cedar-bridging cedar-template-designer; do
             git clone --quiet --branch develop "https://github.com/metadatacenter/$repo.git" "$repo"
           done
+          git clone --quiet --branch main https://github.com/metadatacenter/cedar-cee-mcp.git mcp/cedar-cee-mcp
       - name: Fail on a token no consumer or recipe reads
         run: |
           python3 cedar-design-tokens/tools/check_adoption.py --root . --json > adoption.json

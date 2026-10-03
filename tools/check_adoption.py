@@ -19,7 +19,11 @@ PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
 REPOS = ('cedar-embeddable-editor', 'cedar-embeddable-designer',
          'cedar-embeddable-term-picker', 'cedar-workspace', 'cedar-openview',
-         'cedar-monitoring', 'cedar-bridging', 'cedar-template-designer')
+         'cedar-monitoring', 'cedar-bridging', 'cedar-template-designer',
+         'mcp/cedar-cee-mcp')
+# A consumer without npm vendors the package's compiled stylesheets beside this manifest, which
+# names the version they came from and the SHA-256 digest of each file.
+VENDORED = 'vendor/cedar-design-tokens/manifest.json'
 EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
             'assets', 'fixtures', '__tests__'}
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
@@ -117,11 +121,16 @@ def source_files(repo, policy=1, ref=None):
                 and (path.suffix in ('.scss', '.css', '.less') or (policy >= 4 and path.suffix == '.sass') or
                      (policy >= 4 and path.suffix in ('.tsx', '.jsx') and '.spec.' not in name) or
                      (policy >= 2 and path.suffix in ('.html', '.ts', '.js', '.mjs') and '.spec.' not in name
-                      and (parts[0] == 'src' or json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-template-designer')))
+                      and (parts[0] == 'src' or package_name(repo) == 'cedar-template-designer')))
                 and not EXCLUDED.intersection(path.parts)
                 and not path.name.startswith('styles-Material-Icons')
                 and (ref or (repo / path).is_file())):
             yield path
+
+
+def package_name(repo):
+    manifest = repo / 'package.json'
+    return json.loads(manifest.read_text()).get('name') if manifest.exists() else None
 
 
 def findings(path, source, policy=1):
@@ -468,6 +477,45 @@ def pinned_tokens(pin):
     return match[1], token_names(found.stdout)
 
 
+def dependency(repo):
+    """The token version a consumer pins and the version its lock records. An npm consumer pins in
+    package.json and locks in package-lock.json. A consumer without npm pins in its vendored copy's
+    manifest, and that copy locks the version only while every file matches its recorded digest and
+    the custom properties it declares are the token set at the commit the version names."""
+    nested = sorted(repo.glob('*-src/package.json'))
+    if len(nested) > 1:
+        raise ValueError('Multiple frontend manifests; select an unambiguous consumer')
+    package_root = nested[0].parent if nested else repo
+    if not (package_root / 'package.json').exists():
+        manifests = sorted(path for path in repo.glob('src/**/' + VENDORED) if 'target' not in path.parts)
+        if len(manifests) > 1:
+            raise ValueError('Multiple vendored token manifests; keep one copy')
+        if not manifests:
+            raise ValueError(f'No package.json and no {VENDORED}; the consumer pins no token version')
+        manifest = json.loads(manifests[0].read_text())
+        if manifest.get('package') != PACKAGE or not isinstance(manifest.get('files'), dict) or not manifest['files']:
+            raise ValueError(f'{manifests[0].relative_to(repo)} must name {PACKAGE} and the files it vendors')
+        pin = manifest.get('version')
+        intact = all((manifests[0].parent / name).is_file() and Path(name).name == name and
+                     hashlib.sha256((manifests[0].parent / name).read_bytes()).hexdigest() == digest
+                     for name, digest in manifest['files'].items())
+        properties = manifests[0].parent / 'custom-properties.css'
+        _, pinned = pinned_tokens(pin)
+        if intact and pinned is not None and properties.is_file():
+            intact = set(re.findall(r'--cedar-([\w-]+)\s*:', properties.read_text())) == pinned
+        return pin, pin if intact else None
+    package = json.loads((package_root / 'package.json').read_text())
+    pin = next((package.get(section, {}).get(PACKAGE) for section in
+                ('dependencies', 'devDependencies', 'peerDependencies') if PACKAGE in package.get(section, {})), None)
+    lockpath = package_root / 'package-lock.json'
+    locked = None
+    if lockpath.exists():
+        lock = json.loads(lockpath.read_text())
+        locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
+        locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
+    return pin, locked
+
+
 def report(repo, expected, ref=None, initialize=False, prune=False):
     baseline, exists = read_baseline(repo, ref)
     current, _ = read_baseline(repo)
@@ -506,19 +554,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         row['status'] = ('new' if row['rule'] in ('sass-alias', 'spacing-expression', 'unknown-token', 'token-override', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) and remaining[key] > 0 else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
-    nested = sorted(repo.glob('*-src/package.json'))
-    if len(nested) > 1:
-        raise ValueError('Multiple frontend manifests; select an unambiguous consumer')
-    package_root = nested[0].parent if nested else repo
-    package = json.loads((package_root / 'package.json').read_text())
-    pin = next((package.get(section, {}).get(PACKAGE) for section in
-                ('dependencies', 'devDependencies', 'peerDependencies') if PACKAGE in package.get(section, {})), None)
-    lockpath = package_root / 'package-lock.json'
-    locked = None
-    if lockpath.exists():
-        lock = json.loads(lockpath.read_text())
-        locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
-        locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
+    pin, locked = dependency(repo)
     dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
     # A pinned package that lacks a token this repository reads leaves a custom property unset, which
     # no build reports: the declaration silently falls back.
@@ -561,7 +597,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
+    parser.add_argument('--repo', action='append', help='Repository path under root, such as cedar-workspace or mcp/cedar-cee-mcp; repeatable')
     parser.add_argument('--sync-surfaces', action='store_true', help='Refresh generated browser contracts from the central implementation')
     parser.add_argument('--surface-inventory', type=Path, help='Generate the maintained Markdown surface hierarchy (requires all registered repositories)')
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
@@ -578,8 +614,8 @@ def main(argv=None):
     expected = published_version()
     reports, errors = [], []
     for name in args.repo or REPOS:
-        if Path(name).name != name:
-            parser.error('--repo must be a repository name, not a path')
+        if Path(name).is_absolute() or not Path(name).parts or any(part in ('.', '..') for part in Path(name).parts):
+            parser.error('--repo must be a repository path under root')
         repo = args.root / name
         if not repo.exists() and not args.repo:
             continue

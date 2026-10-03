@@ -61,6 +61,10 @@ def sources(path, source, policy=2):
         return
     source = re.sub(r'<!--.*?-->|/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', lambda m: masked(m[0]), source, flags=re.S)
     templates = [(0, source)] if Path(path).suffix in ('.html', '.tsx', '.jsx') else []
+    if Path(path).suffix == '.html':
+        # A page's own script reaches the document as directly as a component's code does.
+        for match in re.finditer(r'<script\b(?![^>]*\bsrc\s*=)[^>]*>(.*?)</script\s*>', source, re.S | re.I):
+            yield from sources(Path('inline.js'), _at(source, match.start(1)) + match[1], policy)
     if Path(path).suffix in ('.ts', '.js', '.mjs', '.tsx', '.jsx'):
         if policy >= 4:
             yield from policy_4_script(source, properties)
@@ -95,6 +99,9 @@ def sources(path, source, policy=2):
                 else:
                     templates.append((offset, text))
     for offset, template in templates:
+        # A style element is a stylesheet, in a page's head as in a component's template.
+        for match in re.finditer(r'<style\b[^>]*>(.*?)</style\s*>', template, re.S | re.I):
+            yield _at(source, offset) + _at(template, match.start(1)) + match[1]
         for match in re.finditer(r"""\[style\.(--[\w-]+)(?:\.(?:px|rem|em|%))?\]\s*=\s*(["'])(.*?)\2""", template, re.S):
             yield '\n' * (source[:offset].count('\n') + template[:match.start()].count('\n')) + '{' + match[1] + ':uninspectable-binding;}'
         # Check resize utilities in literal and bound class attributes only.
