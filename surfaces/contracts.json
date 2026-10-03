@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "walk": 2,
   "contracts": {
     "menu": {
       "background-color": "--cedar-surface-raised",
@@ -66,6 +67,28 @@
       "--cedar-status-warning-text",
       "--cedar-status-success-text"
     ],
-    "border-radius": ["--cedar-radius", "--cedar-radius-pill"]
+    "border-radius": ["--cedar-radius", "--cedar-radius-pill"],
+    "paint": [
+      "--cedar-surface-raised",
+      "--cedar-surface-subtle",
+      "--cedar-surface-selected",
+      "--cedar-color-primary",
+      "--cedar-color-primary-strong",
+      "--cedar-color-on-primary",
+      "--cedar-text-primary",
+      "--cedar-text-muted",
+      "--cedar-text-title",
+      "--cedar-border-rule",
+      "--cedar-control-border-default",
+      "--cedar-status-error-text",
+      "--cedar-status-error-surface",
+      "--cedar-status-warning-text",
+      "--cedar-status-warning-surface",
+      "--cedar-status-success-text",
+      "--cedar-status-success-surface",
+      "--cedar-status-unsaved-dot",
+      "--cedar-dialog-backdrop"
+    ],
+    "shadow": ["--cedar-shadow-overlay", "--cedar-shadow-dialog"]
   }
 }

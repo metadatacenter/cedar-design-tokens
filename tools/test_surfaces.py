@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -110,6 +111,23 @@ class SurfaceCoverageTest(unittest.TestCase):
         subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
         subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'base'], check=True)
         self.registry['surfaces'][0]['scaleDebt'] = [{'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Added in a feature change'}]
+        self.save()
+        self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
+
+    def test_moving_to_a_new_walk_may_record_existing_findings_once(self):
+        helper = self.repo / self.registry['browserHelper']
+        current = helper.read_text()
+        helper.write_text(re.sub(r'^// Walk \d+\.$', '// Walk 1.', current, flags=re.M))
+        commit = ['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm']
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(commit + ['base'], check=True)
+        sync(self.repo)
+        self.registry['surfaces'][0]['scaleDebt'] = [{'property': 'box-shadow', 'value': 'rgba(0, 0, 0, 0.14)', 'reason': 'Material elevation, found when the walk read shadows'}]
+        self.save()
+        self.assertFalse(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(commit + ['migrated'], check=True)
+        self.registry['surfaces'][0]['scaleDebt'].append({'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Added in a later feature change'})
         self.save()
         self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
 
