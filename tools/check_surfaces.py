@@ -7,7 +7,8 @@ import subprocess
 
 MANIFEST = '.ui-surfaces.json'
 HOME = Path(__file__).resolve().parents[1]
-REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer', 'cedar-openview')
+REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer', 'cedar-openview',
+            'cedar-embeddable-term-picker', 'cedar-monitoring', 'cedar-bridging')
 SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace', 'OpenView', 'Term Picker', 'Monitoring', 'Bridging')
 # Applications whose pages are their Angular routes: every literal route path must be registered.
 ROUTED = ('cedar-openview', 'cedar-monitoring', 'cedar-bridging')

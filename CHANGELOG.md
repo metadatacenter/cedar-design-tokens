@@ -28,6 +28,8 @@
   a token the repository reads, and on a pin naming a commit the checkout does not have. The
   version report compares pins with the version the checkout's head publishes under.
 - The `Unused tokens` workflow checks every consumer for a reader of each token.
+- CETP, Monitoring and Bridging own surface registries with rendered contracts, and the check now
+  requires all three, with Monitoring's and Bridging's literal routes registered as OpenView's are.
 - The adoption check reads a page's style elements and inline scripts. A consumer without npm pins
   the package through a vendored copy of its compiled stylesheets and a manifest of their digests,
   and the session page `cedar-cee-mcp` serves is checked that way. `--repo` takes a path under the

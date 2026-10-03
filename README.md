@@ -622,7 +622,8 @@ it does not prove the entire CSS cascade. Legacy AngularJS pages remain excluded
 
 ## Maintained Surface Registry
 
-Workspace, CED, CEE, the Template Designer host and OpenView own `.ui-surfaces.json` files.
+Workspace, CED, CEE, CETP, the Template Designer host, OpenView, Monitoring and Bridging own
+`.ui-surfaces.json` files.
 These are the source for the human-readable surface hierarchy and the rendered
 menu, dialog and validation-summary checks. Embedded CEE/CEF internals remain
 opaque in the hierarchy; their own component suites retain that coverage.
@@ -638,6 +639,15 @@ OpenView's folder and template pages, and its not-found and not-open error cards
 are checked as rendered pages. Its browser suite, under `browser/`, serves the built
 application and answers the open API from captured fixtures, so it needs no network.
 Its errors are inline cards, not dialogs.
+
+Monitoring's and Bridging's registries also live at their repository roots, over sources under
+`cedar-monitoring-src` and `cedar-bridging-src`, and their literal routes must be registered as
+OpenView's are. Each has a browser suite under `browser/` that serves the built application, signs a
+test user in through a stand-in Keycloak issuing unsigned tokens, and answers the configuration and
+every backend call from fixtures, so it needs no network. Their initial registries record as scale
+debt the Material defaults their themes leave in place, such as letter spacing and elevation
+shadows, and the values Monitoring keeps by policy. CETP's registry checks its search tabs, a term's
+detail and the constraint table through the fixtures its browser suite already uses.
 Registries without rendered contracts may omit `browserHelper`; adding a recognized
 menu or dialog still requires registration, a rendered contract and browser tests.
 CEE menus/dialogs remain registered once in CEE, rather than copied into each host.
