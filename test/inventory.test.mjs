@@ -48,7 +48,6 @@ const inventory = {
     'focus-ring-width',
     'focus-ring-offset',
     'row-height-compact',
-    'table-row-height',
   ],
   space: ['space-1', 'space-2', 'space-3', 'space-4', 'space-6'],
   shape: [

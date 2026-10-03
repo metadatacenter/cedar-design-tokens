@@ -11,6 +11,9 @@ $header-action-slot: 40px;
 $property-slot: 18px;
 $form-toolbar-size: 30px;
 
+// An ordinary listing row: a default control with a `space-1` gutter above and below it.
+$table-row-height: tokens.$control-height-default + 2 * tokens.$space-1;
+
 $-recipes: (
   split-column-gutter: (1%),
   inset-status-panel: (4.55%),

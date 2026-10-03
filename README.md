@@ -112,8 +112,8 @@ Controls have two densities. The `-default` tokens describe the 36px control wit
 `authoring.density` mixin points the two `-default` properties at their `-authoring` values. These
 are defaults only: the public host overrides, such as `--cedar-control-height`, have different
 names, and the adapters read an override first. A choice option and an authoring table row are
-`row-height-compact` (28px); an ordinary listing row is `table-row-height` (44px: a control with a
-small gutter above and below).
+`row-height-compact` (28px). An ordinary listing row takes `spacing.$table-row-height`, a default
+control with a `space-1` gutter above and below it (44px).
 
 Space, shape and elevation are each one short scale. Every padding, margin and gap in a consumer is a
 step of `space-1/2/3/4/6` (4, 8, 12, 16 and 24px). A half step, a multiple or a derived inset comes from
@@ -468,7 +468,7 @@ each recipe's spacing, weight and semantic color. Use this variant instead of ad
 a local font-size override after the mixin. Only `small` and `body` are supported.
 
 `table-cell` gives an ordinary table's cells 4px/12px padding and a rule, and the host sets its rows to
-`table-row-height` (44px). `authoring.compact-table` gives authoring tables 28px rows
+`spacing.$table-row-height` (44px). `authoring.compact-table` gives authoring tables 28px rows
 (`row-height-compact`) with 2px block padding; their inline padding stays with the host. Authoring
 headers fit their text; rows
 grow for wrapped values or larger controls. The ordinary profile fits its controls

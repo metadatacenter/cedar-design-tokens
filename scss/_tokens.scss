@@ -180,10 +180,9 @@ $control-disabled-opacity: 0.45;
 $focus-ring-width: 2px;
 $focus-ring-offset: 2px;
 
-// A choice option and an authoring table row; an ordinary listing row, which holds a control with a
-// small gutter above and below it.
+// A choice option and an authoring table row. An ordinary listing row derives from the control
+// height, so it is a `spacing` measurement.
 $row-height-compact: 28px;
-$table-row-height: 44px;
 
 // ---------------------------------------------------------------------------
 // Space, shape and elevation

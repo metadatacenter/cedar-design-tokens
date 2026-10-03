@@ -132,6 +132,7 @@
   "table-cell-padding-inline-authoring": "space-2",
   "table-divider": "border-rule",
   "table-header-weight": "font-weight-medium",
+  "table-row-height": "spacing.$table-row-height",
   "table-row-height-authoring": "row-height-compact",
   "text-authoring": "text-primary",
   "text-destructive": "status-error-text",

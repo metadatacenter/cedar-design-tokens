@@ -25,7 +25,7 @@ test('input recipes preserve host focus and error overrides and avoid premature 
 
 test('table density keeps compact action rows at 28px and ordinary controls unclipped', () => {
   const css = sass.compileString(
-    `@use 'sass:math'; @use 'tokens'; a { default-row: tokens.$table-row-height; authoring-row: tokens.$row-height-compact; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$space-1; authoring-padding: math.div(tokens.$space-1, 2); }`,
+    `@use 'sass:math'; @use 'tokens'; @use 'spacing'; a { default-row: spacing.$table-row-height; authoring-row: tokens.$row-height-compact; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$space-1; authoring-padding: math.div(tokens.$space-1, 2); }`,
     { loadPaths: ['scss'] },
   ).css;
   const values = new Map([...css.matchAll(/([\w-]+): (\d+)px/g)].map((m) => [m[1], Number(m[2])]));
