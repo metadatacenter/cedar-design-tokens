@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `textarea-min-rows-default` is retired. Only the embeddable editor read it, as the default of its
+  own `--cedar-textarea-min-rows` host property, so the editor now states that default itself.
 - The Sass modules and their font faces sit under `scss/`, and the sources of the compiled
   stylesheets under `css/`, each named after the file it builds. The export names are unchanged,
   but they now resolve only through the package's `exports`: Angular's builder reads it, and a

@@ -45,7 +45,6 @@ const inventory = {
     'control-line-height-default',
     'control-line-height-authoring',
     'control-disabled-opacity',
-    'textarea-min-rows-default',
     'focus-ring-width',
     'focus-ring-offset',
     'row-height-compact',

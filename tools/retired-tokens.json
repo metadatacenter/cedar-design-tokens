@@ -137,5 +137,6 @@
   "text-destructive": "status-error-text",
   "text-readonly": "text-muted",
   "text-selected": "text-primary",
+  "textarea-min-rows-default": "2, the embeddable editor's own default for --cedar-textarea-min-rows",
   "tooltip-shadow": "shadow-overlay"
 }
