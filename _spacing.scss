@@ -51,12 +51,13 @@ $-recipes: (
   header-action-reserve: (
     $header-action-slot + tokens.$space-2,
   ),
-  compact: (calc(var(--cedar-space-1) / 2)),
+  // Static, because CEE renders in hosts that declare no CEDAR properties.
+  compact: (calc(tokens.$space-1 / 2)),
   compact-cell: (
     calc(var(--cedar-space-1) / 2) var(--cedar-space-1),
   ),
   compact-row: (
-    calc(var(--cedar-space-1) / 2) var(--cedar-space-2),
+    calc(#{tokens.$space-1} / 2) tokens.$space-2,
   ),
   control-row: (
     calc(var(--cedar-space-3) / 2) var(--cedar-space-3),

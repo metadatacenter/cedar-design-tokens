@@ -20,9 +20,7 @@ test('every finite spacing recipe compiles without consumer Sass variables', () 
 
 test('control alignment retains the existing geometry without local arithmetic', () => {
   assert.match(compile('a { @include spacing.apply(padding, view-switch); }'), /space-1\) \* 1.25/);
-  assert.match(
-    compile('a { @include spacing.apply(padding, compact); }'),
-    /padding: calc\(var\(--cedar-space-1\) \/ 2\)/,
-  );
+  assert.match(compile('a { @include spacing.apply(padding, compact); }'), /padding: 2px/);
+  assert.doesNotMatch(compile('a { @include spacing.apply(padding, compact-row); }'), /var\(/);
   assert.match(compile('a { @include spacing.apply(padding, preview-select); }'), /space-2\) \* 3.75/);
 });
