@@ -59,13 +59,7 @@ const inventory = {
     'shadow-overlay',
     'shadow-dialog',
   ],
-  motion: [
-    'motion-duration-fast',
-    'motion-duration-normal',
-    'motion-duration-spinner',
-    'motion-ease-standard',
-    'motion-ease-enter',
-  ],
+  motion: ['motion-duration-fast', 'motion-duration-normal', 'motion-duration-spinner', 'motion-ease-standard'],
   layers: ['layer-sticky', 'layer-menu', 'layer-modal', 'layer-overlay', 'layer-tooltip'],
 };
 

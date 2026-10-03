@@ -122,7 +122,7 @@ rejects. Every box
 has the `radius` corner (4px); chips and pills take `radius-pill`. Icons are 16, 20 or 24px. Menus,
 popovers, tooltips and drag previews take `shadow-overlay`; dialogs take `shadow-dialog`.
 
-Motion is two interaction durations, a spinner duration and two easing curves. Layers are five
+Motion is two interaction durations, a spinner duration and one easing curve. Layers are five
 ordered stacking levels: sticky, menu, modal, overlay and tooltip.
 
 ## Holding the Line
@@ -489,7 +489,7 @@ properties (for example a computed grid column definition) remain local.
 
 ### Motion and Overlay Layers
 
-Use the fast and normal duration roles with the shared easing curves. Continuous
+Use the fast and normal duration roles with the shared easing curve. Continuous
 progress indicators use the spinner duration role. Literal transition/animation
 durations and style utility classes in Angular bindings are gated as well. Include
 `motion.reduced-motion` once per application/shadow root, or import `motion.css`.

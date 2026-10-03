@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `motion-ease-enter` is retired for `motion-ease-standard`. Only the designer read it, for three
+  fade-ins, and both curves decelerate.
 - `table-row-height` is retired for `spacing.$table-row-height`, the same 44px derived from the
   default control height and `space-1`.
 - `textarea-min-rows-default` is retired. Only the embeddable editor read it, as the default of its

@@ -71,6 +71,7 @@
   "menu-padding": "space-1",
   "menu-radius": "radius",
   "menu-shadow": "shadow-overlay",
+  "motion-ease-enter": "motion-ease-standard",
   "on-accent-100": "a colour role (color-primary, color-primary-strong, surface-selected, text-title)",
   "on-accent-200": "a colour role (color-primary, color-primary-strong, surface-selected, text-title)",
   "on-accent-300": "a colour role (color-primary, color-primary-strong, surface-selected, text-title)",
