@@ -92,6 +92,9 @@
   font-weight: var(--cedar-font-weight-medium, #{tokens.$font-weight-medium});
 }
 
+// The circle that holds a settings dialog's header icon.
+$-settings-badge-size: 40px;
+
 // Shared settings-dialog structure. Content and maximum width remain host-owned.
 @mixin settings-dialog {
   .settings-dialog-backdrop {
@@ -133,8 +136,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: calc(var(--cedar-space-6) + var(--cedar-space-4));
-    height: calc(var(--cedar-space-6) + var(--cedar-space-4));
+    width: $-settings-badge-size;
+    height: $-settings-badge-size;
     border-radius: var(--cedar-radius-pill);
     background: transparent;
     color: var(--cedar-color-primary);

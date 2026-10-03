@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- `patterns.icon-button($size)` draws an icon-only button's box: `small` (24px) for row actions and
+  handles, `default` at the control height.
+- The `spacing` export names the box sizes no role describes, for the designer, Workspace and the
+  editor, and gains the `control-reserve` recipe and `padding-top` as a recipe property. A consumer
+  reads a named size instead of a spacing step or control height whose value matches.
+- `resource-card-icon` and `resource-card-heading` size their slot with `icon-size-large`, the
+  settings-dialog badge and the save-state dot with sizes of their own. Each renders as before.
+- A status text colour may fill a small indicator. A rule colour never draws text.
 - `--strict` fails on a token that only one consumer reads, counting the recipes each consumer
   includes and the compiled stylesheets it imports. The JSON report names each such token and its
   reader under `singleReaderTokens`. The `Unused tokens` workflow is now `Token readers`.

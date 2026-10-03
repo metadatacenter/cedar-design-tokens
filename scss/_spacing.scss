@@ -14,6 +14,47 @@ $form-toolbar-size: 30px;
 // An ordinary listing row: a default control with a `space-1` gutter above and below it.
 $table-row-height: tokens.$control-height-default + 2 * tokens.$space-1;
 
+// An icon-only button for a row action or a handle: a small icon with a `space-1` inset. The
+// `patterns.icon-button` recipe draws it.
+$icon-button-small: tokens.$icon-size-small + 2 * tokens.$space-1;
+
+// Sizes no role describes, named so that a consumer says what a size is for instead of borrowing a
+// token whose value happens to match. Each belongs to the component named in its comment.
+
+// Workspace: the brand mark beside the product name, as tall as the header's controls.
+$brand-mark-size: tokens.$control-height-default;
+// Workspace: the resource grid's minimum height.
+$resource-grid-min-height: 240px;
+// Workspace: a crumb in the destination picker, as tall as a small icon button.
+$inline-target-height: $icon-button-small;
+// Workspace: a resource card's line of small type, as tall as a line of body text.
+$card-meta-line-height: tokens.$font-size;
+
+// Designer: the overview and library panels beside the canvas, and the library collapsed to a rail.
+$designer-overview-width: 224px;
+$designer-library-width: 288px;
+$designer-library-rail-width: 48px;
+// Designer: the identity block in the header, and the CEDAR mark at its top.
+$designer-identity-width: 72px;
+$designer-identity-mark-size: 40px;
+// Designer: the template header's icon tile, as tall as the name control beside it.
+$template-icon-tile-size: tokens.$control-height-default;
+// Designer: the template header's second field column, and the accent bar along the card's top.
+$template-header-field-width: 176px;
+$template-card-accent-height: 4px;
+// Designer: the handle that resizes the overview panel, and the stripe that marks an invalid row in
+// the outline.
+$resize-handle-width: 8px;
+$invalid-stripe-width: 3px;
+// Designer: the annotation table's type column, and a column that holds one control and its cell
+// padding. The second reads the custom properties, so an authoring density narrows it with its
+// control.
+$annotation-type-column-width: 96px;
+$control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+
+// Editor: the ring between a single-choice marker's outline and its filled centre.
+$choice-marker-ring: 4px;
+
 $-recipes: (
   split-column-gutter: (1%),
   inset-status-panel: (4.55%),
@@ -117,6 +158,8 @@ $-recipes: (
     var(--cedar-space-3) calc(2 * var(--cedar-space-3) + var(--cedar-icon-size-small)),
   ),
   page-footer: (calc(2 * var(--cedar-space-6))),
+  // Keeps a default control's height clear, for a control drawn over the padded box.
+  control-reserve: (var(--cedar-control-height-default)),
 );
 
 @mixin apply($property, $recipe) {
@@ -139,7 +182,8 @@ $-recipes: (
         padding-bottom,
         padding-inline,
         padding-left,
-        padding-right
+        padding-right,
+        padding-top
       ),
       $property
     )

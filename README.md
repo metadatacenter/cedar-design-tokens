@@ -174,9 +174,12 @@ A token only one component reads. The vocabulary is what every surface shares, s
 component has never becomes a custom property. Derived measurements are another matter: a consumer
 does no arithmetic on tokens, so every half step, multiple and inset lives here as a named recipe
 in the `spacing` export, including those only one component uses, such as the editor's header slot,
-its property slot and its toolbar size. They are recipe inputs, never emitted as properties, and a
-recipe no consumer selects is removed. Geometry a shared pattern needs, such as the minimum width of
-a resource card, lives in the pattern.
+its property slot and its toolbar size. A box size that no role describes is named there too, such
+as the designer's panel widths or Workspace's brand mark, so a consumer says what a size is for
+rather than borrowing a token whose value matches. A spacing step is not a button size, and a
+control height is not a logo size. They are recipe inputs, never emitted as properties, and a recipe
+no consumer selects is removed. Geometry a shared pattern needs, such as the minimum width of a
+resource card, lives in the pattern.
 
 Anything from `@angular/material`. These values are CEDAR's, and expressing them in the vocabulary
 of a framework that renames that vocabulary every couple of releases means each rename edits the
@@ -450,6 +453,9 @@ Use `surface-selected` for selection and `surface-subtle` for hover, so a pointe
 unselected row look selected. Every text role is tested for normal-text contrast of at least 4.5:1
 on each surface it is drawn on, the status pairs included. Retain a label or icon alongside status
 color. A destructive action uses `status-error-text`, which does not replace an error message.
+A status text colour may also fill a small indicator, such as a meter bar, a state dot or a chip,
+because it carries the status hue at text contrast. The matching `-surface` stays a background and
+never draws a rule. A rule colour never draws text: a placeholder or a quiet icon takes `text-muted`.
 Read-only surfaces remain distinct from native disabled behavior. CETP derives its selection tint
 from the documented host primary override, so a host that re-points the primary gets a matching
 tint.
@@ -538,6 +544,10 @@ ordinary bordered button beside a primary one. A host written in plain CSS impor
 `visually-hidden` keeps text for assistive technology without drawing it. `tooltip-surface` draws a
 help label beside its control; a host written in plain CSS imports `tooltip.css` and gives the
 element the `cedar-tooltip` class. Both leave position and visibility to the host.
+
+`icon-button` draws the box of an icon-only button. The `small` size, 24px, is a 16px icon with a
+`space-1` inset, for row actions and handles. The `default` size is the control height and honours
+`--cedar-control-height`. The host keeps the button's colours, border and states.
 
 `save-state-dot` and `save-state-dot-modified` draw the mark beside an editor's save state: a
 hollow ring while nothing is unsaved and a filled dot once something is, both in `status-warning-text`.

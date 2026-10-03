@@ -182,3 +182,30 @@ test('notices take a status pair or the information roles, and refuse other tone
   );
   assert.throws(() => patterns('.c { @include patterns.notice(alarm); }'), /Notice tone/);
 });
+
+test('an icon button is a small box for row actions or the control height, nothing else', () => {
+  const small = patterns('a { @include patterns.icon-button; }');
+  for (const property of ['width', 'min-width', 'height', 'min-height'])
+    assert.match(small, new RegExp(`\\b${property}: 24px`));
+  assert.match(small, /padding: 0/);
+  assert.match(
+    patterns('a { @include patterns.icon-button(default); }'),
+    /height: var\(--cedar-control-height, var\(--cedar-control-height-default\)\)/,
+  );
+  assert.doesNotMatch(small, /color|background|border/);
+  assert.throws(() => patterns('a { @include patterns.icon-button(large); }'), /Icon button size/);
+});
+
+test("a resource card's type icon sits in an icon slot", () => {
+  const css = patterns('a { @include patterns.resource-card-heading; } b { @include patterns.resource-card-icon; }');
+  assert.match(css, /min-height: var\(--cedar-icon-size-large\)/);
+  assert.match(css, /flex: 0 0 var\(--cedar-icon-size-large\)/);
+  assert.doesNotMatch(css, /--cedar-space-6/);
+});
+
+test('a tooltip keeps the shared surface in a shadow root whose host declares no properties', () => {
+  const css = patterns('a { @include patterns.tooltip-surface; }');
+  assert.match(css, /background: var\(--cedar-surface-raised, #ffffff\)/);
+  assert.match(css, /color: var\(--cedar-text-primary, rgba\(0, 0, 0, 0\.87\)\)/);
+  assert.match(css, /border: 1px solid var\(--cedar-border-rule, #d7e0df\)/);
+});
