@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as sass from 'sass';
 
-const compile = (body) => sass.compileString(`@use 'authoring'; ${body}`, { loadPaths: [process.cwd()] }).css;
+const compile = (body) => sass.compileString(`@use 'authoring'; ${body}`, { loadPaths: ['scss'] }).css;
 
 test('authoring recipes are opt-in and preserve the native control host API', () => {
   assert.equal(compile(''), '');
@@ -34,7 +34,7 @@ test('the authoring select arrow is the shared native-select chevron at authorin
   const controls = sass.compileString(
     `@use 'controls'; select { @include controls.select-indicator($density: authoring); }`,
     {
-      loadPaths: [process.cwd()],
+      loadPaths: ['scss'],
     },
   ).css;
   assert.equal(compile('select { @include authoring.select-arrow; }'), controls);

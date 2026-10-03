@@ -12,7 +12,7 @@
 // `:host` as well as `:root`, because a CEDAR component renders inside a shadow root when it is
 // embedded and `:root` matches the document element, which is outside it.
 
-@use 'custom-properties';
+@use '../scss/custom-properties';
 
 :root,
 :host {

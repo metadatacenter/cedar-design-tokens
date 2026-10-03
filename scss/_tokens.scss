@@ -12,8 +12,8 @@
 // `_cee-material-theme.scss` is the adapter that feeds these values to Material.
 //
 // The names carry no component prefix. The module is used under an alias, so a consumer writes
-// `tokens.$font-size`, and the alias is where the scope belongs. `tokens.entry.scss` emits every
-// scalar here as a `--cedar-` custom property; the two palette maps and the Material font string
+// `tokens.$font-size`, and the alias is where the scope belongs. `css/custom-properties.scss`
+// emits every scalar here as a `--cedar-` custom property; the two palette maps and the Material font string
 // are Sass inputs only.
 
 @use 'sass:map';

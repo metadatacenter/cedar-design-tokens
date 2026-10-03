@@ -508,7 +508,8 @@ class AdoptionTest(unittest.TestCase):
         (tokens / 'package.json').write_text(json.dumps({'version': '0.1.0-dev.20260101.00000000'}))
         names = []
         for revision in revisions:
-            (tokens / '_tokens.scss').write_text(''.join(f'${name}: 1px;\n' for name in revision))
+            (tokens / 'scss').mkdir(exist_ok=True)
+            (tokens / 'scss/_tokens.scss').write_text(''.join(f'${name}: 1px;\n' for name in revision))
             subprocess.run(['git', '-C', str(tokens), 'add', '.'], check=True)
             subprocess.run(['git', '-C', str(tokens), '-c', 'user.name=Test', '-c', 'user.email=test@example.org',
                             'commit', '-qm', 'tokens'], check=True)
@@ -545,6 +546,17 @@ class AdoptionTest(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
                 self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+
+    def test_a_pin_from_before_the_sources_moved_still_names_its_tokens(self):
+        tokens, (head,) = self.token_checkout(['space-2', 'radius'])
+        subprocess.run(['git', '-C', str(tokens), 'mv', 'scss/_tokens.scss', '_tokens.scss'], check=True)
+        subprocess.run(['git', '-C', str(tokens), '-c', 'user.name=Test', '-c', 'user.email=test@example.org',
+                        'commit', '-qm', 'former layout'], check=True)
+        former = subprocess.run(['git', '-C', str(tokens), 'rev-parse', '--short=8', 'HEAD'],
+                                capture_output=True, text=True, check=True).stdout.strip()
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            self.assertEqual((former, {'space-2', 'radius'}), check.pinned_tokens('0.1.0-dev.20260101.' + former))
+            self.assertEqual((head, {'space-2', 'radius'}), check.pinned_tokens('0.1.0-dev.20260101.' + head))
 
     def test_strict_fails_on_allowances_the_code_no_longer_needs(self):
         self.style.write_text('a { color: #123; } b { color: #123; }')

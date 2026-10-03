@@ -20,7 +20,7 @@ sass.compileString(
      }
    }`,
   {
-    loadPaths: [root],
+    loadPaths: [join(root, 'scss')],
     functions: {
       'audit-token($name, $value)': ([name, value]) => {
         expected.set(`--cedar-${name.assertString().text}`, value.assertString().text);
@@ -74,7 +74,7 @@ test('defaults do not shadow the public compact-control override names', () => {
 });
 
 test('shared font export is self-contained and contains only font faces', () => {
-  const fonts = sass.compile(join(root, '_fonts.scss')).css;
+  const fonts = sass.compile(join(root, 'scss/_fonts.scss')).css;
   assert.equal((fonts.match(/@font-face/g) || []).length, 14);
   assert.equal((fonts.match(/data:font\/woff2;base64,/g) || []).length, 14);
   assert.doesNotMatch(fonts, /font-weight: 300;/);

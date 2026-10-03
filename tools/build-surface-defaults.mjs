@@ -7,7 +7,7 @@ const needed = new Set([
   ...Object.values(contracts).flatMap((rules) => Object.values(rules)),
   ...Object.values(scale).flat(),
 ]);
-const css = sass.compile(new URL('tokens.entry.scss', root).pathname).css;
+const css = sass.compile(new URL('css/custom-properties.scss', root).pathname).css;
 const defaults = Object.fromEntries(
   [...css.matchAll(/(--cedar-[\w-]+):\s*([^;]+);/g)]
     .filter(([, name]) => needed.has(name))

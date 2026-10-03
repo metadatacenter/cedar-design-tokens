@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The Sass modules and their font faces sit under `scss/`, and the sources of the compiled
+  stylesheets under `css/`, each named after the file it builds. The export names are unchanged,
+  but they now resolve only through the package's `exports`: Angular's builder reads it, and a
+  direct `sass` build needs the package importer, because a load path alone no longer finds them.
+  A path into the package that bypasses `exports`, such as `fonts/_roboto-400.scss`, has moved.
 - The type scale is four sizes. `font-size-large` (18px) replaces `font-size-element-heading` and
   the 20px `font-size-heading`, so a section break takes the size of a nested element's heading and
   no longer outranks the element that contains it. Both names are retired.

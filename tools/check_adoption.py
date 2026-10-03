@@ -39,7 +39,7 @@ POLICIES = (1, 2, 3, 4)
 LATEST_POLICY = POLICIES[-1]
 EXACT_VERSION = re.compile(r'\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?')
 TOKEN_LITERALS = dict(re.findall(r'^\$([\w-]+):\s*([^;]+);',
-                                (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text(), re.M))
+                                (Path(__file__).resolve().parents[1] / 'scss/_tokens.scss').read_text(), re.M))
 
 
 def literal_typography(prop, value, policy=2):
@@ -206,6 +206,10 @@ def finding(path, clean, position, rule, prop, value, policy):
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+# The Sass module that defines the tokens. Before the sources moved into `scss/`, it sat at the root,
+# where a pin naming an older commit still finds it.
+TOKENS = 'scss/_tokens.scss'
+FORMER_TOKENS = '_tokens.scss'
 RETIRED = json.loads((Path(__file__).parent / 'retired-tokens.json').read_text())
 HOSTS = {name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text())}
 
@@ -227,8 +231,8 @@ def token_names(text):
 
 
 def shared_tokens():
-    """Every scalar of the Sass module, which tokens.entry.scss emits under its own name."""
-    return token_names((PACKAGE_ROOT / '_tokens.scss').read_text())
+    """Every scalar of the Sass module, which css/custom-properties.scss emits under its own name."""
+    return token_names((PACKAGE_ROOT / TOKENS).read_text())
 
 
 def known_css_properties():
@@ -390,8 +394,8 @@ def unused_tokens(root):
     """Shared tokens that no consumer and no package recipe references; None unless every consumer is checked out."""
     if not all((root / name).exists() for name in REPOS):
         return None
-    texts = [path.read_text() for path in PACKAGE_ROOT.glob('*.scss')
-             if path.name not in ('_tokens.scss', 'tokens.entry.scss')]
+    texts = [path.read_text() for path in sorted(PACKAGE_ROOT.glob('scss/*.scss')) + sorted(PACKAGE_ROOT.glob('css/*.scss'))
+             if path.name not in ('_tokens.scss', 'custom-properties.scss')]
     for name in REPOS:
         repo = root / name
         texts.extend((repo / path).read_text() for path in source_files(repo, 2))
@@ -470,11 +474,12 @@ def pinned_tokens(pin):
     match = PIN_COMMIT.search(pin or '')
     if not match:
         return None, None
-    found = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'show', f'{match[1]}:_tokens.scss'],
-                           capture_output=True, text=True)
-    if found.returncode:
-        return match[1], None
-    return match[1], token_names(found.stdout)
+    for path in (TOKENS, FORMER_TOKENS):
+        found = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'show', f'{match[1]}:{path}'],
+                               capture_output=True, text=True)
+        if not found.returncode:
+            return match[1], token_names(found.stdout)
+    return match[1], None
 
 
 def dependency(repo):

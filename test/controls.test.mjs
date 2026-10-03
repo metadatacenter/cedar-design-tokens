@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { readFileSync } from 'node:fs';
 import { getIcon } from '../dist/icons.js';
-const compile = (source) => sass.compileString(`@use 'controls'; ${source}`, { loadPaths: [process.cwd()] }).css;
+const compile = (source) => sass.compileString(`@use 'controls'; ${source}`, { loadPaths: ['scss'] }).css;
 test('pressed and hover recipes exclude both forms of disabled action', () => {
   const css = compile('button { @include controls.action-states; @include controls.primary-action; }');
   for (const selector of css.matchAll(/([^{}]+)\{/g)) {
@@ -26,7 +26,7 @@ test('input recipes preserve host focus and error overrides and avoid premature 
 test('table density keeps compact action rows at 28px and ordinary controls unclipped', () => {
   const css = sass.compileString(
     `@use 'sass:math'; @use 'tokens'; a { default-row: tokens.$table-row-height; authoring-row: tokens.$row-height-compact; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$space-1; authoring-padding: math.div(tokens.$space-1, 2); }`,
-    { loadPaths: [process.cwd()] },
+    { loadPaths: ['scss'] },
   ).css;
   const values = new Map([...css.matchAll(/([\w-]+): (\d+)px/g)].map((m) => [m[1], Number(m[2])]));
   assert.equal(values.get('authoring-row'), 28);
@@ -43,14 +43,14 @@ test('table density keeps compact action rows at 28px and ordinary controls uncl
 test('overlay layers are ordered within a host stacking context', () => {
   const css = sass.compileString(
     "@use 'tokens'; a { sticky: tokens.$layer-sticky; menu: tokens.$layer-menu; modal: tokens.$layer-modal; overlay: tokens.$layer-overlay; tooltip: tokens.$layer-tooltip; }",
-    { loadPaths: [process.cwd()] },
+    { loadPaths: ['scss'] },
   ).css;
   const levels = [...css.matchAll(/: (\d+);/g)].map((m) => Number(m[1]));
   assert.equal(levels.length, 5);
   assert.ok(levels.every((n, i) => i === 0 || n > levels[i - 1]));
 });
 test('reduced motion preserves animation completion and covers pseudo elements', () => {
-  const css = sass.compileString("@use 'motion'; @include motion.reduced-motion;", { loadPaths: [process.cwd()] }).css;
+  const css = sass.compileString("@use 'motion'; @include motion.reduced-motion;", { loadPaths: ['scss'] }).css;
   assert.match(css, /prefers-reduced-motion: reduce/);
   assert.match(css, /\*::before/);
   assert.match(css, /\*::after/);

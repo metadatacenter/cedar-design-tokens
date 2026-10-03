@@ -1,4 +1,4 @@
-@use 'controls';
+@use '../scss/controls';
 
 // Hosts opt in at their application root; legacy hosts can opt in one page only.
 .cedar-native-choices input[type='checkbox'],

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { readFileSync } from 'node:fs';
 
-const compile = (body) => sass.compileString(`@use 'spacing'; ${body}`, { loadPaths: [process.cwd()] }).css;
+const compile = (body) => sass.compileString(`@use 'spacing'; ${body}`, { loadPaths: ['scss'] }).css;
 
 test('spacing recipes emit nothing until selected and reject arbitrary values and token assignments', () => {
   assert.equal(compile(''), '');
@@ -12,7 +12,7 @@ test('spacing recipes emit nothing until selected and reject arbitrary values an
 });
 
 test('every finite spacing recipe compiles without consumer Sass variables', () => {
-  const source = readFileSync('_spacing.scss', 'utf8');
+  const source = readFileSync('scss/_spacing.scss', 'utf8');
   const names = [...source.matchAll(/^  ([\w-]+):/gm)].map((m) => m[1]);
   assert.ok(names.length > 0);
   for (const name of names) assert.ok(compile(`a { @include spacing.apply(padding, ${name}); }`).includes('padding:'));

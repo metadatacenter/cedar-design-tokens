@@ -1,5 +1,5 @@
-@use 'patterns';
-@use 'fonts/roboto-400';
+@use '../scss/patterns';
+@use '../scss/fonts/roboto-400';
 
 .cedar-validation-summary {
   @include patterns.validation-summary;

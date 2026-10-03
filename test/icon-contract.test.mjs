@@ -4,7 +4,7 @@ import * as sass from 'sass';
 import { readFileSync } from 'node:fs';
 
 test('all icon adapters receive the same enforced foreground and flat glyph surface', () => {
-  const css = sass.compile('icon-contract.entry.scss').css;
+  const css = sass.compile('css/icon-contract.scss').css;
   for (const adapter of ['svg[data-cedar-icon]', 'mat-icon', '.material-icons', '.fa', '.glyphicon'])
     assert.ok(css.includes(adapter));
   assert.match(css, /color: var\(--cedar-icon-color, var\(--cedar-color-primary, #0f7686\)\) !important/);
@@ -18,5 +18,5 @@ test('all icon adapters receive the same enforced foreground and flat glyph surf
 });
 
 test('icon Sass contract stays opt-in for encapsulated consumers', () => {
-  assert.equal(sass.compileString("@use 'icon-contract';", { loadPaths: [process.cwd()] }).css, '');
+  assert.equal(sass.compileString("@use 'icon-contract';", { loadPaths: ['scss'] }).css, '');
 });

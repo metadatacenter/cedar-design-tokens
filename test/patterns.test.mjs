@@ -44,7 +44,7 @@ const names = [
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
     const css = sass.compileString(`@use 'patterns'; .consumer { @include patterns.${name}; }`, {
-      loadPaths: [process.cwd()],
+      loadPaths: ['scss'],
     }).css;
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g))
       assert.ok(roles.has(role[1]), `Unknown role: ${role[1]}`);
@@ -53,14 +53,14 @@ for (const name of names) {
   });
 }
 test('recipes emit nothing until used', () => {
-  assert.equal(sass.compileString("@use 'patterns';", { loadPaths: [process.cwd()] }).css, '');
+  assert.equal(sass.compileString("@use 'patterns';", { loadPaths: ['scss'] }).css, '');
 });
 
 for (const name of ['field-label', 'field-help', 'field-error']) {
   test(`${name} body variant preserves the default recipe except its type role`, () => {
     const compile = (args) =>
       sass.compileString(`@use 'patterns'; .consumer { @include patterns.${name}${args}; }`, {
-        loadPaths: [process.cwd()],
+        loadPaths: ['scss'],
       }).css;
     const defaultCss = compile('');
     assert.equal(compile('($size: small)'), defaultCss);
@@ -95,7 +95,7 @@ test('offline checker recognizes exactly the generated roles and host overrides'
 
 test('Info descriptions resize vertically without allowing width changes', () => {
   const css = sass.compileString("@use 'patterns'; .description { @include patterns.info-description-resize; }", {
-    loadPaths: [process.cwd()],
+    loadPaths: ['scss'],
   }).css;
   assert.match(css, /resize: vertical;/);
 });
@@ -103,7 +103,7 @@ test('Info descriptions resize vertically without allowing width changes', () =>
 test('dialog content can own padding while retaining the shared surface', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; .dialog { @include patterns.dialog-surface${args}; }`, {
-      loadPaths: [process.cwd()],
+      loadPaths: ['scss'],
     }).css;
   assert.equal(compile('($padding: 0)'), compile('').replace('padding: var(--cedar-space-6);', 'padding: 0;'));
 });
@@ -111,7 +111,7 @@ test('dialog content can own padding while retaining the shared surface', () => 
 for (const name of ['specification-box', 'specification-separator', 'specification-link']) {
   test(`${name} has registered host-overridable roles with standalone fallbacks`, () => {
     const css = sass.compileString(`@use 'patterns'; .reader { @include patterns.${name}; }`, {
-      loadPaths: [process.cwd()],
+      loadPaths: ['scss'],
     }).css;
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g)) {
       assert.ok(roles.has(role[1]) || role[1].replace('--', '') in hosts, role[1]);
@@ -127,7 +127,7 @@ for (const name of ['specification-box', 'specification-separator', 'specificati
 
 test('a required mark is raised without enlarging the line box of its label', () => {
   const css = sass.compileString(`@use 'patterns'; sup { @include patterns.required-mark; }`, {
-    loadPaths: [process.cwd()],
+    loadPaths: ['scss'],
   }).css;
   assert.match(css, /line-height: 0/);
   assert.match(css, /vertical-align: baseline/);
@@ -138,7 +138,7 @@ test('a required mark is raised without enlarging the line box of its label', ()
 test('breadcrumbs take the large size only when they head a listing, at one weight', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; nav { @include patterns.breadcrumbs${args}; }`, {
-      loadPaths: [process.cwd()],
+      loadPaths: ['scss'],
     }).css;
   assert.doesNotMatch(compile(''), /font-size/);
   assert.match(compile('($size: heading)'), /font-size: var\(--cedar-font-size-large\)/);
@@ -149,7 +149,7 @@ test('breadcrumbs take the large size only when they head a listing, at one weig
 test('resource cards share one minimum width and clamp names to two lines', () => {
   const css = sass.compileString(
     `@use 'patterns'; ul { @include patterns.resource-grid; } li { @include patterns.resource-card-name; }`,
-    { loadPaths: [process.cwd()] },
+    { loadPaths: ['scss'] },
   ).css;
   assert.match(css, /minmax\(min\(100%, 190px\), 1fr\)/);
   assert.match(css, /-webkit-line-clamp: 2/);
@@ -157,7 +157,7 @@ test('resource cards share one minimum width and clamp names to two lines', () =
   assert.match(css, /max-height: calc\(2 \* \(var\(--cedar-space-4\) \+ var\(--cedar-space-1\)\)\)/);
 });
 
-const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: [process.cwd()] }).css;
+const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: ['scss'] }).css;
 
 test('a trail mutes its ancestors, links included, and colours the current location', () => {
   const css = patterns('.trail { @include patterns.breadcrumbs; }');

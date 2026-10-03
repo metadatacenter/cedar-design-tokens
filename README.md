@@ -28,19 +28,12 @@ A Sass consumer takes the partial and reads the variables through an alias:
 The variables carry no component prefix. The alias is where the scope belongs, so it is
 `tokens.$font-size` rather than `tokens.$cedar-font-size`.
 
-Sass does not resolve a package path on its own, so `node_modules` has to be on the load path. In an
-Angular application that is one entry in `angular.json`, beside the one the repository already has
-for its own `src`:
-
-```json
-"stylePreprocessorOptions": {
-  "includePaths": ["src", "node_modules"]
-}
-```
-
-A build that runs `sass` directly takes `--load-path=node_modules`, and one whose Sass has the
-package importer enabled can write `@use 'pkg:@org.metadatacenter/cedar-design-tokens/tokens'`
-instead and skip the load path.
+A module's path is an export name, not a file path. The Sass sources sit under `scss/`, and the
+package's `exports` map points each name at its file under the `sass` condition. Angular's
+application builder resolves a package path through that map, so an Angular consumer needs no
+configuration for it. A build that runs `sass` directly enables the package importer with
+`--pkg-importer=node` and writes `@use 'pkg:@org.metadatacenter/cedar-design-tokens/tokens'`. A load
+path alone does not find the modules.
 
 A consumer whose stylesheet is plain CSS imports the compiled declarations instead, resolved by the
 bundler rather than by Sass:

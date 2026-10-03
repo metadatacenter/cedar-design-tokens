@@ -2,7 +2,7 @@
 @use 'sass:map';
 @use 'tokens';
 @use 'spacing';
-@use 'dist/icon-masks';
+@use '../dist/icon-masks';
 
 @mixin focus-ring($color: tokens.$color-primary) {
   outline: tokens.$focus-ring-width solid $color;
