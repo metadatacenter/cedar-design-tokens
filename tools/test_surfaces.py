@@ -190,6 +190,17 @@ class SurfaceCoverageTest(unittest.TestCase):
         (self.repo / 'package.json').unlink()
         self.assertIn('Missing', validate(self.repo)[0])
 
+    def test_monitoring_and_bridging_register_their_routes_as_openview_does(self):
+        nested = self.openview_registry()
+        for name in ('cedar-monitoring', 'cedar-bridging'):
+            (nested / 'package.json').write_text(json.dumps({'name': name}))
+            self.registry['repo'] = name
+            self.save()
+            (nested / 'src/extra-routing.module.ts').write_text("const routes = [{path: 'logs', component: Logs}];")
+            self.assertTrue(any("unregistered route 'logs'" in e for e in validate(self.repo)), name)
+            (nested / 'src/extra-routing.module.ts').unlink()
+            self.assertEqual(validate(self.repo), [], name)
+
     def test_nested_host_stray_routes_menus_and_dialogs_fail(self):
         nested = self.openview_registry()
         (nested / 'src/extra-routing.module.ts').write_text("const routes = [{path: 'new', component: New}];")

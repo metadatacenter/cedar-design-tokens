@@ -8,7 +8,9 @@ import subprocess
 MANIFEST = '.ui-surfaces.json'
 HOME = Path(__file__).resolve().parents[1]
 REQUIRED = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer', 'cedar-openview')
-SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace', 'OpenView')
+SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning / Error', 'Metadata Editor', 'Template Designer', 'Workspace', 'OpenView', 'Term Picker', 'Monitoring', 'Bridging')
+# Applications whose pages are their Angular routes: every literal route path must be registered.
+ROUTED = ('cedar-openview', 'cedar-monitoring', 'cedar-bridging')
 CONTRACTS = json.loads((HOME / 'surfaces/contracts.json').read_text())['contracts']
 SCALE = json.loads((HOME / 'surfaces/contracts.json').read_text())['scale']
 # The contracts that may check each kind of element the parser finds. A page contract walks a whole
@@ -160,7 +162,7 @@ def validate(repo):
         parser = Surfaces()
         source_text = (repo / name).read_text()
         parser.feed(source_text)
-        if package.get('name') == 'cedar-openview' and name.endswith('-routing.module.ts'):
+        if package.get('name') in ROUTED and name.endswith('-routing.module.ts'):
             for route in re.finditer(r'\bpath\s*:\s*([\"\'])(.*?)\1', source_text):
                 if not any(any(source['file'] == name and source['anchor'] == route.group(0)
                                for source in surface.get('source', [])) for surface in data['surfaces']):
