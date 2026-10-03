@@ -31,7 +31,7 @@ NAMED_COLOR = re.compile(r'(?<![\w$@.-])(?:' + '|'.join(sorted(NAMED_COLORS)) + 
 DIMENSION = re.compile(r'(?<![\w.-])(?:\d*\.)?\d+(?:px|rem|em)\b')
 # Policy 3 also reads a negative length, which policy 2 skipped: `margin-top: -48px` is a literal too.
 SIGNED_DIMENSION = re.compile(r'(?<![\w.])-?(?:\d*\.)?\d+(?:px|rem|em)\b')
-POLICIES = (1, 2, 3)
+POLICIES = (1, 2, 3, 4)
 LATEST_POLICY = POLICIES[-1]
 EXACT_VERSION = re.compile(r'\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?')
 TOKEN_LITERALS = dict(re.findall(r'^\$([\w-]+):\s*([^;]+);',
@@ -56,6 +56,24 @@ def literal_typography(prop, value, policy=2):
         inspected = re.sub(r'!important|\b(?:inherit|initial|unset|revert|revert-layer|normal)\b', '', inspected)
         return bool(re.search(r'[a-zA-Z]', inspected))
     return False
+
+
+# Material's system and component tokens, set as custom properties on a theme or a host.
+MATERIAL_INPUT = re.compile(r'--(?:mat|mdc)-[\w-]+')
+
+
+def material_input_rule(prop, value, policy):
+    """Policy 4: a Material input carries a type size, line height, weight, tracking, corner or
+    control height like any declaration, and the same literal rules apply to it."""
+    plain = re.sub(r'\s*!important$', '', value, flags=re.I)
+    if prop.endswith('-size') and not re.search(r'-(?:icon|state-layer|handle|track|touch-target|indicator)-size$', prop):
+        return 'typography' if literal_typography('font-size', plain, policy) else None
+    for suffix, typography in (('line-height', 'line-height'), ('weight', 'font-weight'), ('tracking', 'letter-spacing'), ('font', 'font-family')):
+        if prop.endswith('-' + suffix):
+            return 'typography' if literal_typography(typography, plain, policy) else None
+    if re.search(r'-(?:shape|radius|corner|height)$', prop) and SIGNED_DIMENSION.search(plain):
+        return 'geometry'
+    return None
 
 
 def policy_3_rule(prop, value):
@@ -96,7 +114,8 @@ def source_files(repo, policy=1, ref=None):
         path = Path(name)
         parts = path.parts[1:] if path.parts and path.parts[0].endswith('-src') else path.parts
         if (parts and parts[0] in ('src', 'app')
-                and (path.suffix in ('.scss', '.css', '.less') or
+                and (path.suffix in ('.scss', '.css', '.less') or (policy >= 4 and path.suffix == '.sass') or
+                     (policy >= 4 and path.suffix in ('.tsx', '.jsx') and '.spec.' not in name) or
                      (policy >= 2 and path.suffix in ('.html', '.ts', '.js', '.mjs') and '.spec.' not in name
                       and (parts[0] == 'src' or json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-template-designer')))
                 and not EXCLUDED.intersection(path.parts)
@@ -141,14 +160,39 @@ def findings(path, source, policy=1):
             rule = 'geometry'
         elif prop in ('height', 'min-height', 'border-radius', 'box-shadow', 'text-shadow', 'z-index', 'transition-duration', 'animation-duration') and (DIMENSION.search(value) or (prop == 'z-index' and re.fullmatch(r'-?\d+', value))):
             rule = 'geometry'
+        elif policy >= 4 and MATERIAL_INPUT.fullmatch(prop):
+            rule = material_input_rule(prop, value, policy)
         elif policy >= 3:
             rule = policy_3_rule(prop, value)
         if rule:
-            identity = f'{path}|{rule}|{prop}|{value}'
-            yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
-                   'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
-                   'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
+            yield finding(path, clean, match.start(1), rule, prop, value, policy)
+    if policy >= 4:
+        # A Material override map sets the roles a stylesheet would, as map entries the declaration
+        # parser never sees: `mat.form-field-overrides((container-text-size: 13px))`.
+        for overrides in re.finditer(r'[\w-]+\.([\w-]+-overrides)\s*\(\s*\(', clean):
+            depth, end = 2, overrides.end()
+            while end < len(clean) and depth:
+                depth += {'(': 1, ')': -1}.get(clean[end], 0)
+                end += 1
+            body, offset, nesting, entry_start = clean[overrides.end():end - 2], overrides.end(), 0, 0
+            for index, char in enumerate(body + ','):
+                nesting += {'(': 1, ')': -1}.get(char, 0)
+                if char == ',' and nesting == 0:
+                    entry = re.match(r'\s*([\w-]+)\s*:\s*(.+?)\s*$', body[entry_start:index], re.S)
+                    if entry:
+                        value = ' '.join(entry[2].split())
+                        rule = material_input_rule('--mat-' + entry[1], value, policy)
+                        if rule:
+                            yield finding(path, clean, offset + entry_start, rule, f'{overrides[1]}.{entry[1]}', value, policy)
+                    entry_start = index + 1
+
+
+def finding(path, clean, position, rule, prop, value, policy):
+    identity = f'{path}|{rule}|{prop}|{value}'
+    return {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
+            'file': str(path), 'line': clean.count('\n', 0, position) + 1,
+            'rule': rule, 'property': prop, 'value': value,
+            'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
 
 
 
@@ -308,7 +352,18 @@ def scan_styles(repo, policy=1, ref=None):
                     yield {'id': hashlib.sha256(f'{path}|token-override|{value}'.encode()).hexdigest()[:20],
                            'file': str(path), 'line': clean[:assignment.start()].count('\n') + 1,
                            'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
-            for match in re.finditer(r'(?<![\w-])--cedar-([\w-]+)\s*:\s*([^;{}]*)', '\n'.join(snippets)):
+            # Interpolation and @property reach the same names: `#{'--cedar-space-2'}: 6px`,
+            # `$n: --cedar-radius; #{$n}: 7px` and `@property --cedar-radius { initial-value: 7px }`.
+            names = dict(re.findall(r'(?:^|[;{}\s])\$([\w-]+)\s*:\s*[\'"]?(--cedar-[\w-]+)[\'"]?\s*;', clean))
+            uncommented = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
+            indirect = [(m.start(), names[m[1]]) for m in re.finditer(r'#\{\s*\$([\w-]+)\s*\}\s*:', uncommented) if m[1] in names]
+            indirect += [(m.start(), m[1]) for m in re.finditer(r'@property\s+(--cedar-[\w-]+)', clean)]
+            for position, name in indirect:
+                if name[len('--cedar-'):] in shared or name[len('--cedar-'):] in RETIRED:
+                    yield {'id': hashlib.sha256(f'{path}|token-override|{name}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': clean[:position].count('\n') + 1,
+                           'rule': 'token-override', 'property': name, 'value': name, 'severity': 'gate'}
+            for match in re.finditer(r'(?<![\w-])[\'"]?--cedar-([\w-]+)[\'"]?\s*:\s*([^;{}]*)', '\n'.join(snippets)):
                 # A component may re-point a shared role to its own documented host property, as the
                 # term picker does with `--cetp-*`, so shared recipes follow what an embedder sets.
                 if (str(path) == 'src/app/cedar-embeddable-term-picker.scss'
@@ -554,7 +609,7 @@ def main(argv=None):
     if args.json:
         print(json.dumps(output, indent=2))
     else:
-        print('Design-token adoption (policy 2 gates embedded styles, utilities, spacing and geometry; policy 3 adds outlines, opacity, easing and negative lengths)')
+        print('Design-token adoption (policy 2 gates embedded styles, utilities, spacing and geometry; policy 3 adds outlines, opacity, easing and negative lengths; policy 4 adds Material inputs and template bypasses)')
         for result in reports:
             rows = result['findings']
             new = sum(r['status'] == 'new' and r['severity'] == 'gate' for r in rows)

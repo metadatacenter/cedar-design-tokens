@@ -534,8 +534,49 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual(3, json.loads(path.read_text())['policy'])
         self.commit()
         self.assertTrue(all(r['status'] == 'existing' for r in self.run_report(ref='HEAD')['findings']))
+        while json.loads(path.read_text())['policy'] < check.LATEST_POLICY:
+            check.upgrade_policy(self.repo)
+            self.commit()
         with self.assertRaises(ValueError):
             check.upgrade_policy(self.repo)
+
+    def test_policy_four_reads_material_inputs(self):
+        source = ('.theme { --mat-form-field-container-height: 40px; --mat-menu-item-label-text-weight: 600;'
+                  ' --mdc-filled-text-field-label-text-size: 13px; --mat-icon-button-icon-size: 20px;'
+                  ' --mat-select-trigger-text-line-height: var(--cedar-control-line-height-default); }'
+                  ' @include mat.form-field-overrides((container-text-size: 13px, container-shape: var(--cedar-radius),'
+                  ' outlined-outline-width: 1px));')
+        self.assertEqual([], [r for r in check.findings('x.scss', source, 3) if r['property'].startswith(('--mat', '--mdc', 'form'))])
+        found = {(r['property'], r['rule']) for r in check.findings('x.scss', source, 4)}
+        self.assertEqual({('--mat-form-field-container-height', 'geometry'), ('--mat-menu-item-label-text-weight', 'typography'),
+                          ('--mdc-filled-text-field-label-text-size', 'typography'),
+                          ('form-field-overrides.container-text-size', 'typography')}, found)
+
+    def test_policy_four_reads_styles_that_skip_the_template_scan(self):
+        (self.repo / 'src/host.ts').write_text("""
+            interface Options { styles: string[] }
+            @Component({selector: 'x', host: {style: 'font-size: 13px', '[style.color]': 'tint', '[attr.style]': 'css'},
+                        styles: [SHARED], template: '<svg><text font-size="13" fill="#123456">A</text></svg><b class="[font-size:13px] outline-4">B</b>'})
+            class Host {}
+            const sheet = css`.a { color: #654321; }`;
+            new CSSStyleSheet().replaceSync(text);""")
+        three = [r for r in check.scan_styles(self.repo, 3) if r['file'].endswith('host.ts')]
+        four = [r for r in check.scan_styles(self.repo, 4) if r['file'].endswith('host.ts')]
+        self.assertEqual([], [r for r in three if r['rule'] != 'spellcheck'])
+        kinds = sorted((r['rule'], r['property']) for r in four if r['rule'] != 'spellcheck')
+        self.assertIn(('typography', 'font-size'), kinds)
+        self.assertIn(('color', 'fill'), kinds)
+        self.assertIn(('color', 'color'), kinds)
+        self.assertIn(('utility-style', 'utility-style'), kinds)
+        self.assertEqual(4, sum(1 for kind in kinds if kind == ('dynamic-style', 'dynamic-style') or kind == ('dynamic-style', 'color')))
+
+    def test_indirect_overrides_of_shared_tokens_are_refused(self):
+        for source in ("a { #{'--cedar-space-2'}: 6px; }",
+                       '$name: --cedar-radius;\na { #{$name}: 7px; }',
+                       '@property --cedar-radius { syntax: "<length>"; inherits: true; initial-value: 7px; }'):
+            self.style.write_text(source)
+            rows = [r for r in check.scan_styles(self.repo, 2) if r['rule'] == 'token-override']
+            self.assertTrue(rows, source)
 
 
 if __name__ == '__main__':
