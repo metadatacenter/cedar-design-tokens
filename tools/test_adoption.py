@@ -191,7 +191,7 @@ class AdoptionTest(unittest.TestCase):
     def test_dependency_and_lock_are_compared_separately(self):
         self.assertEqual('matches checkout', self.run_report()['versionStatus'])
         (self.repo / 'package-lock.json').unlink()
-        self.assertEqual('differs from checkout/lock', self.run_report()['versionStatus'])
+        self.assertEqual('differs from lock', self.run_report()['versionStatus'])
 
     def test_reasoned_exceptions_apply_to_exact_finding(self):
         self.style.write_text('a { color: red; }')
@@ -448,6 +448,94 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual(1, invoke('--strict')[0])
         (self.repo / check.BASELINE).write_text('invalid')
         self.assertEqual(2, invoke()[0])
+
+    def token_checkout(self, *revisions):
+        """A token repository whose commits hold the given token sets, newest last; returns their short names."""
+        tokens = self.root / 'tokens'
+        tokens.mkdir()
+        subprocess.run(['git', 'init', '-q', str(tokens)], check=True)
+        (tokens / 'package.json').write_text(json.dumps({'version': '0.1.0-dev.20260101.00000000'}))
+        names = []
+        for revision in revisions:
+            (tokens / '_tokens.scss').write_text(''.join(f'${name}: 1px;\n' for name in revision))
+            subprocess.run(['git', '-C', str(tokens), 'add', '.'], check=True)
+            subprocess.run(['git', '-C', str(tokens), '-c', 'user.name=Test', '-c', 'user.email=test@example.org',
+                            'commit', '-qm', 'tokens'], check=True)
+            names.append(subprocess.run(['git', '-C', str(tokens), 'rev-parse', '--short=8', 'HEAD'],
+                                        capture_output=True, text=True, check=True).stdout.strip())
+        return tokens, names
+
+    def pin(self, version):
+        (self.repo / 'package.json').write_text(json.dumps({'devDependencies': {check.PACKAGE: version}}))
+        (self.repo / 'package-lock.json').write_text(json.dumps({'packages': {'node_modules/' + check.PACKAGE: {'version': version}}}))
+
+    def test_expected_version_is_the_one_the_checkout_head_publishes(self):
+        tokens, (old, head) = self.token_checkout(['space-2'], ['space-2', 'radius'])
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            expected = check.published_version()
+            self.assertRegex(expected, r'^0\.1\.0-dev\.\d{8}\.' + head + '$')
+            self.pin(expected)
+            self.assertEqual('matches checkout', check.report(self.repo, expected)['versionStatus'])
+            self.pin(expected.replace(head, old))
+            result = check.report(self.repo, expected)
+            self.assertEqual(('1 token commits behind checkout', []), (result['versionStatus'], result['pinMissingTokens']))
+
+    def test_a_pin_that_lacks_a_token_the_consumer_reads_fails_strict(self):
+        tokens, (old, head) = self.token_checkout(['space-2'], ['space-2', 'radius'])
+        self.style.write_text('a { border-radius: var(--cedar-radius); padding: var(--cedar-space-2); }')
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            self.pin('0.1.0-dev.20260101.' + old)
+            self.assertEqual(['radius'], check.report(self.repo, 'x')['pinMissingTokens'])
+            self.pin('0.1.0-dev.202601010000.g' + head + '.t12')
+            self.assertEqual([], check.report(self.repo, 'x')['pinMissingTokens'])
+            self.pin('0.1.0-dev.20260101.abcdef12')
+            self.assertTrue(check.report(self.repo, 'x')['pinUnknown'])
+            self.pin('0.1.0-dev.20260101.' + old)
+            with contextlib.redirect_stdout(io.StringIO()):
+                (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
+                self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+
+    def test_strict_fails_on_allowances_the_code_no_longer_needs(self):
+        self.style.write_text('a { color: #123; } b { color: #123; }')
+        self.run_report(initialize=True)
+        self.style.write_text('a { color: #123; }')
+        self.assertEqual(1, self.run_report()['staleAllowances'])
+        self.run_report(prune=True)
+        self.assertEqual(0, self.run_report()['staleAllowances'])
+
+    def test_policy_three_reads_outlines_opacity_easing_and_negative_lengths(self):
+        source = ('a { outline: 3px solid var(--cedar-color-primary); outline-offset: 1px; opacity: .5;'
+                  ' transition: color var(--cedar-motion-duration-fast) ease; margin-top: -6px;'
+                  ' letter-spacing: -0.3px; z-index: 9999 !important; border-top-left-radius: 7px;'
+                  ' background: color-mix(in srgb, var(--cedar-color-primary) 15%, transparent); }')
+        self.assertEqual([], list(check.findings('x.scss', source, 2)))
+        found = {(r['property'], r['rule']) for r in check.findings('x.scss', source, 3)}
+        self.assertEqual({('outline', 'geometry'), ('outline-offset', 'geometry'), ('opacity', 'geometry'),
+                          ('transition', 'motion'), ('margin-top', 'spacing'), ('letter-spacing', 'typography'),
+                          ('z-index', 'geometry'), ('border-top-left-radius', 'geometry'), ('background', 'color')}, found)
+        quiet = ('a { opacity: 0; } b { opacity: 1; } c { animation: spin var(--cedar-motion-duration-spinner) linear infinite; }'
+                 ' d { outline: none; outline-offset: var(--cedar-focus-ring-offset); }')
+        self.assertEqual([], list(check.findings('x.scss', quiet, 3)))
+
+    def test_policy_three_reads_bound_outline_colours(self):
+        (self.repo / 'src/card.html').write_text("<div [style.outline-color]=\"issues ? '#b42318' : null\"></div>")
+        self.assertEqual([], [r for r in check.scan_styles(self.repo, 2) if r['file'].endswith('.html')])
+        self.assertEqual(['dynamic-style'], [r['rule'] for r in check.scan_styles(self.repo, 3) if r['file'].endswith('.html')])
+
+    def test_policy_upgrade_moves_one_step_and_records_new_debt(self):
+        self.style.write_text('a { color: #fff; opacity: .5; }')
+        self.run_report(initialize=True)
+        path = self.repo / check.BASELINE
+        baseline = json.loads(path.read_text())
+        baseline['policy'] = 2
+        path.write_text(json.dumps(baseline))
+        self.commit()
+        check.upgrade_policy(self.repo)
+        self.assertEqual(3, json.loads(path.read_text())['policy'])
+        self.commit()
+        self.assertTrue(all(r['status'] == 'existing' for r in self.run_report(ref='HEAD')['findings']))
+        with self.assertRaises(ValueError):
+            check.upgrade_policy(self.repo)
 
 
 if __name__ == '__main__':

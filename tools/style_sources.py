@@ -8,6 +8,12 @@ from pathlib import Path
 
 LITERAL = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
 STYLE_PROPERTIES = r'(?:resize|accent-color|color|background(?:-color)?|font(?:-[\w-]+)?|line-height|letter-spacing|border(?:-[\w-]+)?|box-shadow|z-index|padding(?:-[\w-]+)?|margin(?:-[\w-]+)?|(?:row-|column-)?gap|height|min-height|transition(?:-duration)?|animation(?:-duration)?)'
+# Policy 3 also inspects focus outlines, opacity and the easing a transition or animation names.
+STYLE_PROPERTIES_3 = STYLE_PROPERTIES[:-1] + r'|outline(?:-[\w-]+)?|opacity|transition(?:-timing-function)?|animation(?:-timing-function)?)'
+
+
+def style_properties(policy):
+    return STYLE_PROPERTIES_3 if policy >= 3 else STYLE_PROPERTIES
 UTILITY = re.compile(r'^(?:!?)(?:(?:[\w-]+|\[[^]]+\]):)*(?:bg|text|font|leading|tracking|rounded|shadow|ring|border|p[trblxyse]?|m[trblxyse]?|gap(?:-[xy])?|space-[xy]|h|min-h|z)-(.+)$')
 
 def gated_utility(name):
@@ -25,12 +31,13 @@ def masked(text):
     return re.sub(r'[^\n]', ' ', text)
 
 
-def sources(path, source):
+def sources(path, source, policy=2):
     """Yield CSS snippets with original line offsets, plus forbidden dynamic declarations."""
+    properties = style_properties(policy)
     if Path(path).suffix in ('.scss', '.css', '.less'):
         yield source
         for match in re.finditer(r'@apply\s+([^;]+);', source):
-            for extracted in sources(Path('utilities.html'), '<div class="' + match[1] + '"></div>'):
+            for extracted in sources(Path('utilities.html'), '<div class="' + match[1] + '"></div>', policy):
                 if extracted:
                     yield '\n' * source[:match.start()].count('\n') + extracted
         return
@@ -48,16 +55,16 @@ def sources(path, source):
             name = match[1].strip()
             literal = re.fullmatch(LITERAL, name)
             prop = name[1:-1] if literal else 'dynamic-style'
-            if prop.startswith('--') or re.fullmatch(STYLE_PROPERTIES, prop) or not literal:
+            if prop.startswith('--') or re.fullmatch(properties, prop) or not literal:
                 yield '\n' * source[:match.start()].count('\n') + '{' + prop + ':uninspectable-binding;}'
         for match in re.finditer(r"""\.style(?:\.(\w+)|\[\s*(['"])(.*?)\2\s*\])\s*=(?!=)""", source):
             prop = match[1] or match[3]
             prop = re.sub(r'[A-Z]', lambda m: '-' + m[0].lower(), prop)
-            if prop.startswith('--') or prop == 'css-text' or re.fullmatch(STYLE_PROPERTIES, prop):
+            if prop.startswith('--') or prop == 'css-text' or re.fullmatch(properties, prop):
                 yield '\n' * source[:match.start()].count('\n') + '{' + ('dynamic-style' if prop == 'css-text' else prop) + ':uninspectable-binding;}'
         for match in re.finditer(r"""@HostBinding\(\s*(['"])style\.(.*?)\1\s*\)""", source):
             prop = match[2]
-            if prop.startswith('--') or re.fullmatch(STYLE_PROPERTIES, prop):
+            if prop.startswith('--') or re.fullmatch(properties, prop):
                 yield '\n' * source[:match.start()].count('\n') + '{' + prop + ':uninspectable-binding;}'
         for match in re.finditer(r'\b(styles|template)\s*:\s*(\[(?:'+LITERAL+r'|[^\]"\'`])*\]|'+LITERAL+r')', source):
             for literal in re.finditer(LITERAL, match[2]):
@@ -82,7 +89,7 @@ def sources(path, source):
             yield '\n' * (source[:offset].count('\n') + template[:match.start(2)].count('\n')) + '{' + match[2] + '}'
         for match in re.finditer(r'\[style\.([\w-]+)(?:\.(px|rem|em|%))?\]\s*=\s*(["\'])(.*?)\3', template, re.S):
             prop = re.sub(r'[A-Z]', lambda m: '-' + m[0].lower(), match[1])
-            if not re.fullmatch(STYLE_PROPERTIES, prop):
+            if not re.fullmatch(properties, prop):
                 continue
             value = match[4].strip()
             literal = re.fullmatch(LITERAL, value)
