@@ -47,6 +47,7 @@ $font-size-element-heading: 18px; // a nested element's heading; a section headi
 $font-size-heading: 20px; // a section break; the largest heading inside a form
 $font-size-artifact-title: clamp(19px, 3cqi, 26px); // the title of a page, an artifact or a dialog
 $line-height-heading: 1.25; // every heading and title
+$line-height-tight: 1; // an icon, caret, badge or one-line label whose box is exactly its type size
 
 // ---------------------------------------------------------------------------
 // Palettes

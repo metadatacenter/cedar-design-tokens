@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `line-height-tight`, 1, for an icon, caret, badge or one-line label whose box is exactly its type
+  size. CEE, CED, CETP and Monitoring each set that value locally.
 - `patterns.section-heading`, `patterns.notice` with `notice.css`, and `controls.secondary-action`
   with `secondary-action.css`.
 - The breadcrumb trail mutes its ancestors, links included, and colours the current location.

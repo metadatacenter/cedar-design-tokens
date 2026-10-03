@@ -17,6 +17,7 @@ const inventory = {
     'font-size-heading',
     'font-size-artifact-title',
     'line-height-heading',
+    'line-height-tight',
   ],
   colour: [
     'color-primary',

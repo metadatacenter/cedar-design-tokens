@@ -72,12 +72,13 @@ contains the compiled CSS, prepared before packing.
 
 ## The Vocabulary
 
-Sixty-one tokens, in seven groups. A value between two of them is not on the scale; a consumer uses
+Sixty-two tokens, in seven groups. A value between two of them is not on the scale; a consumer uses
 the nearer one.
 
-Typography is one family, five sizes and two weights. The sizes are in px rather than rem, because
-`rem` resolves against the embedding page's root element, which a component neither sets nor can
-see: a host with `html { font-size: 62.5% }` would render rem-sized type at 62.5% of its size.
+Typography is one family, five sizes, two weights and two line heights. The sizes are in px rather
+than rem, because `rem` resolves against the embedding page's root element, which a component
+neither sets nor can see: a host with `html { font-size: 62.5% }` would render rem-sized type at
+62.5% of its size.
 
 | Token                       | Value                     | Role                                                |
 | --------------------------- | ------------------------- | --------------------------------------------------- |
@@ -91,6 +92,7 @@ see: a host with `html { font-size: 62.5% }` would render rem-sized type at 62.5
 | `font-size-heading`         | 20px                      | A section break; the largest heading inside a form  |
 | `font-size-artifact-title`  | `clamp(19px, 3cqi, 26px)` | The title of a page, an artifact or a dialog        |
 | `line-height-heading`       | 1.25                      | Every heading and title                             |
+| `line-height-tight`         | 1                         | An icon, caret, badge or one-line label's own box   |
 
 Colour is one theme colour with a stronger variant, three text colours, two rules and three
 surfaces. Status colours come in pairs, each tested for normal-text contrast against its surface,
