@@ -36,6 +36,8 @@ const names = [
   'resource-card-meta',
   'save-state-dot',
   'save-state-dot-modified',
+  'visually-hidden',
+  'tooltip-surface',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
