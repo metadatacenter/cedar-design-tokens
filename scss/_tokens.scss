@@ -201,9 +201,9 @@ $icon-size-small: 16px;
 $icon-size-default: 20px;
 $icon-size-large: 24px;
 
-// Menus, popovers, tooltips and drag previews float; dialogs float higher.
+// Menus, popovers, tooltips, drag previews and dialogs float. A dialog needs no deeper shadow,
+// because its backdrop already separates it from the page.
 $shadow-overlay: 0 4px 18px rgba(0, 0, 0, 0.13);
-$shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.2);
 
 // ---------------------------------------------------------------------------
 // Motion and layers

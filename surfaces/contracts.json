@@ -87,6 +87,6 @@
       "--cedar-status-success-surface",
       "--cedar-dialog-backdrop"
     ],
-    "shadow": ["--cedar-shadow-overlay", "--cedar-shadow-dialog"]
+    "shadow": ["--cedar-shadow-overlay"]
   }
 }

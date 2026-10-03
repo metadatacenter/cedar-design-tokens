@@ -120,7 +120,7 @@ step of `space-1/2/3/4/6` (4, 8, 12, 16 and 24px). A half step, a multiple or a 
 a named recipe in the `spacing` export, never from arithmetic in the consumer, which the adoption check
 rejects. Every box
 has the `radius` corner (4px); chips and pills take `radius-pill`. Icons are 16, 20 or 24px. Menus,
-popovers, tooltips and drag previews take `shadow-overlay`; dialogs take `shadow-dialog`.
+popovers, tooltips, drag previews and dialogs take the one shadow, `shadow-overlay`.
 
 Motion is two interaction durations, a spinner duration and one easing curve. Layers are five
 ordered stacking levels: sticky, menu, modal, overlay and tooltip.
@@ -437,7 +437,7 @@ overrides can remain authoritative. Invalid styling uses `aria-invalid`, not
 
 `patterns.dialog-surface`, `menu-surface` and `menu-item` describe shared surfaces, not
 application-specific widths. Native dialogs, designer popups and Material adapters consume the same
-corner, shadows, backdrop and spacing steps. Menu items use the shared control height.
+corner, shadow, backdrop and spacing steps. Menu items use the shared control height.
 Keep viewport constraints, focus trapping, dismissal and focus restoration in the
 component; tokens do not implement those behaviors. The template designer host
 stages the same generated properties alongside its icon module.

@@ -29,6 +29,5 @@
   "--cedar-control-line-height-authoring": "18px",
   "--cedar-radius": "4px",
   "--cedar-radius-pill": "9999px",
-  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)",
-  "--cedar-shadow-dialog": "0 8px 24px rgba(0, 0, 0, 0.2)"
+  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)"
 }

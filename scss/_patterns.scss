@@ -14,7 +14,7 @@
   padding: $padding;
   color: var(--cedar-text-primary);
   background: var(--cedar-surface-raised);
-  box-shadow: var(--cedar-shadow-dialog);
+  box-shadow: var(--cedar-shadow-overlay);
   &::backdrop {
     background: var(--cedar-dialog-backdrop);
   }

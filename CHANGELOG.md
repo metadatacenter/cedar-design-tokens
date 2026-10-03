@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `shadow-dialog` is retired for `shadow-overlay`, so a dialog floats like a menu. Its backdrop already
+  separates it from the page.
 - `status-unsaved-dot` is retired for `status-warning-text`. The save-state mark turns from yellow
   `#eab308` to amber `#b45309`, and its contrast on white rises from 1.9:1 to 5.0:1.
 - `motion-ease-enter` is retired for `motion-ease-standard`. Only the designer read it, for three

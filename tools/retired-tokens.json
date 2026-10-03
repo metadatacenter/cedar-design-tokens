@@ -119,6 +119,7 @@
   "resource-card-min-width": "patterns.resource-grid",
   "selection-marquee-surface": "color-mix(in srgb, var(--cedar-color-primary) 13%, transparent)",
   "selection-tint-percentage": "surface-selected",
+  "shadow-dialog": "shadow-overlay",
   "status-info-surface": "surface-selected",
   "status-info-text": "color-primary-strong",
   "status-unsaved-dot": "status-warning-text",
