@@ -15,16 +15,16 @@ $-recipes: (
   split-column-gutter: (1%),
   inset-status-panel: (4.55%),
   form-header: (
-    tokens.$space-2 clamp(12px, 3cqi, 32px),
+    tokens.$space-2 clamp(#{tokens.$space-3}, 3cqi, 32px),
   ),
   form-content: (
-    0 clamp(12px, 3cqi, 32px) tokens.$space-6,
+    0 clamp(#{tokens.$space-3}, 3cqi, 32px) tokens.$space-6,
   ),
   outline-row: (
     calc(var(--cedar-space-1) / 2) 0,
   ),
   control-content-inset: (calc((var(--_cedar-height) - var(--_cedar-line-height)) / 2)),
-  control-icon-inset: (calc((var(--_cedar-height) - 24px) / 2)),
+  control-icon-inset: (calc((var(--_cedar-height) - #{tokens.$icon-size-large}) / 2)),
   compact-static: (calc(tokens.$space-1 / 2)),
   outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
   element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
