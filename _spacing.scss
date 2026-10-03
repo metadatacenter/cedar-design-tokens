@@ -73,17 +73,11 @@ $-recipes: (
   element-toggle-reserve: (calc(var(--cedar-space-3) + var(--cedar-space-6))),
   control-inset: (calc(var(--cedar-space-3) / 2)),
   field-action-outdent: (calc(-1 * var(--cedar-space-1))),
-  field-label: (
-    var(--cedar-space-4) 0 calc(var(--cedar-space-1) / 2),
-  ),
   field-heading: (
     var(--cedar-space-1) calc(var(--cedar-space-3) / 2),
   ),
   field-control: (
     calc(var(--cedar-space-3) / 2) var(--cedar-space-2),
-  ),
-  field-error: (
-    calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0,
   ),
   compact-break: (
     calc(var(--cedar-space-1) / 2) 0 var(--cedar-space-1),
