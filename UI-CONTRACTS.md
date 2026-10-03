@@ -1,163 +1,142 @@
 # Modern CEDAR UI contracts
 
-CEE's approved editable and read-only visuals are the reference. Legacy AngularJS
-is outside this contract. A shared token value is necessary but does not establish
-a complete interaction or layout; use the patterns export where a recipe applies.
+These requirements apply to modern CEDAR applications and embedded components.
+CEE's approved editable and read-only visuals are the reference; legacy AngularJS
+is outside this contract. Use the [shared tokens and recipes](README.md) and
+preserve existing behavior unless a product change is explicitly approved.
 
-| Surface             | Required contract                                                                                                                                                    | Verification                                                         |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Read-only values    | Legible, selectable content; no saving. Disabled actions remain distinct.                                                                                            | CEE approved baselines; Workspace read-only browser checks           |
-| Dialogs             | Named target/title, contained keyboard focus, reachable actions, Escape closes the innermost interaction, focus returns to invoker. Busy writes cannot be dismissed. | Workspace keyboard suite and narrow Permissions baselines            |
-| Unsaved changes     | Never silently discard; explicit discard confirmation; cancellation retains input.                                                                                   | Workspace resource and metadata browser flows; CED/CEE suites        |
-| Saves               | Prevent duplicate writes; show progress and outcome; retain edits on failure.                                                                                        | Workspace duplicate/stale-save browser checks and real-stack journey |
-| Conflicts           | Conditional writes; no automatic overwrite/retry with a newer revision; explicit reload/reopen.                                                                      | Permissions/Groups unit suites and two-user live journey             |
-| Artifact commands   | Stable labels, order and capability rules for all five artifact types; keyboard access; no hidden off-screen actions.                                                | Workspace artifact-type/permission matrix and browser suite          |
-| Destructive actions | Name the target and consequences before confirmation. Cancel sends no write. Ownership transfer identifies the new owner.                                            | Workspace browser and Permissions tests                              |
-| Search/pickers      | Labelled input, keyboard selection, clear/reset, announced loading/no-results/errors; Escape dismisses suggestions first.                                            | GroupPicker tests, Workspace browser suite, CETP browser suite       |
-| Navigation          | URL retains folder/search/sort/page; editor return and browser Back restore context.                                                                                 | Workspace browser tests and host return tests                        |
-| Responsive UI       | Controls stay reachable at 375px and in narrow embedded hosts; long labels wrap or expose their full text; data tables may scroll within their own region.           | Workspace, CED, CEE and CETP browser geometry/visual tests           |
-| Feedback            | Field errors identify their field; page errors explain recovery and retain edits; asynchronous outcomes use live status/alert regions.                               | Axe plus explicit failure-flow tests                                 |
-| Motion              | Respect reduced-motion; keep functional completion callbacks.                                                                                                        | Shared motion tests and component browser suites                     |
+## Interaction requirements
 
-## Making an intentional visual change
+| Area                | Required behavior                                                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Read-only values    | Content remains legible and selectable; no saving. Keep read-only and disabled states distinct.                                                                                                           |
+| Dialogs             | Provide an accessible title, contain focus and keep actions reachable. Escape closes the innermost interaction; closing restores focus to the invoker. Busy writes cannot be dismissed.                   |
+| Unsaved changes     | Confirm discard explicitly. Cancellation keeps input.                                                                                                                                                     |
+| Saves and conflicts | Prevent duplicate writes; show progress and outcome; retain edits on failure. Use conditional writes. Conflicts require explicit reload/reopen, never automatic overwrite or retry with a newer revision. |
+| Artifact commands   | Preserve labels, order and capability rules across all five artifact types. Support keyboard access and keep actions on screen.                                                                           |
+| Destructive actions | Name the target and consequences; ownership transfer names the new owner. Cancel sends no write.                                                                                                          |
+| Search and pickers  | Label inputs; support keyboard selection and clear/reset. Announce loading, no results and errors. Escape dismisses suggestions first.                                                                    |
+| Navigation          | Preserve folder, search, sort and page in the URL. Editor return and browser Back restore context.                                                                                                        |
+| Responsive layout   | Keep controls reachable at 375px and in narrow hosts. Wrap long labels or expose their full text. Tables may scroll within their own region.                                                              |
+| Feedback            | Identify fields with errors; explain page-error recovery and retain edits. Announce asynchronous outcomes through status/alert regions.                                                                   |
+| Motion              | Respect reduced motion, including JavaScript animations, while preserving functional completion callbacks.                                                                                                |
 
-Change shared roles or recipes first. Add a representative state to the fixture
-gallery, run the impacted consumer suites, and inspect before/after/diff images.
-Update baselines only for the intended change. Keep browser, fonts, OS and CPU
-architecture fixed; changing these is a separate baseline migration. Never widen
-pixel tolerances to make a failure disappear. CEE's approved baselines must not be
-regenerated incidentally during consumer work.
+Components own keyboard handling, validation timing, save rules and accessible
+descriptions. CSS recipes do not implement these behaviors. In particular,
+`aria-disabled` styling must be paired with blocked activation; prefer native
+`disabled` where appropriate. Use `aria-invalid` for validated errors so untouched
+required fields are not marked prematurely.
 
-The checker scans stylesheet files, Angular styles/templates and inline bindings.
-Policy 2 gates typography, color, fixed spacing/control geometry, utility styles,
-overlay layers and unknown shared properties. Existing debt is tracked per exact
-file/declaration/count. `--prune-baseline` can only remove allowances. Policy rollout
-uses `--upgrade-policy` on a clean committed checkout; CI independently derives its
-maximum allowances from the trusted base revision. Unknown shared properties and
-icon violations cannot be waived. Documented embedding overrides are registered
-in `tools/host-properties.json`; this does not permit arbitrary new token names.
+## Fields and authoring
 
-Local layout can still use percentages, flexible tracks and positional bindings.
-A new fixed design dimension should become a shared semantic role rather than an
-unexplained exception. Inline dynamic paint bindings should become inspectable
-semantic classes. Existing exceptions cannot be silently added to a feature PR.
+**Resizing.** Textareas use `resize: none`, including inside shadow roots.
+Automatic sizing and scrolling remain supported. The sole manual-resize exception
+is Workspace's Info panel Description, using `patterns.info-description-resize`:
+a vertical handle with fixed width. Its height lasts only for the open resource
+and is never saved to the artifact or preferences.
 
-Reviewer ownership and repository approval rules are intentionally unchanged.
+**Spellchecking.** Documents, inputs, textareas and editable content explicitly set
+`spellcheck="false"`, including dialogs and shadow-root controls. There are no
+prose exceptions. CEDAR validation remains unchanged; local opt-ins and missing
+declarations fail adoption checks.
 
-## Field resizing
+**Card navigation.** When an authoring card owns focus, unmodified Up/Down moves
+focus and selection to the previous/next visible card and scrolls its header into
+view. Clicking non-interactive card chrome focuses it. Cards have accessible names
+and `aria-keyshortcuts="ArrowUp ArrowDown"`. Navigation stops at the ends and never
+reorders, edits, saves or changes expanded settings. Element cards participate;
+collapsed descendants do not. Inputs, tabs, menus, pickers and dialogs keep their
+own keys; modified shortcuts and IME composition are not intercepted.
 
-Manual field resizing is forbidden across modern CEDAR surfaces, including embedded
-shadow roots. Textareas must set `resize: none`. Automatic sizing to fit content
-and scrolling remain supported. Other resize values, dynamic resize bindings and
-resizing utility classes fail the adoption gate and cannot be grandfathered through
-a baseline or exception.
+**Choice editors.** Options and default-value controls use `controls.choice-text`
+and `controls.choice-row`: body text, regular weight and a 28px minimum row height.
+Wrapped labels grow. Preserve host control typography overrides and verify parity
+between CED's option editors and real CEF rendering for checkbox, radio and both
+list types.
 
-The Workspace Info panel Description is the explicit exception requested by the
-product owner. It opts into `patterns.info-description-resize`: a native vertical
-grab handle with fixed width. Its height is temporary for the open resource and
-is never stored in the artifact or user preferences. Do not apply this recipe to
-authoring fields or other textareas.
+**Labels and read-only values.** Use `patterns.required-mark` for an asterisk that
+does not enlarge the label's line box. Field label/help/error recipes support
+`$size: small` and `$size: body`; choose the variant instead of overriding it.
+Read-only specification recipes preserve selectable content, outlined-control
+alignment and documented `--cedar-specification-*` overrides.
 
-## Browser spellchecking
+**Validation summaries.** Use `patterns.validation-summary` or
+`validation-summary.css` with `.cedar-validation-summary`. Center the disclosure
+icon, status icon and text together; expand issues into an indented, left-aligned
+list. Errors use error roles; `validation-summary--warning` uses warning roles.
+Warnings never disable saving. CED has validation errors only. The metadata host
+classifies missing required values, collection properties and minimum occurrences
+as incomplete-data warnings, and invalid supplied values as errors. Host code owns
+classification and the save gate.
 
-Modern CEDAR controls explicitly set `spellcheck="false"`. Browser spelling marks
-are inappropriate for scientific names, controlled terms, identifiers and artifact
-metadata. This behavior applies to inputs, textareas and editable content, including
-controls inside shadow roots and dialogs. Application documents also default to off.
-This is an HTML behavior contract, not a CSS token. CEDAR validation is unchanged.
+## Menus, icons and native controls
 
-There are currently no prose exceptions. An exception requires a deliberate update
-to this shared contract and its adoption gate; do not enable it locally. The adoption
-check rejects missing declarations and spellcheck opt-ins, including bindings. These
-findings cannot be grandfathered into visual/style baselines.
+Menus use `patterns.menu-text`, included by `menu-surface` and `menu-item`:
+shared family, body size, regular weight, default control line height and primary
+theme color. Apply it to framework labels, nested actions, headings and empty
+messages. Menu icons match the labels. Selection retains its background/checkmark;
+disabled actions and input placeholders retain their state treatment.
 
-## Card navigation
+Ordinary icons use the primary theme color, a transparent glyph background and no
+glyph shadow. Apply `icon-contract`; choose `data-cedar-icon-tone` (`primary`,
+`inverse`, `error`, `warning`, `success`) or a scoped `--cedar-icon-color` referencing
+the corresponding token. Filled actions use inverse icons; disabled controls keep
+their role with shared disabled opacity. Icon-only buttons need accessible names.
+Person and settings glyphs have no decorative shaded badges. Logos and authored
+imagery are separate; preserve selection fills, focus rings and surface shadows.
 
-In vertical authoring-card collections, unmodified Up/Down moves keyboard focus and
-selection to the previous/next visible card in document order and brings its header
-into view. Clicking non-interactive card chrome gives that card keyboard focus.
-Cards expose an accessible name and `aria-keyshortcuts="ArrowUp ArrowDown"`.
-Navigation stops at the ends; it never wraps, reorders, edits, saves or changes a
-card's expanded settings. Element cards participate; collapsed descendants do not.
+Modern Workspace imports `native-choices.css` globally and places
+`cedar-native-choices` on its root. Preserve native checkbox/radio geometry,
+keyboard behavior and disabled semantics. Shared select chevrons and date/time
+indicators use the primary role; do not restore browser-default indicators locally.
+Chromium and WebKit tests cover native controls and host palette overrides.
 
-Arrow navigation applies when the card itself owns focus. Inputs, textareas,
-selects, tabs, menus, pickers and dialogs retain their own keyboard behavior.
-Modified shortcuts and IME composition are not intercepted. This is an interaction
-contract, not a CSS token or a document-wide keyboard handler. CED's card-navigation
-browser tests enforce it at desktop and narrow widths and across nested elements.
+## Verification
 
-## Choice editors and default values
+Each modern frontend maintains `.ui-surfaces.json`. A rendered entry identifies its
+source, central contract, selector, fixture scenario, states and test file.
+Navigation/group entries need no rendered contract. Embedded components are tested
+in their owning repository rather than duplicated in every host.
 
-Editable checkbox, radio and list options and their default-value controls share
-`controls.choice-text` and the `row-height-compact` role. Minimum row height is
-28px; wrapped labels grow. Consumers must not derive this height independently
-from ordinary-control density or layer utility text colors over the shared role.
-The CED real-CEF browser suite compares both renderers for every choice type;
-CEE visual baselines cover selected, disabled, read-only and wrapped states.
+The strict adoption check validates source styles and registry coverage. It rejects
+missing registrations, stale references and edited generated helpers. It also
+checks resizing, spellchecking, icon use and documented host properties. It runs
+offline and does **not** run browser tests or verify deployed bundles.
 
-## Validation summaries
+Registry-driven Playwright tests open real surfaces at 1440px and 375px, including
+collapsed/expanded summaries. Expected values come from
+[`surfaces/contracts.json`](surfaces/contracts.json), resolved in the surface's
+theme/shadow root with central Sass defaults as fallback. Contract-specific rules
+cover menus, dialogs, summaries, calendars, alerts and authoring controls. Every
+registered surface also receives a scale check for typography, loaded fonts,
+colors, paint and corners. A `page` contract uses that scale check without extra
+property rules. Generated text, placeholders and SVG text are included; embedded
+components, visually hidden text and glyph internals have targeted exclusions.
 
-Use `patterns.validation-summary` for a collapsible validation notice in an authoring editor.
-Center the summary's disclosure icon, warning icon and text as one group. Expanded issues form
-an indented, left-aligned list below it. Errors use the shared error foreground and surface;
-`validation-summary--warning` uses the orange warning roles. Warnings never disable saving.
-CED currently has only validation errors. The metadata host treats missing required values,
-missing collection properties and unmet minimum occurrences as incomplete-data warnings;
-invalid supplied values are errors. Host code owns that classification and the save gate.
+These style checks complement consumer keyboard, geometry, accessibility, failure
+and save-flow suites. A registered surface is not proof that every state works.
+Keep the relevant CEE, CED, CETP and Workspace browser/visual tests, plus live-stack
+journeys for conflicts and persistence.
 
-Hosts without Sass can load `custom-properties.css` and `validation-summary.css`, then use
-`.cedar-validation-summary`. The compiled stylesheet includes the shared regular font;
-`icons.svg` exposes the same icon registry as SVG symbols for those hosts. Main consumes
-these assets through its declared design-token dependency and stages them with `copy:tokens`.
+## Reviewing changes
 
-## Required marks
+Change shared roles or recipes first and preserve documented embedding overrides.
+Add representative fixture states, run affected consumer suites and inspect
+before/after/diff images. Update screenshots only for the approved change. Keep
+browser, fonts, OS and architecture fixed; migrate those separately. Do not widen
+pixel tolerances or regenerate CEE baselines to accommodate unrelated work.
 
-A required label's asterisk uses `patterns.required-mark`. The mark is raised
-without enlarging the label's line box, so a required label's row has the same
-height as any other and the icons beside it stay centred on its text. CEE and CED
-apply the recipe to their field headings; their visual baselines cover both.
+Source baselines record exact existing findings by file, declaration and count.
+Rendered differences use exact per-surface `debt` or `scaleDebt` records with a
+reason. CI compares both against the trusted base revision; feature changes cannot
+increase allowances. Remove resolved debt and use `--prune-baseline` for obsolete
+source findings. Never delete and regenerate a baseline to pass CI. Unknown shared
+properties, icon violations, forbidden resizing and spellcheck violations cannot
+be waived. Policy upgrades use `--upgrade-policy` from a clean committed checkout;
+CI derives allowances from the base under the new policy.
 
-### Native choices in modern Workspace
-
-Checkboxes and radios inherit the shared native-choice stylesheet at the app root.
-Keep native keyboard operation and disabled semantics; do not replace their
-appearance or geometry to apply brand colour. Groups, permission ownership,
-resource filters and create-draft sharing are covered by Workspace's browser
-contract in Chromium and WebKit. It compares computed accent colours with the
-central role and checks a host palette override, rather than copying a hex value.
-The adoption checker independently rejects a missing root/import and explicit
-resets to browser-default accent colours; these findings cannot be waived.
-
-The same root class draws native single-select chevrons and date and time picker
-indicators from the icon registry in the primary role, at the shared inline inset.
-Do not restore the browser's indicators locally.
-
-## Menu text
-
-Menu icons must use the same primary theme colour as their labels, including CEE's
-Material download icons. Black icon defaults are not permitted.
-
-Every menu surface and action uses `patterns.menu-text` (included by `menu-surface`
-and `menu-item`): the shared font family, body size, regular weight, control line height
-and primary theme colour. Framework adapters, including Material menu labels, use
-the same recipe. Do not override these properties locally, including on nested labels
-or selected actions; selection remains visible through the existing background/checkmark.
-Disabled actions retain their disabled affordance. Section headings and empty-menu
-messages inherit the same text style; input placeholders retain their input affordance. Registered menu browser contracts check the
-rendered surface, action labels and icons, including an alternate host theme, so local drift fails.
-
-## Icon foreground and surfaces
-
-Ordinary UI icons use the current theme primary colour and have transparent glyph
-backgrounds, without a shadow. This is enforced by `icon-contract` for shared SVG,
-Material and legacy font-icon adapters. Its deliberate `!important` declarations
-prevent text utilities and framework defaults from overriding the glyph role.
-Consumers select a role with `data-cedar-icon-tone` (`primary`, `inverse`, `error`,
-`warning`, `success`) or a scoped `--cedar-icon-color` referencing the corresponding
-shared token. Filled controls use inverse icons; semantic feedback retains its
-status colour; disabled controls retain their role and central disabled opacity.
-Logos and authored imagery are outside this UI-glyph contract.
-
-Person and settings glyphs are flat, not decorative shaded circular badges.
-Selection/hover backgrounds, focus rings, status surfaces and overlay elevation
-remain separate surface roles. Do not remove them with a global shadow reset.
+Add registrations and fixture scenarios with new surfaces; remove both when a
+surface disappears. Keep IDs stable through renames. Change central rules here,
+then run `cedarcli check design-tokens --sync-surfaces` and the affected browser
+suites. Do not copy expected colors or dimensions into consumer tests, weaken a
+contract to hide drift or change approved UI merely to clear existing debt.
