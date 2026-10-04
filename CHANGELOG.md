@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `patterns.drag-placeholder` fades the item a drag will drop. The designer's outline and child
+  picker each spelled out their own opacity, 0.25 and 0.3; both now take 0.25.
+- `spacing.$designer-outline-chevron-size` names the 12px chevron that collapses an element in the
+  designer's outline, which no shared icon size fits.
 - `spacing.$template-header-field-width` is removed. It sized the identifier column of the
   designer's template header, and the designer now edits a template's or element's identifier in
   its metadata settings. No other consumer read it.

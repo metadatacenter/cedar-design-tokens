@@ -37,6 +37,8 @@ $designer-library-rail-width: 48px;
 // Designer: the identity block in the header, and the CEDAR mark at its top.
 $designer-identity-width: 72px;
 $designer-identity-mark-size: 40px;
+// Designer: the chevron that collapses an element in the outline, smaller than a small icon.
+$designer-outline-chevron-size: 12px;
 // Designer: the template header's icon tile, as tall as the name control beside it.
 $template-icon-tile-size: tokens.$control-height-default;
 // Designer: the accent bar along the top of the template header's card.

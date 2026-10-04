@@ -385,6 +385,11 @@ $-save-state-dot-size: 8px;
   }
 }
 
+// Where a dragged item will land: the item itself, faded. Hosts own the drag behaviour.
+@mixin drag-placeholder {
+  opacity: 0.25;
+}
+
 // The box of an icon-only button: `small` for a row action or a handle, `default` at the control
 // height. Hosts keep the button's colours, border and states.
 @mixin icon-button($size: small) {

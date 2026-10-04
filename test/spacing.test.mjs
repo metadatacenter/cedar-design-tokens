@@ -27,9 +27,10 @@ test('control alignment retains the existing geometry without local arithmetic',
 
 test('named measurements say what a size is for and follow density where a control does', () => {
   const css = compile(
-    'a { small: spacing.$icon-button-small; cell: spacing.$control-cell-width; brand: spacing.$brand-mark-size; }',
+    'a { small: spacing.$icon-button-small; cell: spacing.$control-cell-width; brand: spacing.$brand-mark-size; chevron: spacing.$designer-outline-chevron-size; }',
   );
   assert.match(css, /small: 24px/);
+  assert.match(css, /chevron: 12px/);
   assert.match(css, /brand: 36px/);
   // An authoring density re-points the default control height, so the column must read the property.
   assert.match(css, /cell: calc\(var\(--cedar-control-height-default\) \+ 2 \* var\(--cedar-space-2\)\)/);

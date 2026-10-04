@@ -41,6 +41,7 @@ const names = [
   'section-heading',
   'notice',
   'spinner',
+  'drag-placeholder',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -195,6 +196,10 @@ test('an icon button is a small box for row actions or the control height, nothi
   );
   assert.doesNotMatch(small, /color|background|border/);
   assert.throws(() => patterns('a { @include patterns.icon-button(large); }'), /Icon button size/);
+});
+
+test('a drag placeholder fades the item it stands for and draws nothing else', () => {
+  assert.equal(patterns('a { @include patterns.drag-placeholder; }').trim(), 'a {\n  opacity: 0.25;\n}');
 });
 
 test("a resource card's type icon sits in an icon slot", () => {
