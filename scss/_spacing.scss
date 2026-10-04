@@ -72,6 +72,10 @@ $-recipes: (
   control-icon-inset: (calc((var(--_cedar-height) - #{tokens.$icon-size-large}) / 2)),
   outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
   element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
+  // Editor: an element's body, content and heading insets once its component is narrow, in
+  // proportion to its width so that several nested levels still leave room for their fields.
+  element-narrow-inset: (4%),
+  element-narrow-heading-inset: (8%),
   form-action-alignment: (
     math.div($property-slot - tokens.$icon-size-small, 2) - math.div($form-toolbar-size - tokens.$icon-size-default, 2),
   ),
@@ -168,6 +172,7 @@ $-recipes: (
     list.index(
       (
         --_cedar-padding,
+        --_cee-element-body-inset,
         --_cee-element-heading-inset,
         --element-child-inset,
         gap,

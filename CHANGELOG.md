@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The `spacing` recipes `element-narrow-inset` (4%) and `element-narrow-heading-inset` (8%) hold
+  the editor's proportional element insets in a narrow component, and `spacing.apply` accepts
+  `--_cee-element-body-inset`. The editor had stated both percentages directly.
 - `patterns.drag-placeholder` fades the item a drag will drop. The designer's outline and child
   picker each spelled out their own opacity, 0.25 and 0.3; both now take 0.25.
 - `spacing.$designer-outline-chevron-size` names the 12px chevron that collapses an element in the

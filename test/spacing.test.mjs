@@ -23,6 +23,14 @@ test('control alignment retains the existing geometry without local arithmetic',
   assert.match(compile('a { @include spacing.apply(padding, compact); }'), /padding: 2px/);
   assert.doesNotMatch(compile('a { @include spacing.apply(padding, compact-row); }'), /var\(/);
   assert.match(compile('a { @include spacing.apply(padding, preview-select); }'), /space-2\) \* 3.75/);
+  assert.match(
+    compile('a { @include spacing.apply(--_cee-element-body-inset, element-narrow-inset); }'),
+    /--_cee-element-body-inset: 4%/,
+  );
+  assert.match(
+    compile('a { @include spacing.apply(--_cee-element-heading-inset, element-narrow-heading-inset); }'),
+    /--_cee-element-heading-inset: 8%/,
+  );
 });
 
 test('named measurements say what a size is for and follow density where a control does', () => {
