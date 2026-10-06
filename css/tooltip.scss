@@ -1,0 +1,6 @@
+@use '../scss/patterns';
+
+// The tooltip surface for a host written in plain CSS; a Sass host includes the recipe itself.
+.cedar-tooltip {
+  @include patterns.tooltip-surface;
+}

@@ -4,12 +4,13 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
 import sys
 from check_icons import scan as icon_findings
-from style_sources import sources, STYLE_PROPERTIES
+from style_sources import sources, style_properties
 from check_spellcheck import findings as spellcheck_findings
 from check_native_choices import findings as native_choice_findings
 from check_surfaces import findings as surface_findings, sync as sync_surfaces, markdown as surface_markdown, load as load_surfaces
@@ -18,7 +19,11 @@ PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
 REPOS = ('cedar-embeddable-editor', 'cedar-embeddable-designer',
          'cedar-embeddable-term-picker', 'cedar-workspace', 'cedar-openview',
-         'cedar-monitoring', 'cedar-bridging', 'cedar-template-designer')
+         'cedar-monitoring', 'cedar-bridging', 'cedar-template-designer',
+         'mcp/cedar-cee-mcp')
+# A consumer without npm vendors the package's compiled stylesheets beside this manifest, which
+# names the version they came from and the SHA-256 digest of each file.
+VENDORED = 'vendor/cedar-design-tokens/manifest.json'
 EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
             'assets', 'fixtures', '__tests__'}
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
@@ -28,12 +33,16 @@ COLOR = re.compile(r'#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklc
 NAMED_COLORS = set('aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgrey darkgreen darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray grey green greenyellow honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgrey lightgreen lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'.split())
 NAMED_COLOR = re.compile(r'(?<![\w$@.-])(?:' + '|'.join(sorted(NAMED_COLORS)) + r')(?![\w-])', re.I)
 DIMENSION = re.compile(r'(?<![\w.-])(?:\d*\.)?\d+(?:px|rem|em)\b')
+# Policy 3 also reads a negative length, which policy 2 skipped: `margin-top: -48px` is a literal too.
+SIGNED_DIMENSION = re.compile(r'(?<![\w.])-?(?:\d*\.)?\d+(?:px|rem|em)\b')
+POLICIES = (1, 2, 3, 4)
+LATEST_POLICY = POLICIES[-1]
 EXACT_VERSION = re.compile(r'\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?')
 TOKEN_LITERALS = dict(re.findall(r'^\$([\w-]+):\s*([^;]+);',
-                                (Path(__file__).resolve().parents[1] / '_tokens.scss').read_text(), re.M))
+                                (Path(__file__).resolve().parents[1] / 'scss/_tokens.scss').read_text(), re.M))
 
 
-def literal_typography(prop, value):
+def literal_typography(prop, value, policy=2):
     # Remove references, retaining var() fallbacks so literal defaults still gate.
     def compatibility(match):
         name, fallback = match.groups()
@@ -43,7 +52,7 @@ def literal_typography(prop, value):
     inspected = re.sub(r'var\(\s*--[\w-]+\s*\)', '', value)
     inspected = re.sub(r'var\(\s*--[\w-]+\s*,', '(', inspected)
     inspected = re.sub(r'(?:[\w-]+\.)?\$[\w-]+|@[\w-]+', '', inspected)
-    if re.search(r'(?<![\w.-])(?:\d*\.)?\d+(?:[a-z%]+)?', inspected, re.I):
+    if re.search(r'(?<![\w.-])(?:\d*\.)?\d+(?:[a-z%]+)?' if policy < 3 else r'(?<![\w.])-?(?:\d*\.)?\d+(?:[a-z%]+)?', inspected, re.I):
         return True
     if prop in ('font-weight', 'font-size', 'font-stretch'):
         return bool(re.search(r'\b(?:bold|bolder|lighter|small|medium|large|larger|smaller|condensed|expanded)\b', inspected))
@@ -51,6 +60,41 @@ def literal_typography(prop, value):
         inspected = re.sub(r'!important|\b(?:inherit|initial|unset|revert|revert-layer|normal)\b', '', inspected)
         return bool(re.search(r'[a-zA-Z]', inspected))
     return False
+
+
+# Material's system and component tokens, set as custom properties on a theme or a host.
+MATERIAL_INPUT = re.compile(r'--(?:mat|mdc)-[\w-]+')
+
+
+def material_input_rule(prop, value, policy):
+    """Policy 4: a Material input carries a type size, line height, weight, tracking, corner or
+    control height like any declaration, and the same literal rules apply to it."""
+    plain = re.sub(r'\s*!important$', '', value, flags=re.I)
+    if prop.endswith('-size') and not re.search(r'-(?:icon|state-layer|handle|track|touch-target|indicator)-size$', prop):
+        return 'typography' if literal_typography('font-size', plain, policy) else None
+    for suffix, typography in (('line-height', 'line-height'), ('weight', 'font-weight'), ('tracking', 'letter-spacing'), ('font', 'font-family')):
+        if prop.endswith('-' + suffix):
+            return 'typography' if literal_typography(typography, plain, policy) else None
+    if re.search(r'-(?:shape|radius|corner|height)$', prop) and SIGNED_DIMENSION.search(plain):
+        return 'geometry'
+    return None
+
+
+def policy_3_rule(prop, value):
+    """What policy 3 adds: focus outlines, single corners, opacity, easing, a z-index marked important
+    and negative lengths, each of which has a token or is a geometry literal like the rest."""
+    plain = re.sub(r'\s*!important$', '', value, flags=re.I).strip()
+    if re.fullmatch(r'outline(?:-width|-offset)?|border-(?:top|bottom|start|end)-(?:left|right|start|end)-radius|height|min-height|border-radius|box-shadow|text-shadow', prop) and SIGNED_DIMENSION.search(value):
+        return 'geometry'
+    if prop == 'z-index' and re.fullmatch(r'-?\d+', plain):
+        return 'geometry'
+    # Fully hidden and fully shown are states, not values; anything between is the disabled token's job.
+    if prop == 'opacity' and re.fullmatch(r'\d*\.?\d+%?', plain) and float(plain.rstrip('%')) not in (0, 1, 100):
+        return 'geometry'
+    # A constant rotation and a stepped animation carry no design value; a curve or keyword easing does.
+    if re.fullmatch(r'(?:transition|animation)(?:-timing-function)?', prop) and re.search(r'\bcubic-bezier\s*\(|(?<![\w-])ease(?:-in|-out|-in-out)?(?![\w-])', plain):
+        return 'motion'
+    return None
 
 
 def git(repo, *args):
@@ -74,13 +118,19 @@ def source_files(repo, policy=1, ref=None):
         path = Path(name)
         parts = path.parts[1:] if path.parts and path.parts[0].endswith('-src') else path.parts
         if (parts and parts[0] in ('src', 'app')
-                and (path.suffix in ('.scss', '.css', '.less') or
+                and (path.suffix in ('.scss', '.css', '.less') or (policy >= 4 and path.suffix == '.sass') or
+                     (policy >= 4 and path.suffix in ('.tsx', '.jsx') and '.spec.' not in name) or
                      (policy >= 2 and path.suffix in ('.html', '.ts', '.js', '.mjs') and '.spec.' not in name
-                      and (parts[0] == 'src' or json.loads((repo / 'package.json').read_text()).get('name') == 'cedar-template-designer')))
+                      and (parts[0] == 'src' or package_name(repo) == 'cedar-template-designer')))
                 and not EXCLUDED.intersection(path.parts)
                 and not path.name.startswith('styles-Material-Icons')
                 and (ref or (repo / path).is_file())):
             yield path
+
+
+def package_name(repo):
+    manifest = repo / 'package.json'
+    return json.loads(manifest.read_text()).get('name') if manifest.exists() else None
 
 
 def findings(path, source, policy=1):
@@ -103,13 +153,13 @@ def findings(path, source, policy=1):
             rule = 'dynamic-style'
         elif prop == 'utility-style':
             rule = 'utility-style'
-        elif COLOR.search(inspected) or NAMED_COLOR.search(inspected):
+        elif COLOR.search(inspected) or NAMED_COLOR.search(inspected) or (policy >= 3 and re.search(r'\bcolor-mix\s*\(', inspected, re.I)):
             rule = 'color'
         elif prop in ('font', 'font-family', 'font-size', 'font-weight', 'font-stretch', 'line-height', 'letter-spacing'):
-            if literal_typography(prop, value):
+            if literal_typography(prop, value, policy):
                 rule = 'typography'
         elif re.fullmatch(r'(?:margin|padding)(?:-[\w-]+)?|(?:row-|column-)?gap', prop):
-            if DIMENSION.search(value):
+            if (SIGNED_DIMENSION if policy >= 3 else DIMENSION).search(value):
                 rule = 'spacing'
             elif re.search(r'\b(?:calc|min|max|clamp)\(|[*/+]|\s-\s', value):
                 rule = 'spacing-expression'
@@ -119,16 +169,47 @@ def findings(path, source, policy=1):
             rule = 'geometry'
         elif prop in ('height', 'min-height', 'border-radius', 'box-shadow', 'text-shadow', 'z-index', 'transition-duration', 'animation-duration') and (DIMENSION.search(value) or (prop == 'z-index' and re.fullmatch(r'-?\d+', value))):
             rule = 'geometry'
+        elif policy >= 4 and MATERIAL_INPUT.fullmatch(prop):
+            rule = material_input_rule(prop, value, policy)
+        elif policy >= 3:
+            rule = policy_3_rule(prop, value)
         if rule:
-            identity = f'{path}|{rule}|{prop}|{value}'
-            yield {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
-                   'file': str(path), 'line': clean.count('\n', 0, match.start(1)) + 1,
-                   'rule': rule, 'property': prop, 'value': value,
-                   'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
+            yield finding(path, clean, match.start(1), rule, prop, value, policy)
+    if policy >= 4:
+        # A Material override map sets the roles a stylesheet would, as map entries the declaration
+        # parser never sees: `mat.form-field-overrides((container-text-size: 13px))`.
+        for overrides in re.finditer(r'[\w-]+\.([\w-]+-overrides)\s*\(\s*\(', clean):
+            depth, end = 2, overrides.end()
+            while end < len(clean) and depth:
+                depth += {'(': 1, ')': -1}.get(clean[end], 0)
+                end += 1
+            body, offset, nesting, entry_start = clean[overrides.end():end - 2], overrides.end(), 0, 0
+            for index, char in enumerate(body + ','):
+                nesting += {'(': 1, ')': -1}.get(char, 0)
+                if char == ',' and nesting == 0:
+                    entry = re.match(r'\s*([\w-]+)\s*:\s*(.+?)\s*$', body[entry_start:index], re.S)
+                    if entry:
+                        value = ' '.join(entry[2].split())
+                        rule = material_input_rule('--mat-' + entry[1], value, policy)
+                        if rule:
+                            yield finding(path, clean, offset + entry_start, rule, f'{overrides[1]}.{entry[1]}', value, policy)
+                    entry_start = index + 1
+
+
+def finding(path, clean, position, rule, prop, value, policy):
+    identity = f'{path}|{rule}|{prop}|{value}'
+    return {'id': hashlib.sha256(identity.encode()).hexdigest()[:20],
+            'file': str(path), 'line': clean.count('\n', 0, position) + 1,
+            'rule': rule, 'property': prop, 'value': value,
+            'severity': 'gate' if policy >= 2 or rule in ('color', 'typography', 'manual-resize', 'native-choice-reset') else 'advisory'}
 
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+# The Sass module that defines the tokens. Before the sources moved into `scss/`, it sat at the root,
+# where a pin naming an older commit still finds it.
+TOKENS = 'scss/_tokens.scss'
+FORMER_TOKENS = '_tokens.scss'
 RETIRED = json.loads((Path(__file__).parent / 'retired-tokens.json').read_text())
 HOSTS = {name.removeprefix('cedar-') for name in json.loads((Path(__file__).parent / 'host-properties.json').read_text())}
 
@@ -143,11 +224,15 @@ CETP_BRIDGE = {shared: 'var(--cetp-' + host + ')' for shared, host in {
     'font-size': 'font-size', 'font-size-small': 'font-size-small',
 }.items()}
 
-def shared_tokens():
-    """Every scalar of the Sass module, which tokens.entry.scss emits under its own name."""
-    source = COMMENT.sub('', (PACKAGE_ROOT / '_tokens.scss').read_text())
+def token_names(text):
+    source = COMMENT.sub('', text)
     return {name for name, value in re.findall(r'^\$([\w-]+):\s*(.)', source, re.M)
             if value != '(' and name != 'font-family-string'}
+
+
+def shared_tokens():
+    """Every scalar of the Sass module, which css/custom-properties.scss emits under its own name."""
+    return token_names((PACKAGE_ROOT / TOKENS).read_text())
 
 
 def known_css_properties():
@@ -155,13 +240,15 @@ def known_css_properties():
 
 
 def scan_styles(repo, policy=1, ref=None):
-    yield from native_choice_findings(lambda name: git(repo, 'show', f'{ref}:{name}') if ref else (repo / name).read_text())
+    # A nested frontend has no package.json at the root; asking a revision for one is expected to fail quietly.
+    yield from native_choice_findings(lambda name: subprocess.check_output(['git', '-C', str(repo), 'show', f'{ref}:{name}'], text=True, stderr=subprocess.DEVNULL)
+                                      if ref else (repo / name).read_text())
     known = known_css_properties()
     authored = []
     for path in source_files(repo, max(policy, 2), ref):
         source = git(repo, 'show', f'{ref}:{path}') if ref else (repo / path).read_text()
         authored.append((path, source, [re.sub(r'#\{([^{}]*)\}', lambda m: '  ' + m[1] + ' ', COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), snippet))
-                                       for snippet in sources(path, source)]))
+                                       for snippet in sources(path, source, policy)]))
     # Local aliases remain valid: their declarations are inspected by the same
     # literal-value rules. Framework defaults are not implicit token contracts.
     local = {match[1] for _, _, snippets in authored for snippet in snippets
@@ -177,6 +264,7 @@ def scan_styles(repo, policy=1, ref=None):
     # a namespace spelling such as "tokens". Ambiguous/missing modules fail closed.
     sass_sources = {str(path): source for path, source, _ in authored if path.suffix == '.scss'}
     sass_reference = re.compile(r'(?:(?P<module>[\w-]+)\.)?\$(?P<name>[\w-]+)')
+    properties = style_properties(policy)
 
     def resolve_sass(path, value, visited=frozenset()):
         source = sass_sources.get(str(path), '')
@@ -236,7 +324,7 @@ def scan_styles(repo, policy=1, ref=None):
                 continue
             for declaration in DECL.finditer(snippet):
                 prop, value = declaration.groups()
-                if re.fullmatch(STYLE_PROPERTIES, prop) and sass_reference.search(value):
+                if re.fullmatch(properties, prop) and sass_reference.search(value):
                     expanded = resolve_sass(path, value)
                     if expanded != value and not list(findings(path, '{' + prop + ':' + value + ';}', policy)):
                         for row in findings(path, '{' + prop + ':' + expanded + ';}', policy):
@@ -246,7 +334,7 @@ def scan_styles(repo, policy=1, ref=None):
                             yield {'id': hashlib.sha256(f'{path}|sass-alias|{prop}|{value}'.encode()).hexdigest()[:20],
                                    'file': str(path), 'line': snippet[:declaration.start(1)].count('\n') + 1,
                                    'rule': 'sass-alias', 'property': prop, 'value': value, 'severity': 'gate'}
-                if not (prop.startswith('--') or re.fullmatch(STYLE_PROPERTIES, prop)):
+                if not (prop.startswith('--') or re.fullmatch(properties, prop)):
                     continue
                 for match in re.finditer(r'var\(\s*(--[\w-]+)', value):
                     name = match[1]
@@ -277,7 +365,18 @@ def scan_styles(repo, policy=1, ref=None):
                     yield {'id': hashlib.sha256(f'{path}|token-override|{value}'.encode()).hexdigest()[:20],
                            'file': str(path), 'line': clean[:assignment.start()].count('\n') + 1,
                            'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
-            for match in re.finditer(r'(?<![\w-])--cedar-([\w-]+)\s*:\s*([^;{}]*)', '\n'.join(snippets)):
+            # Interpolation and @property reach the same names: `#{'--cedar-space-2'}: 6px`,
+            # `$n: --cedar-radius; #{$n}: 7px` and `@property --cedar-radius { initial-value: 7px }`.
+            names = dict(re.findall(r'(?:^|[;{}\s])\$([\w-]+)\s*:\s*[\'"]?(--cedar-[\w-]+)[\'"]?\s*;', clean))
+            uncommented = COMMENT.sub(lambda m: re.sub(r'[^\n]', ' ', m[0]), source)
+            indirect = [(m.start(), names[m[1]]) for m in re.finditer(r'#\{\s*\$([\w-]+)\s*\}\s*:', uncommented) if m[1] in names]
+            indirect += [(m.start(), m[1]) for m in re.finditer(r'@property\s+(--cedar-[\w-]+)', clean)]
+            for position, name in indirect:
+                if name[len('--cedar-'):] in shared or name[len('--cedar-'):] in RETIRED:
+                    yield {'id': hashlib.sha256(f'{path}|token-override|{name}'.encode()).hexdigest()[:20],
+                           'file': str(path), 'line': clean[:position].count('\n') + 1,
+                           'rule': 'token-override', 'property': name, 'value': name, 'severity': 'gate'}
+            for match in re.finditer(r'(?<![\w-])[\'"]?--cedar-([\w-]+)[\'"]?\s*:\s*([^;{}]*)', '\n'.join(snippets)):
                 # A component may re-point a shared role to its own documented host property, as the
                 # term picker does with `--cetp-*`, so shared recipes follow what an embedder sets.
                 if (str(path) == 'src/app/cedar-embeddable-term-picker.scss'
@@ -291,33 +390,131 @@ def scan_styles(repo, policy=1, ref=None):
                            'rule': 'token-override', 'property': value, 'value': value, 'severity': 'gate'}
 
 
-def unused_tokens(root):
-    """Shared tokens that no consumer and no package recipe references; None unless every consumer is checked out."""
+# A token read in a recipe: a custom property, whose name an interpolation such as
+# `status-#{$tone}-text` may complete, or a variable of the package's own `tokens` module.
+RECIPE_READ = re.compile(r'--cedar-((?:[\w-]|#\{[^{}]*\})+)|\btokens\.\$([\w-]+)')
+PACKAGE_USE = re.compile(r"@use\s+['\"]" + re.escape(PACKAGE) + r"/([\w-]+)['\"](?:\s+as\s+([\w-]+))?")
+SPACING_APPLY = re.compile(r'@include\s+([\w-]+)\.apply\(\s*[^,()]+,\s*([\w-]+)\s*\)')
+
+
+def braced(text, start):
+    """The text from `start` through the brace that closes the first one after it."""
+    depth = 0
+    for index in range(text.index('{', start), len(text)):
+        depth += {'{': 1, '}': -1}.get(text[index], 0)
+        if depth == 0:
+            return text[start:index + 1]
+    raise ValueError('Unbalanced braces')
+
+
+class Recipes:
+    """What each package recipe reads: a mixin, through every mixin it includes; a public module
+    variable; a `spacing` recipe; and each compiled stylesheet, by the mixins its source includes.
+    `custom-properties.declare` declares every token rather than reading one, so it reads none."""
+
+    def __init__(self):
+        self.shared = shared_tokens()
+        self.modules = {}
+        for path in sorted(PACKAGE_ROOT.glob('scss/_*.scss')):
+            module = path.stem.lstrip('_')
+            if module not in ('tokens', 'custom-properties'):
+                self.modules[module] = COMMENT.sub('', path.read_text())
+        self.mixins = {(module, match[1]): braced(text, match.start())
+                       for module, text in self.modules.items()
+                       for match in re.finditer(r'@mixin\s+([\w-]+)', text)}
+        self.variables = {(module, name): value for module, text in self.modules.items()
+                          for name, value in re.findall(r'^\$(?!-)([\w-]+)\s*:\s*([^;]+);', text, re.M)}
+        spacing = self.modules.get('spacing', '')
+        table = spacing[spacing.index('$-recipes:'):] if '$-recipes:' in spacing else ''
+        table = table[table.index('(') + 1:] if table else ''
+        self.spacing = dict(re.findall(r'^  ([\w-]+):(.*?)(?=^  [\w-]+:|^\);)', table, re.M | re.S))
+        self.stylesheets = {path.stem: self.source(COMMENT.sub('', path.read_text()), None)
+                            for path in sorted(PACKAGE_ROOT.glob('css/*.scss')) if path.stem != 'custom-properties'}
+
+    def names(self, text):
+        found = set()
+        for written, variable in RECIPE_READ.findall(text):
+            pattern = re.compile(r'[\w-]+'.join(map(re.escape, re.split(r'#\{[^{}]*\}', written or variable))))
+            found.update(token for token in self.shared if pattern.fullmatch(token))
+        return found
+
+    def mixin(self, module, name, seen=frozenset()):
+        if (module, name) in seen or (module, name) not in self.mixins:
+            return set()
+        return self.source(self.mixins[module, name], module, seen | {(module, name)})
+
+    def source(self, text, module, seen=frozenset()):
+        """What a stylesheet in the package reads; `module` names the module a bare include resolves in."""
+        aliases = {Path(target).name.lstrip('_'): Path(target).name.lstrip('_')
+                   for target in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]", text)}
+        aliases.update({alias: Path(target).name.lstrip('_')
+                        for target, alias in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]\s+as\s+([\w-]+)", text)})
+        if module:
+            aliases.update({Path(target).name.lstrip('_'): Path(target).name.lstrip('_')
+                            for target in re.findall(r"@use\s+['\"](?!sass:)([^'\"]+)['\"]", self.modules.get(module, ''))})
+        return self.names(text) | self.resolve(text, aliases, module, seen)
+
+    def resolve(self, text, aliases, module=None, seen=frozenset()):
+        """Tokens read through the recipes `text` selects, given the modules its aliases name."""
+        found = set()
+        for alias, name in re.findall(r'@include\s+(?:([\w-]+)\.)?([\w-]+)', text):
+            target = aliases.get(alias) if alias else module
+            if target == 'spacing' and name == 'apply':
+                continue
+            if target:
+                found |= self.mixin(target, name, seen)
+        for alias, recipe in SPACING_APPLY.findall(text):
+            if aliases.get(alias) == 'spacing':
+                found |= self.names(self.spacing.get(recipe, ''))
+        for alias, name in re.findall(r'\b([\w-]+)\.\$([\w-]+)', text):
+            if aliases.get(alias) in self.modules:
+                found |= self.names(self.variables.get((aliases[alias], name), ''))
+        return found
+
+    def consumer(self, text):
+        """What a consumer's source reads: tokens it names, the recipes it includes from the package
+        and the compiled stylesheets it imports, links or stages."""
+        found = {name for name in re.findall(r'--cedar-([\w-]+)', text) + re.findall(r'\b[\w-]+\.\$([\w-]+)', text)
+                 if name in self.shared}
+        aliases = {alias or module: module for module, alias in PACKAGE_USE.findall(text)}
+        found |= self.resolve(text, aliases)
+        for name, reads in self.stylesheets.items():
+            if re.search(r'(?<![\w-])' + re.escape(name) + r'\.css\b', text):
+                found |= reads
+        return found
+
+
+def token_readers(root):
+    """The consumers that read each shared token, directly or through a package recipe; None unless
+    every consumer is checked out. A token belongs in the vocabulary only when two of them read it."""
     if not all((root / name).exists() for name in REPOS):
         return None
-    texts = [path.read_text() for path in PACKAGE_ROOT.glob('*.scss')
-             if path.name not in ('_tokens.scss', 'tokens.entry.scss')]
+    recipes = Recipes()
+    readers = {token: [] for token in sorted(recipes.shared)}
     for name in REPOS:
         repo = root / name
-        texts.extend((repo / path).read_text() for path in source_files(repo, 2))
-    used = set()
-    for text in texts:
-        used.update(re.findall(r'--cedar-([\w-]+)', text))
-        used.update(re.findall(r'\b[\w-]+\.\$([\w-]+)', text))
-    return sorted(shared_tokens() - used)
+        reads = set()
+        for path in source_files(repo, LATEST_POLICY):
+            reads |= recipes.consumer(COMMENT.sub('', (repo / path).read_text()))
+        for token in sorted(reads):
+            readers[token].append(name)
+    return readers
 
 
 def upgrade_policy(repo):
-    """One-time expansion records only debt already committed at HEAD, never working edits."""
+    """Move a baseline to the next policy, recording only debt already committed at HEAD, never working edits."""
     baseline, exists = read_baseline(repo)
-    if not exists or baseline.get('policy', 1) != 1:
-        raise ValueError('Upgrade requires an existing policy-1 baseline')
+    if not exists or baseline.get('policy', 1) >= LATEST_POLICY:
+        raise ValueError(f'Upgrade requires an existing baseline below policy {LATEST_POLICY}')
     if git(repo, 'status', '--porcelain').strip():
         raise ValueError('Commit or isolate changes before upgrading the style policy')
-    rows = list(scan_styles(repo, 2))
-    baseline['policy'] = 2
+    target = baseline.get('policy', 1) + 1
+    rows = list(scan_styles(repo, target))
+    baseline['policy'] = target
+    # Sorted like an initialized or pruned baseline, so a move between policies diffs as additions.
     baseline['findings'] = {row['id']: dict({k: row[k] for k in ('file', 'rule', 'property', 'value')},
-                                         count=sum(r['id'] == row['id'] for r in rows)) for row in rows if row['rule'] != 'unknown-token'}
+                                         count=sum(r['id'] == row['id'] for r in rows))
+                            for row in sorted(rows, key=lambda r: r['id']) if row['rule'] != 'unknown-token'}
     (repo / BASELINE).write_text(json.dumps(baseline, indent=2) + '\n')
 
 def read_baseline(repo, ref=None):
@@ -345,13 +542,87 @@ def read_baseline(repo, ref=None):
     return data, True
 
 
+def published_version():
+    """The development version the token checkout's head publishes under, as `cedarcli publish
+    components` names it: the carried base, the UTC date of the head commit and its first eight
+    digits. A checkout that is not a Git repository is named by its package.json alone."""
+    carried = json.loads((PACKAGE_ROOT / 'package.json').read_text())['version']
+    base = re.match(r'\d+\.\d+\.\d+', carried)
+    try:
+        head = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'rev-parse', '--short=8', '--verify', 'HEAD'],
+                              capture_output=True, text=True, check=True).stdout.strip()
+        date = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'show', '-s', '--format=%cd', '--date=format:%Y%m%d', 'HEAD'],
+                              capture_output=True, text=True, check=True, env={'TZ': 'UTC', 'PATH': os.environ.get('PATH', '')}).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return carried
+    return f'{base[0]}-dev.{date}.{head}' if base else carried
+
+
+# A development version names the commit it was built from: `-dev.<date>.<sha>` from a repository's
+# own publishing, `-dev.<timestamp>.g<sha>[.t<n>]` from a train.
+PIN_COMMIT = re.compile(r'-dev\.\d{8,14}\.g?([0-9a-f]{7,40})(?:\.t\d+)?$')
+
+
+def pinned_tokens(pin):
+    """The commit a pin names and the shared tokens the package held there; (None, None) when the
+    version names no commit, (commit, None) when this checkout does not have it."""
+    match = PIN_COMMIT.search(pin or '')
+    if not match:
+        return None, None
+    for path in (TOKENS, FORMER_TOKENS):
+        found = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'show', f'{match[1]}:{path}'],
+                               capture_output=True, text=True)
+        if not found.returncode:
+            return match[1], token_names(found.stdout)
+    return match[1], None
+
+
+def dependency(repo):
+    """The token version a consumer pins and the version its lock records. An npm consumer pins in
+    package.json and locks in package-lock.json. A consumer without npm pins in its vendored copy's
+    manifest, and that copy locks the version only while every file matches its recorded digest and
+    the custom properties it declares are the token set at the commit the version names."""
+    nested = sorted(repo.glob('*-src/package.json'))
+    if len(nested) > 1:
+        raise ValueError('Multiple frontend manifests; select an unambiguous consumer')
+    package_root = nested[0].parent if nested else repo
+    if not (package_root / 'package.json').exists():
+        manifests = sorted(path for path in repo.glob('src/**/' + VENDORED) if 'target' not in path.parts)
+        if len(manifests) > 1:
+            raise ValueError('Multiple vendored token manifests; keep one copy')
+        if not manifests:
+            raise ValueError(f'No package.json and no {VENDORED}; the consumer pins no token version')
+        manifest = json.loads(manifests[0].read_text())
+        if manifest.get('package') != PACKAGE or not isinstance(manifest.get('files'), dict) or not manifest['files']:
+            raise ValueError(f'{manifests[0].relative_to(repo)} must name {PACKAGE} and the files it vendors')
+        pin = manifest.get('version')
+        intact = all((manifests[0].parent / name).is_file() and Path(name).name == name and
+                     hashlib.sha256((manifests[0].parent / name).read_bytes()).hexdigest() == digest
+                     for name, digest in manifest['files'].items())
+        properties = manifests[0].parent / 'custom-properties.css'
+        _, pinned = pinned_tokens(pin)
+        if intact and pinned is not None and properties.is_file():
+            intact = set(re.findall(r'--cedar-([\w-]+)\s*:', properties.read_text())) == pinned
+        return pin, pin if intact else None
+    package = json.loads((package_root / 'package.json').read_text())
+    pin = next((package.get(section, {}).get(PACKAGE) for section in
+                ('dependencies', 'devDependencies', 'peerDependencies') if PACKAGE in package.get(section, {})), None)
+    lockpath = package_root / 'package-lock.json'
+    locked = None
+    if lockpath.exists():
+        lock = json.loads(lockpath.read_text())
+        locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
+        locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
+    return pin, locked
+
+
 def report(repo, expected, ref=None, initialize=False, prune=False):
     baseline, exists = read_baseline(repo, ref)
     current, _ = read_baseline(repo)
     policy = current.get('policy', 1)
     if ref and policy < baseline.get('policy', 1):
         raise ValueError('Style policy cannot be downgraded')
-    if policy not in (1, 2):
+    if policy not in POLICIES:
         raise ValueError('Unknown style policy')
     if ref and policy > baseline.get('policy', 1):
         # Only pre-existing source at the trusted base may receive migration allowances.
@@ -383,28 +654,42 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
         row['status'] = ('new' if row['rule'] in ('sass-alias', 'spacing-expression', 'unknown-token', 'token-override', 'unknown-variable', 'manual-resize', 'spellcheck', 'native-choice-coverage', 'native-choice-reset') else 'exception' if key in baseline.get('exceptions', {}) and remaining[key] > 0 else
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
-    nested = sorted(repo.glob('*-src/package.json'))
-    if len(nested) > 1:
-        raise ValueError('Multiple frontend manifests; select an unambiguous consumer')
-    package_root = nested[0].parent if nested else repo
-    package = json.loads((package_root / 'package.json').read_text())
-    pin = next((package.get(section, {}).get(PACKAGE) for section in
-                ('dependencies', 'devDependencies', 'peerDependencies') if PACKAGE in package.get(section, {})), None)
-    lockpath = package_root / 'package-lock.json'
-    locked = None
-    if lockpath.exists():
-        lock = json.loads(lockpath.read_text())
-        locked = lock.get('packages', {}).get('node_modules/' + PACKAGE, {}).get('version')
-        locked = locked or lock.get('dependencies', {}).get(PACKAGE, {}).get('version')
+    pin, locked = dependency(repo)
     dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
+    # A pinned package that lacks a token this repository reads leaves a custom property unset, which
+    # no build reports: the declaration silently falls back.
+    pin_commit, pinned = pinned_tokens(pin)
+    used = set()
+    for path in source_files(repo, max(policy, 2)):
+        text = COMMENT.sub('', (repo / path).read_text())
+        used.update(re.findall(r'var\(\s*--cedar-([\w-]+)', text))
+        used.update(re.findall(r'\btokens\.\$([\w-]+)', text))
+    missing = sorted((used & shared_tokens()) - pinned) if pinned is not None else []
+    if not pin:
+        version_status = 'not adopted'
+    elif pin != locked:
+        version_status = 'differs from lock'
+    elif pin == expected:
+        version_status = 'matches checkout'
+    elif pin_commit and pinned is None:
+        version_status = f'names commit {pin_commit}, which the token checkout does not have; fetch it'
+    elif pin_commit:
+        behind = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'rev-list', '--count', f'{pin_commit}..HEAD'],
+                                capture_output=True, text=True).stdout.strip()
+        version_status = f'{behind} token commits behind checkout' if behind not in ('', '0') else 'differs from checkout'
+    else:
+        version_status = 'names no commit'
+    # The working tree's own baseline may not keep allowances its code no longer needs, or a later
+    # change could reintroduce the literal under them.
+    stale = sum(max(0, item['count'] - counts[key]) for key, item in current['findings'].items()) if not (initialize or prune) else 0
     surface_registry = load_surfaces(repo) if (repo / '.ui-surfaces.json').exists() else None
     surface_counts = {'registered': len(surface_registry['surfaces']),
                       'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
                       'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
-    return {'surfaces': surface_counts, 'repo': repo.name, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
+    return {'surfaces': surface_counts, 'repo': repo.name, 'policy': policy, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
-            'expected': expected, 'versionStatus': 'not adopted' if not pin else
-            'matches checkout' if pin == locked == expected else 'differs from checkout/lock',
+            'expected': expected, 'versionStatus': version_status, 'pinCommit': pin_commit,
+            'pinMissingTokens': missing, 'pinUnknown': bool(pin_commit and pinned is None), 'staleAllowances': stale,
             'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
@@ -412,7 +697,7 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
-    parser.add_argument('--repo', action='append', help='Repository name under root; repeatable')
+    parser.add_argument('--repo', action='append', help='Repository path under root, such as cedar-workspace or mcp/cedar-cee-mcp; repeatable')
     parser.add_argument('--sync-surfaces', action='store_true', help='Refresh generated browser contracts from the central implementation')
     parser.add_argument('--surface-inventory', type=Path, help='Generate the maintained Markdown surface hierarchy (requires all registered repositories)')
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
@@ -426,11 +711,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.baseline_ref and (args.init_baseline or args.prune_baseline):
         parser.error('Cannot write a baseline while comparing to a revision')
-    expected = json.loads((Path(__file__).resolve().parents[1] / 'package.json').read_text())['version']
+    expected = published_version()
     reports, errors = [], []
     for name in args.repo or REPOS:
-        if Path(name).name != name:
-            parser.error('--repo must be a repository name, not a path')
+        if Path(name).is_absolute() or not Path(name).parts or any(part in ('.', '..') for part in Path(name).parts):
+            parser.error('--repo must be a repository path under root')
         repo = args.root / name
         if not repo.exists() and not args.repo:
             continue
@@ -455,18 +740,20 @@ def main(argv=None):
             args.surface_inventory.write_text(inventory)
         except (OSError, ValueError, KeyError) as error:
             errors.append(f'Surface inventory: {error}')
-    unused = unused_tokens(args.root) if not args.repo else None
-    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused}
+    readers = token_readers(args.root) if not args.repo else None
+    unused = [token for token, names in readers.items() if not names] if readers is not None else None
+    single = {token: names[0] for token, names in readers.items() if len(names) == 1} if readers is not None else None
+    output = {'schema': 1, 'reports': reports, 'errors': errors, 'unusedTokens': unused, 'singleReaderTokens': single}
     if args.json:
         print(json.dumps(output, indent=2))
     else:
-        print('Design-token adoption (policy 2 gates embedded styles, utilities, spacing and geometry)')
+        print('Design-token adoption (policy 2 gates embedded styles, utilities, spacing and geometry; policy 3 adds outlines, opacity, easing and negative lengths; policy 4 adds Material inputs and template bypasses)')
         for result in reports:
             rows = result['findings']
             new = sum(r['status'] == 'new' and r['severity'] == 'gate' for r in rows)
             old = sum(r['status'] == 'existing' and r['severity'] == 'gate' for r in rows)
             advisory = sum(r['severity'] == 'advisory' for r in rows)
-            print(f"{result['repo']}: {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
+            print(f"{result['repo']} (policy {result['policy']}): {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
             print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
             if result['base']:
                 print(f"  compared with {result['base'][:12]}")
@@ -477,16 +764,24 @@ def main(argv=None):
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:
                 print('  INVALID token dependency; use an exact version with a matching lockfile')
+            if result['pinMissingTokens']:
+                print(f"  PINNED package lacks {', '.join('--cedar-' + t for t in result['pinMissingTokens'])}; advance the pin")
+            if result['staleAllowances']:
+                print(f"  {result['staleAllowances']} baseline allowances are no longer needed; run --prune-baseline")
             for row in rows:
                 if args.all or row['status'] == 'new':
                     hint = f"; use {row['replacement']}" if row.get('replacement') else ''
                     print(f"  {row['file']}:{row['line']} [{row['status']}/{row['rule']}] {row['property']}: {row['value']} ({row['id']}){hint}")
         if unused:
             print(f"Unused shared tokens ({len(unused)}): {', '.join(unused)}; adopt or remove them")
+        if single:
+            print(f"Shared tokens with one reader ({len(single)}): "
+                  f"{', '.join(f'{token} ({name})' for token, name in single.items())}; move each value into its reader")
         for error in errors:
             print(error, file=sys.stderr)
-    return 2 if errors else int(args.strict and (bool(unused) or any(
-        not r['baseline'] or not r['dependencyValid'] or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
+    return 2 if errors else int(args.strict and (bool(unused) or bool(single) or any(
+        not r['baseline'] or not r['dependencyValid'] or r['pinMissingTokens'] or r['pinUnknown'] or r['staleAllowances']
+        or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
 
 
 if __name__ == '__main__':

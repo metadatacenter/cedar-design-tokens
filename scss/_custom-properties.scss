@@ -1,7 +1,7 @@
 // Declares every shared token as a `--cedar-` custom property wherever it is included. A component
 // that renders in its own shadow root includes this on `:host`, so the shared recipes it uses
-// resolve without depending on the embedding page. `tokens.entry.scss` uses the same mixin to emit
-// `custom-properties.css`.
+// resolve without depending on the embedding page. `css/custom-properties.scss` uses the same mixin
+// to emit `custom-properties.css`.
 @use 'sass:meta';
 @use 'tokens';
 

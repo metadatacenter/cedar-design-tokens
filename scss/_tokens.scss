@@ -1,6 +1,6 @@
 // CEDAR's own design values.
 //
-// The interface is plain text and boxes: one font, five type sizes, two weights, one theme
+// The interface is plain text and boxes: one font, four type sizes, two weights, one theme
 // colour, three text colours, two rule colours, three surfaces, one spacing scale and one corner
 // radius. The embeddable editor, the embeddable designer, the term picker and every browser
 // application read these values, and they read as one product only because none of them states a
@@ -12,8 +12,8 @@
 // `_cee-material-theme.scss` is the adapter that feeds these values to Material.
 //
 // The names carry no component prefix. The module is used under an alias, so a consumer writes
-// `tokens.$font-size`, and the alias is where the scope belongs. `tokens.entry.scss` emits every
-// scalar here as a `--cedar-` custom property; the two palette maps and the Material font string
+// `tokens.$font-size`, and the alias is where the scope belongs. `css/custom-properties.scss`
+// emits every scalar here as a `--cedar-` custom property; the two palette maps and the Material font string
 // are Sass inputs only.
 
 @use 'sass:map';
@@ -31,8 +31,8 @@ $font-family-string: 'CEE Roboto, "Helvetica Neue", sans-serif';
 // Logs, identifiers and code samples.
 $font-family-monospace: ui-monospace, SFMono-Regular, Menlo, monospace;
 
-// Body text is regular; labels, headings and the current item in a trail are medium. Authored
-// rich text keeps its own emphasis.
+// Body text is regular; labels, headings and tabs are medium. Authored rich text keeps its own
+// emphasis.
 $font-weight-regular: 400;
 $font-weight-medium: 500;
 
@@ -40,13 +40,15 @@ $font-weight-medium: 500;
 // against that page's root element, which a component neither sets nor can see: a host with
 // `html { font-size: 62.5% }` would render rem-sized type at 62.5% of its intended size.
 //
-// Five steps, and a size between two of them is not on the scale.
+// Four steps, and a size between two of them is not on the scale. The title is the one fluid step.
+// Its floor sits above the large size, so a narrow host never draws a title smaller than a heading
+// beneath it.
 $font-size-small: 12px; // hints, counts, versions and other secondary facts
 $font-size: 14px; // body text, controls, labels, menus and tabs
-$font-size-element-heading: 18px; // a nested element's heading; a section heading inside a page
-$font-size-heading: 20px; // a section break; the largest heading inside a form
-$font-size-artifact-title: clamp(19px, 3cqi, 26px); // the title of a page, an artifact or a dialog
+$font-size-large: 18px; // a heading below a title, such as a section break or a panel's; a prominent number
+$font-size-artifact-title: clamp(20px, 3cqi, 26px); // the title of a page, an artifact or a dialog
 $line-height-heading: 1.25; // every heading and title
+$line-height-tight: 1; // an icon, caret, badge or one-line label whose box is exactly its type size
 
 // ---------------------------------------------------------------------------
 // Palettes
@@ -157,9 +159,6 @@ $status-warning-surface: #fff8e5;
 $status-success-text: #176b3a;
 $status-success-surface: #ecfdf3;
 
-// The filled dot beside an unsaved-changes label.
-$status-unsaved-dot: #eab308;
-
 $dialog-backdrop: rgba(0, 0, 0, 0.4);
 
 // ---------------------------------------------------------------------------
@@ -175,14 +174,12 @@ $control-height-authoring: 32px;
 $control-line-height-default: 21px;
 $control-line-height-authoring: 18px;
 $control-disabled-opacity: 0.45;
-$textarea-min-rows-default: 2;
 $focus-ring-width: 2px;
 $focus-ring-offset: 2px;
 
-// A choice option and an authoring table row; an ordinary listing row, which holds a control with a
-// small gutter above and below it.
+// A choice option and an authoring table row. An ordinary listing row derives from the control
+// height, so it is a `spacing` measurement.
 $row-height-compact: 28px;
-$table-row-height: 44px;
 
 // ---------------------------------------------------------------------------
 // Space, shape and elevation
@@ -204,9 +201,9 @@ $icon-size-small: 16px;
 $icon-size-default: 20px;
 $icon-size-large: 24px;
 
-// Menus, popovers, tooltips and drag previews float; dialogs float higher.
+// Menus, popovers, tooltips, drag previews and dialogs float. A dialog needs no deeper shadow,
+// because its backdrop already separates it from the page.
 $shadow-overlay: 0 4px 18px rgba(0, 0, 0, 0.13);
-$shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.2);
 
 // ---------------------------------------------------------------------------
 // Motion and layers
@@ -214,10 +211,7 @@ $shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.2);
 
 $motion-duration-fast: 120ms;
 $motion-duration-normal: 200ms;
-// Continuous progress indicators use a calm full rotation rather than interaction timing.
-$motion-duration-spinner: 2s;
 $motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-$motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
 
 // Ordered within a host's stacking context.
 $layer-sticky: 10;

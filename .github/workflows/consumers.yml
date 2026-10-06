@@ -46,10 +46,12 @@ jobs:
             directory: .
             command: npm run prepare:components && npm test && npm --prefix browser ci && ./browser/node_modules/.bin/playwright install --with-deps chromium && npm run test:browser
     steps:
+      # Full history: the adoption check reads the token set at the commit the consumer's pin names.
       - name: Check out candidate tokens
         uses: actions/checkout@v4
         with:
           path: tokens
+          fetch-depth: 0
       - name: Check out consumer
         uses: actions/checkout@v4
         with:

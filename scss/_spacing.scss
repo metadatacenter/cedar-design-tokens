@@ -11,23 +11,71 @@ $header-action-slot: 40px;
 $property-slot: 18px;
 $form-toolbar-size: 30px;
 
+// An ordinary listing row: a default control with a `space-1` gutter above and below it.
+$table-row-height: tokens.$control-height-default + 2 * tokens.$space-1;
+
+// An icon-only button for a row action or a handle: a small icon with a `space-1` inset. The
+// `patterns.icon-button` recipe draws it.
+$icon-button-small: tokens.$icon-size-small + 2 * tokens.$space-1;
+
+// Sizes no role describes, named so that a consumer says what a size is for instead of borrowing a
+// token whose value happens to match. Each belongs to the component named in its comment.
+
+// Workspace: the brand mark beside the product name, as tall as the header's controls.
+$brand-mark-size: tokens.$control-height-default;
+// Workspace: the resource grid's minimum height.
+$resource-grid-min-height: 240px;
+// Workspace: a crumb in the destination picker, as tall as a small icon button.
+$inline-target-height: $icon-button-small;
+// Workspace: a resource card's line of small type, as tall as a line of body text.
+$card-meta-line-height: tokens.$font-size;
+
+// Designer: the overview and library panels beside the canvas, and the library collapsed to a rail.
+$designer-overview-width: 224px;
+$designer-library-width: 288px;
+$designer-library-rail-width: 48px;
+// Designer: the identity block in the header, and the CEDAR mark at its top.
+$designer-identity-width: 72px;
+$designer-identity-mark-size: 40px;
+// Designer: the chevron that collapses an element in the outline, smaller than a small icon.
+$designer-outline-chevron-size: 12px;
+// Designer: the template header's icon tile, as tall as the name control beside it.
+$template-icon-tile-size: tokens.$control-height-default;
+// Designer: the accent bar along the top of the template header's card.
+$template-card-accent-height: 4px;
+// Designer: the handle that resizes the overview panel, and the stripe that marks an invalid row in
+// the outline.
+$resize-handle-width: 8px;
+$invalid-stripe-width: 3px;
+// Designer: the annotation table's type column, and a column that holds one control and its cell
+// padding. The second reads the custom properties, so an authoring density narrows it with its
+// control.
+$annotation-type-column-width: 96px;
+$control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+
+// Editor: the ring between a single-choice marker's outline and its filled centre.
+$choice-marker-ring: 4px;
+
 $-recipes: (
   split-column-gutter: (1%),
   inset-status-panel: (4.55%),
   form-header: (
-    tokens.$space-2 clamp(12px, 3cqi, 32px),
+    tokens.$space-2 clamp(#{tokens.$space-3}, 3cqi, 32px),
   ),
   form-content: (
-    0 clamp(12px, 3cqi, 32px) tokens.$space-6,
+    0 clamp(#{tokens.$space-3}, 3cqi, 32px) tokens.$space-6,
   ),
   outline-row: (
     calc(var(--cedar-space-1) / 2) 0,
   ),
   control-content-inset: (calc((var(--_cedar-height) - var(--_cedar-line-height)) / 2)),
-  control-icon-inset: (calc((var(--_cedar-height) - 24px) / 2)),
-  compact-static: (calc(tokens.$space-1 / 2)),
+  control-icon-inset: (calc((var(--_cedar-height) - #{tokens.$icon-size-large}) / 2)),
   outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
   element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
+  // Editor: an element's body, content and heading insets once its component is narrow, in
+  // proportion to its width so that several nested levels still leave room for their fields.
+  element-narrow-inset: (4%),
+  element-narrow-heading-inset: (8%),
   form-action-alignment: (
     math.div($property-slot - tokens.$icon-size-small, 2) - math.div($form-toolbar-size - tokens.$icon-size-default, 2),
   ),
@@ -52,12 +100,13 @@ $-recipes: (
   header-action-reserve: (
     $header-action-slot + tokens.$space-2,
   ),
-  compact: (calc(var(--cedar-space-1) / 2)),
+  // Static, because CEE renders in hosts that declare no CEDAR properties.
+  compact: (calc(tokens.$space-1 / 2)),
   compact-cell: (
     calc(var(--cedar-space-1) / 2) var(--cedar-space-1),
   ),
   compact-row: (
-    calc(var(--cedar-space-1) / 2) var(--cedar-space-2),
+    calc(#{tokens.$space-1} / 2) tokens.$space-2,
   ),
   control-row: (
     calc(var(--cedar-space-3) / 2) var(--cedar-space-3),
@@ -73,17 +122,11 @@ $-recipes: (
   element-toggle-reserve: (calc(var(--cedar-space-3) + var(--cedar-space-6))),
   control-inset: (calc(var(--cedar-space-3) / 2)),
   field-action-outdent: (calc(-1 * var(--cedar-space-1))),
-  field-label: (
-    var(--cedar-space-4) 0 calc(var(--cedar-space-1) / 2),
-  ),
   field-heading: (
     var(--cedar-space-1) calc(var(--cedar-space-3) / 2),
   ),
   field-control: (
     calc(var(--cedar-space-3) / 2) var(--cedar-space-2),
-  ),
-  field-error: (
-    calc(var(--cedar-space-3) / 2) var(--cedar-space-2) 0,
   ),
   compact-break: (
     calc(var(--cedar-space-1) / 2) 0 var(--cedar-space-1),
@@ -106,9 +149,6 @@ $-recipes: (
   search-chip: (
     var(--cedar-space-2) calc(var(--cedar-space-1) / 2),
   ),
-  constraint-row: (
-    calc(#{tokens.$space-1} / 2) tokens.$space-2,
-  ),
   dialog-close-alignment: (calc((var(--cedar-icon-size-default) - var(--cedar-control-height-default)) / 2)),
   view-switch: (
     calc(var(--cedar-space-1) * 1.25) var(--cedar-space-2),
@@ -123,6 +163,8 @@ $-recipes: (
     var(--cedar-space-3) calc(2 * var(--cedar-space-3) + var(--cedar-icon-size-small)),
   ),
   page-footer: (calc(2 * var(--cedar-space-6))),
+  // Keeps a default control's height clear, for a control drawn over the padded box.
+  control-reserve: (var(--cedar-control-height-default)),
 );
 
 @mixin apply($property, $recipe) {
@@ -130,6 +172,7 @@ $-recipes: (
     list.index(
       (
         --_cedar-padding,
+        --_cee-element-body-inset,
         --_cee-element-heading-inset,
         --element-child-inset,
         gap,
@@ -145,7 +188,8 @@ $-recipes: (
         padding-bottom,
         padding-inline,
         padding-left,
-        padding-right
+        padding-right,
+        padding-top
       ),
       $property
     )

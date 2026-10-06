@@ -1,0 +1,12 @@
+@use '../scss/patterns';
+
+// The notice for a host written in plain CSS: the class draws information, and data-tone the
+// status tones. A Sass host includes the recipe itself.
+.cedar-notice {
+  @include patterns.notice;
+}
+@each $tone in (error, warning, success) {
+  .cedar-notice[data-tone='#{$tone}'] {
+    @include patterns.notice-tone($tone);
+  }
+}

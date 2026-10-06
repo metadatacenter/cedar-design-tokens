@@ -1,3 +1,4 @@
+@use 'spacing';
 @use 'tokens';
 // Framework-neutral visual contracts. Consumers own their DOM and application state.
 // CSS roles deliberately remain overridable at a host boundary.
@@ -14,7 +15,7 @@
   padding: $padding;
   color: var(--cedar-text-primary);
   background: var(--cedar-surface-raised);
-  box-shadow: var(--cedar-shadow-dialog);
+  box-shadow: var(--cedar-shadow-overlay);
   &::backdrop {
     background: var(--cedar-dialog-backdrop);
   }
@@ -98,7 +99,7 @@
   color: inherit;
 }
 
-// A row of tabs over a rule. A tab is muted body text; the selected tab is primary and medium,
+// A row of tabs over a rule. Every tab is muted medium text; the selected tab is primary,
 // underlined in primary. The first label starts on the content edge, like the heading above it, and
 // a tab is as tall as a control. Hosts own `aria-selected`, keyboard movement and the panels.
 @mixin tabs {
@@ -136,8 +137,9 @@
   }
 }
 
-// A location trail: muted ancestors, the current location in medium weight, and separators without
-// spacing, so the trail reads as one path. A trail heading a listing takes the element-heading size.
+// A location trail in one weight, with separators without spacing, so the trail reads as one
+// path: muted ancestors, links included, and the current location in the theme colour. A trail
+// heading a listing takes the large size. Hosts mark the current crumb with aria-current.
 @mixin breadcrumbs($size: body) {
   display: flex;
   flex-wrap: wrap;
@@ -145,11 +147,16 @@
   row-gap: var(--cedar-space-2);
   color: var(--cedar-text-muted);
   @if $size == heading {
-    font-size: var(--cedar-font-size-element-heading);
+    font-size: var(--cedar-font-size-large);
   } @else if $size != body {
     @error 'Breadcrumb size must be body or heading; got #{$size}.';
   }
-  // The whole trail keeps one weight. A host that sets the current crumb apart does so by colour.
+  a:not([aria-current]) {
+    color: var(--cedar-text-muted);
+  }
+  [aria-current] {
+    color: var(--cedar-color-primary);
+  }
 }
 
 @mixin breadcrumb-separator {
@@ -183,24 +190,24 @@
   display: flex;
   align-items: center;
   gap: var(--cedar-space-1);
-  min-height: var(--cedar-space-6);
+  min-height: var(--cedar-icon-size-large);
 }
 
 @mixin resource-card-icon {
   display: flex;
-  flex: 0 0 var(--cedar-space-6);
+  flex: 0 0 var(--cedar-icon-size-large);
   align-self: flex-start;
   align-items: center;
-  height: var(--cedar-space-6);
+  height: var(--cedar-icon-size-large);
   color: var(--cedar-color-primary);
 }
 
-// A name takes at most two lines and then ends in an ellipsis.
+// A name takes at most two lines of body text and then ends in an ellipsis.
 @mixin resource-card-name {
   display: -webkit-box;
   overflow: hidden;
-  max-height: calc(2 * var(--cedar-font-size-heading));
-  line-height: var(--cedar-font-size-heading);
+  max-height: calc(2 * var(--cedar-control-line-height-default));
+  line-height: var(--cedar-control-line-height-default);
   white-space: normal;
   overflow-wrap: anywhere;
   -webkit-line-clamp: 2;
@@ -268,12 +275,23 @@
   li {
     padding-block: var(--cedar-space-1);
   }
+  // An issue line leads to its field and reads as the line of text it is, not as one of the page's
+  // buttons: no control box, and no hover fill whatever a host's button rule sets.
   button {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
     color: inherit;
     font: inherit;
     cursor: pointer;
     text-align: left;
     text-decoration: underline;
+    &:hover:not(:disabled):not([aria-disabled='true']),
+    &:active:not(:disabled):not([aria-disabled='true']) {
+      background: none;
+    }
   }
   &.validation-summary--warning {
     --cedar-icon-color: var(--cedar-status-warning-text);
@@ -325,5 +343,144 @@ $specification-padding-inline: 14px;
   &:hover,
   &:focus-visible {
     text-decoration: underline solid var(--cedar-specification-text, var(--cedar-text-muted, #{tokens.$text-muted}));
+  }
+}
+
+// The mark beside an editor's save state: a hollow ring while nothing is unsaved, whether the
+// artifact is unmodified or saved, and a filled dot once it is modified, both in the warning
+// colour. A host draws it in a `::before` beside the state's text and chooses the state with its
+// own selectors.
+$-save-state-dot-size: 8px;
+
+@mixin save-state-dot {
+  content: '';
+  box-sizing: border-box;
+  flex: 0 0 $-save-state-dot-size;
+  height: $-save-state-dot-size;
+  border: 2px solid var(--cedar-status-warning-text);
+  border-radius: var(--cedar-radius-pill);
+  background: transparent;
+}
+
+@mixin save-state-dot-modified {
+  background: var(--cedar-status-warning-text);
+}
+
+// A continuous progress indicator: a ring whose arc, in the theme colour, turns once every two
+// seconds, a calm full rotation rather than interaction timing. The host places the ring; reduced
+// motion stops it with every other animation.
+@mixin spinner {
+  width: var(--cedar-icon-size-large);
+  height: var(--cedar-icon-size-large);
+  border: 4px solid var(--cedar-surface-subtle);
+  border-top-color: var(--cedar-color-primary);
+  border-radius: 50%;
+  animation: cedar-spinner-turn 2s linear infinite;
+  @at-root {
+    @keyframes cedar-spinner-turn {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}
+
+// Where a dragged item will land: the item itself, faded. Hosts own the drag behaviour.
+@mixin drag-placeholder {
+  opacity: 0.25;
+}
+
+// The box of an icon-only button: `small` for a row action or a handle, `default` at the control
+// height. Hosts keep the button's colours, border and states.
+@mixin icon-button($size: small) {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  @if $size == small {
+    width: spacing.$icon-button-small;
+    min-width: spacing.$icon-button-small;
+    height: spacing.$icon-button-small;
+    min-height: spacing.$icon-button-small;
+  } @else if $size == default {
+    width: var(--cedar-control-height, var(--cedar-control-height-default));
+    min-width: var(--cedar-control-height, var(--cedar-control-height-default));
+    height: var(--cedar-control-height, var(--cedar-control-height-default));
+    min-height: var(--cedar-control-height, var(--cedar-control-height-default));
+  } @else {
+    @error 'Icon button size must be small or default; got #{$size}.';
+  }
+}
+
+// Text kept for assistive technology alone: in the accessibility tree, drawn nowhere.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// A help label floating beside its control: the menu's surface and type at the tooltip layer, wide
+// enough for a short sentence, wrapping a long one. Hosts own its position and visibility.
+// Each value falls back to its compiled token, so a tooltip drawn inside a shadow root whose host
+// declares no CEDAR properties, as the embeddable editor's can be, still takes the shared surface.
+@mixin tooltip-surface {
+  @include menu-text;
+  z-index: var(--cedar-layer-tooltip, #{tokens.$layer-tooltip});
+  width: max-content;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow: auto;
+  padding: var(--cedar-space-2, #{tokens.$space-2}) var(--cedar-space-3, #{tokens.$space-3});
+  gap: var(--cedar-space-2, #{tokens.$space-2});
+  background: var(--cedar-surface-raised, #{tokens.$surface-raised});
+  border: 1px solid var(--cedar-border-rule, #{tokens.$border-rule});
+  border-radius: var(--cedar-radius, #{tokens.$radius});
+  box-shadow: var(--cedar-shadow-overlay, #{tokens.$shadow-overlay});
+  color: var(--cedar-text-primary, #{tokens.$text-primary});
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+// A heading for a section inside a page, a panel or a dialog: the large size in the title colour.
+// Hosts own its margins.
+@mixin section-heading {
+  font-size: var(--cedar-font-size-large);
+  font-weight: var(--cedar-font-weight-medium);
+  line-height: var(--cedar-line-height-heading);
+  color: var(--cedar-text-title);
+}
+
+// A message across a page or a panel: the status surface with its text colour, and information in
+// the theme's strong colour on the selection surface. `$inset` aligns the text with the host's
+// content edge; a boxed notice inside content takes the shared corner. Hosts own placement and
+// dismissal, and pair the colour with words or an icon.
+@mixin notice($tone: info, $inset: var(--cedar-space-4), $boxed: false) {
+  margin: 0;
+  padding: var(--cedar-space-2) $inset;
+  font-size: var(--cedar-font-size);
+  line-height: var(--cedar-control-line-height-default);
+  @if $boxed {
+    border-radius: var(--cedar-radius);
+  }
+  @include notice-tone($tone);
+}
+
+@mixin notice-tone($tone) {
+  @if $tone == info {
+    --cedar-icon-color: var(--cedar-color-primary-strong);
+    color: var(--cedar-color-primary-strong);
+    background: var(--cedar-surface-selected);
+  } @else if $tone == error or $tone == warning or $tone == success {
+    --cedar-icon-color: var(--cedar-status-#{$tone}-text);
+    color: var(--cedar-status-#{$tone}-text);
+    background: var(--cedar-status-#{$tone}-surface);
+  } @else {
+    @error 'Notice tone must be info, error, warning or success; got #{$tone}.';
   }
 }

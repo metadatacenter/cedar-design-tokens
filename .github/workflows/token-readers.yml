@@ -1,0 +1,56 @@
+name: Token readers
+
+# Every shared token needs two readers. Only a checkout of every consumer can show that, and a
+# consumer's own adoption job checks that consumer alone, so the check runs here: after each change to
+# the tokens and daily, because a consumer can drop a reader of a token without touching this
+# repository.
+on:
+  push:
+    branches: [develop]
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: cedar-design-tokens
+          fetch-depth: 0
+      - name: Check out every consumer
+        run: |
+          for repo in cedar-embeddable-editor cedar-embeddable-designer cedar-embeddable-term-picker \
+              cedar-workspace cedar-openview cedar-monitoring cedar-bridging cedar-template-designer; do
+            git clone --quiet --branch develop "https://github.com/metadatacenter/$repo.git" "$repo"
+          done
+          git clone --quiet --branch main https://github.com/metadatacenter/cedar-cee-mcp.git mcp/cedar-cee-mcp
+      - name: Fail on a token fewer than two consumers read
+        run: |
+          python3 cedar-design-tokens/tools/check_adoption.py --root . --json > adoption.json
+          python3 - <<'PY'
+          import json, sys
+          report = json.load(open('adoption.json'))
+          unused, single = report['unusedTokens'], report['singleReaderTokens']
+          if unused is None:
+              sys.exit('Not every consumer was checked out')
+          problems = []
+          if unused:
+              problems.append('Unused shared tokens: ' + ', '.join(unused) + '; adopt or remove them')
+          if single:
+              problems.append('Shared tokens with one reader: ' + ', '.join(f'{t} ({r})' for t, r in single.items())
+                              + '; move each value into its reader')
+          if problems:
+              sys.exit('\n'.join(problems))
+          print('Every shared token has at least two readers')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: token-readers
+          path: adoption.json

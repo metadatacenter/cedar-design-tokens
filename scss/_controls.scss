@@ -2,7 +2,7 @@
 @use 'sass:map';
 @use 'tokens';
 @use 'spacing';
-@use 'dist/icon-masks';
+@use '../dist/icon-masks';
 
 @mixin focus-ring($color: tokens.$color-primary) {
   outline: tokens.$focus-ring-width solid $color;
@@ -22,6 +22,21 @@
     opacity: tokens.$control-disabled-opacity;
     cursor: default;
   }
+}
+
+// The ordinary bordered button beside a primary one: a raised surface in the control outline, the
+// theme colour for its label, the shared control height and the shared hover fill.
+@mixin secondary-action {
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height, var(--cedar-control-height-default));
+  padding: 0 var(--cedar-space-3);
+  border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
+  border-radius: var(--cedar-radius);
+  background: tokens.$surface-raised;
+  color: tokens.$color-primary;
+  font: inherit;
+  cursor: pointer;
+  @include action-states;
 }
 
 @mixin primary-action {

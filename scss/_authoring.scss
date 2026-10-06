@@ -1,6 +1,7 @@
 // Shared native authoring recipes. Consumers own selectors and document state.
 // These preserve the compact-control host override API and emit nothing until included.
 @use 'controls';
+@use 'tokens';
 
 @mixin compact-control {
   box-sizing: border-box;
@@ -13,7 +14,7 @@
   font-family: inherit;
   font-size: var(--cedar-control-font-size, var(--cedar-font-size));
   line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
-  font-weight: var(--cedar-font-weight-regular, 400);
+  font-weight: var(--cedar-font-weight-regular, #{tokens.$font-weight-regular});
   &:focus-visible {
     @include controls.focus-ring(var(--cedar-control-focus, var(--cedar-color-primary)));
   }
@@ -46,7 +47,7 @@
   color: var(--cedar-color-primary-strong);
   font-family: inherit;
   font-size: var(--cedar-control-font-size, var(--cedar-font-size));
-  font-weight: var(--cedar-font-weight-regular, 400);
+  font-weight: var(--cedar-font-weight-regular, #{tokens.$font-weight-regular});
   line-height: var(--cedar-control-line-height, var(--cedar-control-line-height-default));
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -88,8 +89,11 @@
 @mixin label-text {
   color: var(--cedar-text-muted);
   font-size: var(--cedar-font-size);
-  font-weight: var(--cedar-font-weight-medium, 500);
+  font-weight: var(--cedar-font-weight-medium, #{tokens.$font-weight-medium});
 }
+
+// The circle that holds a settings dialog's header icon.
+$-settings-badge-size: 40px;
 
 // Shared settings-dialog structure. Content and maximum width remain host-owned.
 @mixin settings-dialog {
@@ -132,9 +136,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: calc(var(--cedar-space-6) + var(--cedar-space-4));
-    height: calc(var(--cedar-space-6) + var(--cedar-space-4));
-    border-radius: 50%;
+    width: $-settings-badge-size;
+    height: $-settings-badge-size;
+    border-radius: var(--cedar-radius-pill);
     background: transparent;
     color: var(--cedar-color-primary);
   }
@@ -181,8 +185,8 @@
     background: var(--cedar-color-primary-strong);
   }
   .settings-dialog-check {
-    width: var(--cedar-space-4);
-    height: var(--cedar-space-4);
+    width: var(--cedar-icon-size-small);
+    height: var(--cedar-icon-size-small);
     cursor: pointer;
   }
 }

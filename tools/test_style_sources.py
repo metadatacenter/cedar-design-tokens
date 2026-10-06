@@ -73,3 +73,21 @@ class EmbeddedStylesTest(unittest.TestCase):
         for source in ('<div [style.fontSize]="size"></div>', '<div [style.backgroundColor]="colour"></div>',
                        '<div [style.row-gap]="gap"></div>'):
             self.assertTrue(any(r['rule'] == 'dynamic-style' for r in self.rules('x.html', source)))
+
+    def test_a_page_style_element_and_inline_script_are_inspected(self):
+        page = '''<!doctype html>
+<html><head>
+<style>
+  body { margin: 0; padding: 2rem; }
+  #status { color: var(--cedar-text-muted); }
+</style>
+<script src="/bundle.js"></script>
+</head><body>
+<script>
+  status.className = isError ? 'error' : '';
+  status.style.color = 'red';
+</script>
+</body></html>'''
+        rows = self.rules('page.html', page)
+        self.assertEqual([('dynamic-style', 11), ('spacing', 4)], [(r['rule'], r['line']) for r in rows])
+        self.assertEqual([], self.rules('page.html', '<style>a { color: var(--cedar-color-primary); }</style>'))

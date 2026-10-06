@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -113,6 +114,44 @@ class SurfaceCoverageTest(unittest.TestCase):
         self.save()
         self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
 
+    def test_moving_to_a_new_walk_may_record_existing_findings_once(self):
+        helper = self.repo / self.registry['browserHelper']
+        current = helper.read_text()
+        helper.write_text(re.sub(r'^// Walk \d+\.$', '// Walk 1.', current, flags=re.M))
+        commit = ['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm']
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(commit + ['base'], check=True)
+        sync(self.repo)
+        self.registry['surfaces'][0]['scaleDebt'] = [{'property': 'box-shadow', 'value': 'rgba(0, 0, 0, 0.14)', 'reason': 'Material elevation, found when the walk read shadows'}]
+        self.save()
+        self.assertFalse(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(commit + ['migrated'], check=True)
+        self.registry['surfaces'][0]['scaleDebt'].append({'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Added in a later feature change'})
+        self.save()
+        self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
+
+    def commit_base(self):
+        subprocess.run(['git', '-C', str(self.repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.repo), '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'base'], check=True)
+
+    def test_a_contract_stays_while_its_source_remains(self):
+        self.commit_base()
+        del self.registry['surfaces'][0]['contract']
+        self.save()
+        self.assertTrue(any('keeps a rendered contract' in f['value'] for f in findings(self.repo, 'HEAD')))
+        self.registry['surfaces'] = []
+        self.save()
+        (self.repo / 'src/view.html').write_text('<p>No dialog any more</p>')
+        self.assertFalse(any('keeps a rendered contract' in f['value'] for f in findings(self.repo, 'HEAD')))
+
+    def test_a_contract_matches_the_kind_of_element_it_checks(self):
+        (self.repo / 'src/view.html').write_text('<div role="menu" aria-label="Rename"></div>')
+        self.assertTrue(any('menu registered under' in error for error in validate(self.repo)))
+        self.registry['surfaces'][0]['contract'] = 'menu'
+        self.save()
+        self.assertFalse(any('registered under' in error for error in validate(self.repo)))
+
     def test_paths_must_stay_in_repository(self):
         self.registry['surfaces'][0]['source'][0]['file'] = '../outside.html'
         self.save()
@@ -150,6 +189,17 @@ class SurfaceCoverageTest(unittest.TestCase):
         (self.repo / MANIFEST).unlink()
         (self.repo / 'package.json').unlink()
         self.assertIn('Missing', validate(self.repo)[0])
+
+    def test_monitoring_and_bridging_register_their_routes_as_openview_does(self):
+        nested = self.openview_registry()
+        for name in ('cedar-monitoring', 'cedar-bridging'):
+            (nested / 'package.json').write_text(json.dumps({'name': name}))
+            self.registry['repo'] = name
+            self.save()
+            (nested / 'src/extra-routing.module.ts').write_text("const routes = [{path: 'logs', component: Logs}];")
+            self.assertTrue(any("unregistered route 'logs'" in e for e in validate(self.repo)), name)
+            (nested / 'src/extra-routing.module.ts').unlink()
+            self.assertEqual(validate(self.repo), [], name)
 
     def test_nested_host_stray_routes_menus_and_dialogs_fail(self):
         nested = self.openview_registry()

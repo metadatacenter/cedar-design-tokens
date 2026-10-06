@@ -15,11 +15,13 @@ jobs:
         with:
           path: consumer
           fetch-depth: 0
+      # Full history: the check reads the token set at the commit the consumer's pin names.
       - uses: actions/checkout@v4
         with:
           repository: metadatacenter/cedar-design-tokens
           ref: develop
           path: cedar-design-tokens
+          fetch-depth: 0
       - name: Report adoption and prevent new drift
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

@@ -1,6 +1,7 @@
 // The complete shared vocabulary. A token joins this list only for a role no existing token covers,
-// and together with the consumer that needs it: `cedarcli check design-tokens --strict` fails on a
-// token that nothing reads. A consumer that wants a value between two of these uses the nearer one.
+// and together with the consumers that need it: `cedarcli check design-tokens --strict` fails on a
+// token that fewer than two consumers read. A consumer that wants a value between two of these uses
+// the nearer one.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,10 +14,10 @@ const inventory = {
     'font-weight-medium',
     'font-size-small',
     'font-size',
-    'font-size-element-heading',
-    'font-size-heading',
+    'font-size-large',
     'font-size-artifact-title',
     'line-height-heading',
+    'line-height-tight',
   ],
   colour: [
     'color-primary',
@@ -36,7 +37,6 @@ const inventory = {
     'status-warning-surface',
     'status-success-text',
     'status-success-surface',
-    'status-unsaved-dot',
     'dialog-backdrop',
   ],
   controls: [
@@ -45,29 +45,13 @@ const inventory = {
     'control-line-height-default',
     'control-line-height-authoring',
     'control-disabled-opacity',
-    'textarea-min-rows-default',
     'focus-ring-width',
     'focus-ring-offset',
     'row-height-compact',
-    'table-row-height',
   ],
   space: ['space-1', 'space-2', 'space-3', 'space-4', 'space-6'],
-  shape: [
-    'radius',
-    'radius-pill',
-    'icon-size-small',
-    'icon-size-default',
-    'icon-size-large',
-    'shadow-overlay',
-    'shadow-dialog',
-  ],
-  motion: [
-    'motion-duration-fast',
-    'motion-duration-normal',
-    'motion-duration-spinner',
-    'motion-ease-standard',
-    'motion-ease-enter',
-  ],
+  shape: ['radius', 'radius-pill', 'icon-size-small', 'icon-size-default', 'icon-size-large', 'shadow-overlay'],
+  motion: ['motion-duration-fast', 'motion-duration-normal', 'motion-ease-standard'],
   layers: ['layer-sticky', 'layer-menu', 'layer-modal', 'layer-overlay', 'layer-tooltip'],
 };
 
@@ -79,8 +63,8 @@ test('the emitted tokens are exactly the reviewed inventory', () => {
   assert.deepEqual([...emitted].sort(), Object.values(inventory).flat().sort());
 });
 
-test('the type scale has five sizes and two weights', () => {
-  assert.equal(inventory.typography.filter((name) => name.startsWith('font-size')).length, 5);
+test('the type scale has four sizes and two weights', () => {
+  assert.equal(inventory.typography.filter((name) => name.startsWith('font-size')).length, 4);
   assert.equal(inventory.typography.filter((name) => name.startsWith('font-weight')).length, 2);
 });
 
