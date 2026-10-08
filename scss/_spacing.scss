@@ -43,8 +43,8 @@ $designer-outline-chevron-size: 12px;
 $designer-template-icon-tile-size: tokens.$control-height-default;
 // Designer: the accent bar along the top of the template header's card.
 $designer-template-card-accent-height: 4px;
-// Designer: the handle that resizes the overview panel, and the stripe that marks an invalid row in
-// the outline.
+// Designer: the handles that resize the overview panel and divide the library's two sections, and
+// the stripe that marks an invalid row in the outline.
 $designer-resize-handle-width: 8px;
 $designer-invalid-stripe-width: 3px;
 // Designer: the annotation table's type column, and a column that holds one control and its cell
@@ -62,6 +62,14 @@ $designer-settings-toggle-height: 14px;
 $designer-panel-toggle-size: 32px;
 // Designer: the count badge beside a group in the field library.
 $designer-library-badge-size: 22px;
+// Designer: the dot that marks a library item as draggable, and the grip on the divider between
+// the library's two sections.
+$designer-drag-indicator-size: 8px;
+$designer-divider-grip-height: 4px;
+// Designer: the scrollbars of its scrolling lists and dialogs.
+$designer-scrollbar-width: 6px;
+// Designer: the least height the designer element takes, whatever its host gives it.
+$designer-min-height: 500px;
 // Designer: two stacking positions between the shared layers. A card's settings toggle sits one
 // above the sticky layer, so that it clears the insertion area between cards. The field library
 // sits between the sticky and menu layers, so that canvas content scrolls under it and its menus
