@@ -35,7 +35,7 @@ test('control alignment retains the existing geometry without local arithmetic',
 
 test('named measurements say what a size is for and follow density where a control does', () => {
   const css = compile(
-    'a { small: spacing.$icon-button-small; cell: spacing.$control-cell-width; brand: spacing.$brand-mark-size; chevron: spacing.$designer-outline-chevron-size; }',
+    'a { small: spacing.$icon-button-small; cell: spacing.$designer-control-cell-width; brand: spacing.$brand-mark-size; chevron: spacing.$designer-outline-chevron-size; }',
   );
   assert.match(css, /small: 24px/);
   assert.match(css, /chevron: 12px/);

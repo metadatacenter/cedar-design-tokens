@@ -40,18 +40,18 @@ $designer-identity-mark-size: 40px;
 // Designer: the chevron that collapses an element in the outline, smaller than a small icon.
 $designer-outline-chevron-size: 12px;
 // Designer: the template header's icon tile, as tall as the name control beside it.
-$template-icon-tile-size: tokens.$control-height-default;
+$designer-template-icon-tile-size: tokens.$control-height-default;
 // Designer: the accent bar along the top of the template header's card.
-$template-card-accent-height: 4px;
+$designer-template-card-accent-height: 4px;
 // Designer: the handle that resizes the overview panel, and the stripe that marks an invalid row in
 // the outline.
-$resize-handle-width: 8px;
-$invalid-stripe-width: 3px;
+$designer-resize-handle-width: 8px;
+$designer-invalid-stripe-width: 3px;
 // Designer: the annotation table's type column, and a column that holds one control and its cell
 // padding. The second reads the custom properties, so an authoring density narrows it with its
 // control.
-$annotation-type-column-width: 96px;
-$control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+$designer-annotation-type-column-width: 96px;
+$designer-control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
 
 // Designer: the preview's toolbar, and the select and close button that sit in it.
 $designer-preview-bar-height: 40px;
