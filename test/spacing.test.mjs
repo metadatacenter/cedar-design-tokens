@@ -40,6 +40,12 @@ test('named measurements say what a size is for and follow density where a contr
   assert.match(css, /small: 24px/);
   assert.match(css, /chevron: 12px/);
   assert.match(css, /brand: 36px/);
+  // The designer's stacking positions stay between the shared layers they are placed among.
+  const layers = compile(
+    'a { toggle: spacing.$designer-settings-toggle-layer; library: spacing.$designer-library-layer; }',
+  );
+  assert.match(layers, /toggle: 11/);
+  assert.match(layers, /library: 30/);
   // An authoring density re-points the default control height, so the column must read the property.
   assert.match(css, /cell: calc\(var\(--cedar-control-height-default\) \+ 2 \* var\(--cedar-space-2\)\)/);
   assert.match(

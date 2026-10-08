@@ -53,6 +53,24 @@ $invalid-stripe-width: 3px;
 $annotation-type-column-width: 96px;
 $control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
 
+// Designer: the preview's toolbar, and the select and close button that sit in it.
+$designer-preview-bar-height: 40px;
+$designer-preview-control-size: 28px;
+// Designer: the mark inside a checked checkbox or radio button.
+$designer-choice-mark-size: 8px;
+// Designer: the toggle under a card that opens its settings.
+$designer-settings-toggle-height: 14px;
+// Designer: the header buttons that open and close the side panels.
+$designer-panel-toggle-size: 32px;
+// Designer: the count badge beside a group in the field library.
+$designer-library-badge-size: 22px;
+// Designer: two stacking positions between the shared layers. A card's settings toggle sits one
+// above the sticky layer, so that it clears the insertion area between cards. The field library
+// sits between the sticky and menu layers, so that canvas content scrolls under it and its menus
+// open over it.
+$designer-settings-toggle-layer: tokens.$layer-sticky + 1;
+$designer-library-layer: 30;
+
 // Editor: the ring between a single-choice marker's outline and its filled centre.
 $choice-marker-ring: 4px;
 

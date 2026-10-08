@@ -385,6 +385,21 @@ $-save-state-dot-size: 8px;
   }
 }
 
+// The selected item in a list of cards: a primary outline drawn just inside the item's border, so
+// the item keeps its size. The designer's overview marks its selected template, element or field
+// with it.
+@mixin selected-outline {
+  outline: 1px solid var(--cedar-color-primary);
+  outline-offset: -1px;
+}
+
+// A card whose content is invalid: an error outline just outside its border. A host's control
+// error colour replaces the shared one, as it does for an invalid control.
+@mixin invalid-outline {
+  outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));
+  outline-offset: 1px;
+}
+
 // Where a dragged item will land: the item itself, faded. Hosts own the drag behaviour.
 @mixin drag-placeholder {
   opacity: 0.25;
