@@ -21,7 +21,8 @@ $icon-button-small: tokens.$icon-size-small + 2 * tokens.$space-1;
 // Sizes no role describes, named so that a consumer says what a size is for instead of borrowing a
 // token whose value happens to match. Each belongs to the component named in its comment.
 
-// Workspace: the brand mark beside the product name, as tall as the header's controls.
+// Workspace and the designer: the CEDAR mark in an application's header, as tall as the header's
+// controls.
 $brand-mark-size: tokens.$control-height-default;
 // Workspace: the resource grid's minimum height.
 $resource-grid-min-height: 240px;
@@ -34,9 +35,8 @@ $card-meta-line-height: tokens.$font-size;
 $designer-overview-width: 224px;
 $designer-library-width: 288px;
 $designer-library-rail-width: 48px;
-// Designer: the identity block in the header, and the CEDAR mark at its top.
+// Designer: the name and build beside the CEDAR mark in the header.
 $designer-identity-width: 72px;
-$designer-identity-mark-size: 40px;
 // Designer: the chevron that collapses an element in the outline, smaller than a small icon.
 $designer-outline-chevron-size: 12px;
 // Designer: the template header's icon tile, as tall as the name control beside it.
@@ -56,8 +56,6 @@ $designer-control-cell-width: calc(var(--cedar-control-height-default) + 2 * var
 // Designer: the preview's toolbar, and the select and close button that sit in it.
 $designer-preview-bar-height: 40px;
 $designer-preview-control-size: 28px;
-// Designer: the mark inside a checked checkbox or radio button.
-$designer-choice-mark-size: 8px;
 // Designer: the toggle under a card that opens its settings.
 $designer-settings-toggle-height: 14px;
 // Designer: the header buttons that open and close the side panels.
