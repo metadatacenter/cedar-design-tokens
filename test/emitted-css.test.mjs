@@ -88,6 +88,43 @@ test('shared font export is self-contained and contains only font faces', () => 
   );
 });
 
+test('each weight covers every script the shared faces are meant to carry', () => {
+  // One character from each of the seven subsets. User content, not only the interface, can be in
+  // any of these scripts, so a dropped subset would draw them in the host's fallback face.
+  const samples = {
+    latin: 0x0041,
+    'latin-ext': 0x0151, // ő, which Hungarian needs
+    cyrillic: 0x0430,
+    'cyrillic-ext': 0x0460,
+    greek: 0x03b1,
+    'greek-ext': 0x1f00,
+    vietnamese: 0x1ea0,
+  };
+  const fonts = sass.compile(join(root, 'scss/_fonts.scss')).css;
+  const faces = [...fonts.matchAll(/@font-face\s*\{([^}]*)\}/g)].map(([, body]) => ({
+    weight: Number(body.match(/font-weight:\s*(\d+)/)[1]),
+    ranges: body
+      .match(/unicode-range:\s*([^;]+);/)[1]
+      .split(',')
+      .map((range) =>
+        range
+          .trim()
+          .replace(/^U\+/i, '')
+          .split('-')
+          .map((hex) => parseInt(hex, 16)),
+      )
+      .map(([start, end = start]) => [start, end]),
+  }));
+  for (const weight of [400, 500]) {
+    for (const [subset, codepoint] of Object.entries(samples)) {
+      const covering = faces.filter(
+        (face) => face.weight === weight && face.ranges.some(([start, end]) => codepoint >= start && codepoint <= end),
+      );
+      assert.equal(covering.length, 1, `${subset} at ${weight}`);
+    }
+  }
+});
+
 test('individual font exports provide exactly their declared weight', () => {
   const metadata = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const [name, weight] of [
