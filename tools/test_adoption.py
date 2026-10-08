@@ -123,7 +123,7 @@ class AdoptionTest(unittest.TestCase):
         for declaration in ('font: inherit', 'line-height: normal', 'font-family: tokens.$font-family',
                             'font: var(--cedar-font-size)/var(--cedar-control-line-height-default) var(--cedar-font-family)',
                             'font-weight: var(--cedar-font-weight-medium, 500)',
-                            "font-family: var(--cedar-font-family, 'CEE Roboto', 'Helvetica Neue', sans-serif)"):
+                            "font-family: var(--cedar-font-family, 'CEDAR Roboto', 'Helvetica Neue', sans-serif)"):
             with self.subTest(declaration=declaration):
                 self.assertEqual([], list(check.findings('x.css', f'a {{ {declaration}; }}')))
 

@@ -25,8 +25,8 @@
 // Two spellings of one font stack: a CSS value for `font-family` declarations, and the single
 // string Material's typography config takes. Quoting them differently is what makes each emit
 // correctly, so they are kept in step by hand.
-$font-family: 'CEE Roboto', 'Helvetica Neue', sans-serif;
-$font-family-string: 'CEE Roboto, "Helvetica Neue", sans-serif';
+$font-family: 'CEDAR Roboto', 'Helvetica Neue', sans-serif;
+$font-family-string: 'CEDAR Roboto, "Helvetica Neue", sans-serif';
 
 // Body text is regular; labels, headings and tabs are medium. Authored rich text keeps its own
 // emphasis.
