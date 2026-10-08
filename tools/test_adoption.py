@@ -395,6 +395,10 @@ class AdoptionTest(unittest.TestCase):
         self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
         (self.repo / 'package.json').write_text('{"name":"cedar-embeddable-term-picker"}')
         self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+        # The derived type steps follow the host's base size, so headings scale with it.
+        adapter.write_text('a { --cetp-font-size-large: calc(var(--cetp-font-size) + 4px); '
+                           '--cedar-font-size-large: var(--cetp-font-size-large); --cetp-font-size: 14px; }')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
         adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-space-1: var(--cetp-color-primary); }')
         self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
 

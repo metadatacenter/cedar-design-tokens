@@ -221,7 +221,7 @@ CETP_BRIDGE = {shared: 'var(--cetp-' + host + ')' for shared, host in {
     'text-title': 'color-heading', 'text-primary': 'color-text', 'text-muted': 'color-muted',
     'surface-subtle': 'color-surface', 'border-rule': 'color-border',
     'status-warning-text': 'color-warning', 'font-family': 'font-family',
-    'font-size': 'font-size', 'font-size-small': 'font-size-small',
+    'font-size': 'font-size', 'font-size-small': 'font-size-small', 'font-size-large': 'font-size-large',
 }.items()}
 
 def token_names(text):
