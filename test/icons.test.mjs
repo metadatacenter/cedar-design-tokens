@@ -67,3 +67,8 @@ test('workspace view choices have distinct shared list and grid icons', () => {
   assert.equal(manifest.grid, 'layout-grid');
   assert.notEqual(getIcon('list').body, getIcon('grid').body);
 });
+
+test('moving within an application and leaving it have distinct icons', () => {
+  assert.equal(manifest['go-to'], 'arrow-right');
+  assert.notEqual(getIcon('go-to').body, getIcon('external').body);
+});

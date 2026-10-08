@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The `go-to` icon, Lucide's `arrow-right`, marks a link that moves to another place in the same
+  application. `external` remains the icon for a link that opens in a new tab.
 - The `spacing` recipes `element-narrow-inset` (4%) and `element-narrow-heading-inset` (8%) hold
   the editor's proportional element insets in a narrow component, and `spacing.apply` accepts
   `--_cee-element-body-inset`. The editor had stated both percentages directly.
