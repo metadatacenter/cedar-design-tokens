@@ -1,6 +1,5 @@
 {
   "--cedar-font-family": "\"CEE Roboto\", \"Helvetica Neue\", sans-serif",
-  "--cedar-font-family-monospace": "ui-monospace, SFMono-Regular, Menlo, monospace",
   "--cedar-font-weight-regular": "400",
   "--cedar-font-weight-medium": "500",
   "--cedar-font-size-small": "12px",

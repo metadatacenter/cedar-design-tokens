@@ -58,16 +58,15 @@ variables (`$space-2`) and CSS properties (`--cedar-space-2`). The
 
 ### Typography
 
-| Token                                       | Default                                          | Use                                   |
-| ------------------------------------------- | ------------------------------------------------ | ------------------------------------- |
-| `font-family`                               | `'CEE Roboto', 'Helvetica Neue', sans-serif`     | Interface text                        |
-| `font-family-monospace`                     | `ui-monospace, SFMono-Regular, Menlo, monospace` | Code, logs, identifiers               |
-| `font-weight-regular`, `font-weight-medium` | 400, 500                                         | Body; labels and headings             |
-| `font-size-small`                           | 12px                                             | Hints and secondary facts             |
-| `font-size`                                 | 14px                                             | Body, controls, menus and tabs        |
-| `font-size-large`                           | 18px                                             | Section headings                      |
-| `font-size-artifact-title`                  | `clamp(20px, 3cqi, 26px)`                        | Page, artifact and dialog titles      |
-| `line-height-heading`, `line-height-tight`  | 1.25, 1                                          | Headings; icons and single-line boxes |
+| Token                                       | Default                                      | Use                                     |
+| ------------------------------------------- | -------------------------------------------- | --------------------------------------- |
+| `font-family`                               | `'CEE Roboto', 'Helvetica Neue', sans-serif` | All text, code and identifiers included |
+| `font-weight-regular`, `font-weight-medium` | 400, 500                                     | Body; labels and headings               |
+| `font-size-small`                           | 12px                                         | Hints and secondary facts               |
+| `font-size`                                 | 14px                                         | Body, controls, menus and tabs          |
+| `font-size-large`                           | 18px                                         | Section headings                        |
+| `font-size-artifact-title`                  | `clamp(20px, 3cqi, 26px)`                    | Page, artifact and dialog titles        |
+| `line-height-heading`, `line-height-tight`  | 1.25, 1                                      | Headings; icons and single-line boxes   |
 
 Sizes use pixels so an embedding page's root font size cannot shrink component
 text. Titles scale with the nearest eligible query container, with a 20–26px range.

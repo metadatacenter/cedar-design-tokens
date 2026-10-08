@@ -50,6 +50,7 @@
   "drag-preview-shadow": "shadow-overlay",
   "empty-state-padding": "patterns.empty-state",
   "focus-ring-color": "color-primary",
+  "font-family-monospace": "font-family",
   "font-size-display": "font-size-artifact-title",
   "font-size-element-heading": "font-size-large",
   "font-size-heading": "font-size-large",

@@ -47,7 +47,7 @@
     "page": {}
   },
   "scale": {
-    "font-family": ["--cedar-font-family", "--cedar-font-family-monospace"],
+    "font-family": ["--cedar-font-family"],
     "font-size": [
       "--cedar-font-size-small",
       "--cedar-font-size",
