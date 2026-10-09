@@ -42,6 +42,8 @@ const names = [
   'notice',
   'spinner',
   'drag-placeholder',
+  'selected-outline',
+  'invalid-outline',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -49,7 +51,7 @@ for (const name of names) {
       loadPaths: ['scss'],
     }).css;
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g))
-      assert.ok(roles.has(role[1]), `Unknown role: ${role[1]}`);
+      assert.ok(roles.has(role[1]) || Object.hasOwn(hosts, role[1].slice(2)), `Unknown role: ${role[1]}`);
     assert.match(css, /^\.consumer/);
     if (!name.startsWith('menu-')) assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(/i);
   });
@@ -200,6 +202,17 @@ test('an icon button is a small box for row actions or the control height, nothi
 
 test('a drag placeholder fades the item it stands for and draws nothing else', () => {
   assert.equal(patterns('a { @include patterns.drag-placeholder; }').trim(), 'a {\n  opacity: 0.25;\n}');
+});
+
+test('a selected item is outlined inside its border and an invalid card just outside it', () => {
+  assert.equal(
+    patterns('a { @include patterns.selected-outline; }').trim(),
+    'a {\n  outline: 1px solid var(--cedar-color-primary);\n  outline-offset: -1px;\n}',
+  );
+  assert.equal(
+    patterns('a { @include patterns.invalid-outline; }').trim(),
+    'a {\n  outline: 2px solid var(--cedar-control-error, var(--cedar-status-error-text));\n  outline-offset: 1px;\n}',
+  );
 });
 
 test("a resource card's type icon sits in an icon slot", () => {

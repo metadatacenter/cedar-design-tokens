@@ -123,7 +123,7 @@ class AdoptionTest(unittest.TestCase):
         for declaration in ('font: inherit', 'line-height: normal', 'font-family: tokens.$font-family',
                             'font: var(--cedar-font-size)/var(--cedar-control-line-height-default) var(--cedar-font-family)',
                             'font-weight: var(--cedar-font-weight-medium, 500)',
-                            'font-family: var(--cedar-font-family-monospace, ui-monospace, SFMono-Regular, Menlo, monospace)'):
+                            "font-family: var(--cedar-font-family, 'CEDAR Roboto', 'Helvetica Neue', sans-serif)"):
             with self.subTest(declaration=declaration):
                 self.assertEqual([], list(check.findings('x.css', f'a {{ {declaration}; }}')))
 
@@ -394,6 +394,10 @@ class AdoptionTest(unittest.TestCase):
         adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-color-primary: var(--cetp-color-primary); }')
         self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
         (self.repo / 'package.json').write_text('{"name":"cedar-embeddable-term-picker"}')
+        self.assertEqual([], list(check.scan_styles(self.repo, 2)))
+        # The derived type steps follow the host's base size, so headings scale with it.
+        adapter.write_text('a { --cetp-font-size-large: calc(var(--cetp-font-size) + 4px); '
+                           '--cedar-font-size-large: var(--cetp-font-size-large); --cetp-font-size: 14px; }')
         self.assertEqual([], list(check.scan_styles(self.repo, 2)))
         adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-space-1: var(--cetp-color-primary); }')
         self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))

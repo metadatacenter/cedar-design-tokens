@@ -58,16 +58,15 @@ variables (`$space-2`) and CSS properties (`--cedar-space-2`). The
 
 ### Typography
 
-| Token                                       | Default                                          | Use                                   |
-| ------------------------------------------- | ------------------------------------------------ | ------------------------------------- |
-| `font-family`                               | `'CEE Roboto', 'Helvetica Neue', sans-serif`     | Interface text                        |
-| `font-family-monospace`                     | `ui-monospace, SFMono-Regular, Menlo, monospace` | Code, logs, identifiers               |
-| `font-weight-regular`, `font-weight-medium` | 400, 500                                         | Body; labels and headings             |
-| `font-size-small`                           | 12px                                             | Hints and secondary facts             |
-| `font-size`                                 | 14px                                             | Body, controls, menus and tabs        |
-| `font-size-large`                           | 18px                                             | Section headings                      |
-| `font-size-artifact-title`                  | `clamp(20px, 3cqi, 26px)`                        | Page, artifact and dialog titles      |
-| `line-height-heading`, `line-height-tight`  | 1.25, 1                                          | Headings; icons and single-line boxes |
+| Token                                       | Default                                        | Use                                     |
+| ------------------------------------------- | ---------------------------------------------- | --------------------------------------- |
+| `font-family`                               | `'CEDAR Roboto', 'Helvetica Neue', sans-serif` | All text, code and identifiers included |
+| `font-weight-regular`, `font-weight-medium` | 400, 500                                       | Body; labels and headings               |
+| `font-size-small`                           | 12px                                           | Hints and secondary facts               |
+| `font-size`                                 | 14px                                           | Body, controls, menus and tabs          |
+| `font-size-large`                           | 18px                                           | Section headings                        |
+| `font-size-artifact-title`                  | `clamp(20px, 3cqi, 26px)`                      | Page, artifact and dialog titles        |
+| `line-height-heading`, `line-height-tight`  | 1.25, 1                                        | Headings; icons and single-line boxes   |
 
 Sizes use pixels so an embedding page's root font size cannot shrink component
 text. Titles scale with the nearest eligible query container, with a 20–26px range.
@@ -124,14 +123,14 @@ rows use `row-height-compact` as a minimum and grow for wrapped content.
 Sass recipes are opt-in: consumers choose selectors and retain behavior and layout
 constraints. Import each module through the package export, as in the token example.
 
-| Export                                      | Provides                                                                                                                                                  |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`patterns`](scss/_patterns.scss)           | Titles, menus, dialogs, forms, tabs, breadcrumbs, resource cards, validation summaries, read-only specifications, notices, tooltips and drag placeholders |
-| [`controls`](scss/_controls.scss)           | Focus, action/input states, choice rows and native control indicators                                                                                     |
-| [`authoring`](scss/_authoring.scss)         | Compact controls/tables, labels, entry rows and settings-dialog structure                                                                                 |
-| [`spacing`](scss/_spacing.scss)             | Named measurements and derived insets, e.g. `spacing.apply(padding, compact-row)`                                                                         |
-| [`motion`](scss/_motion.scss)               | `reduced-motion`; also available as `motion.css`                                                                                                          |
-| [`icon-contract`](scss/_icon-contract.scss) | Shared icon foreground and state rules; also available as `icon-contract.css`                                                                             |
+| Export                                      | Provides                                                                                                                                                                                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`patterns`](scss/_patterns.scss)           | Titles, menus, dialogs, forms, tabs, breadcrumbs, resource cards, validation summaries, read-only specifications, notices, tooltips, drag placeholders and selected and invalid outlines |
+| [`controls`](scss/_controls.scss)           | Focus, action/input states, choice rows and native control indicators                                                                                                                    |
+| [`authoring`](scss/_authoring.scss)         | Compact controls/tables, labels, entry rows and settings-dialog structure                                                                                                                |
+| [`spacing`](scss/_spacing.scss)             | Named measurements and derived insets, e.g. `spacing.apply(padding, compact-row)`                                                                                                        |
+| [`motion`](scss/_motion.scss)               | `reduced-motion`; also available as `motion.css`                                                                                                                                         |
+| [`icon-contract`](scss/_icon-contract.scss) | Shared icon foreground and state rules; also available as `icon-contract.css`                                                                                                            |
 
 Plain CSS exports include `notice.css`, `tooltip.css`, `secondary-action.css`,
 `save-state.css`, `validation-summary.css` and `native-choices.css`. Their class

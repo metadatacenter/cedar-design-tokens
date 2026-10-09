@@ -21,7 +21,8 @@ $icon-button-small: tokens.$icon-size-small + 2 * tokens.$space-1;
 // Sizes no role describes, named so that a consumer says what a size is for instead of borrowing a
 // token whose value happens to match. Each belongs to the component named in its comment.
 
-// Workspace: the brand mark beside the product name, as tall as the header's controls.
+// Workspace and the designer: the CEDAR mark in an application's header, as tall as the header's
+// controls.
 $brand-mark-size: tokens.$control-height-default;
 // Workspace: the resource grid's minimum height.
 $resource-grid-min-height: 240px;
@@ -34,24 +35,47 @@ $card-meta-line-height: tokens.$font-size;
 $designer-overview-width: 224px;
 $designer-library-width: 288px;
 $designer-library-rail-width: 48px;
-// Designer: the identity block in the header, and the CEDAR mark at its top.
+// Designer: the name and build beside the CEDAR mark in the header.
 $designer-identity-width: 72px;
-$designer-identity-mark-size: 40px;
 // Designer: the chevron that collapses an element in the outline, smaller than a small icon.
 $designer-outline-chevron-size: 12px;
 // Designer: the template header's icon tile, as tall as the name control beside it.
-$template-icon-tile-size: tokens.$control-height-default;
+$designer-template-icon-tile-size: tokens.$control-height-default;
 // Designer: the accent bar along the top of the template header's card.
-$template-card-accent-height: 4px;
-// Designer: the handle that resizes the overview panel, and the stripe that marks an invalid row in
-// the outline.
-$resize-handle-width: 8px;
-$invalid-stripe-width: 3px;
+$designer-template-card-accent-height: 4px;
+// Designer: the handles that resize the overview panel and divide the library's two sections, and
+// the stripe that marks an invalid row in the outline.
+$designer-resize-handle-width: 8px;
+$designer-invalid-stripe-width: 3px;
 // Designer: the annotation table's type column, and a column that holds one control and its cell
 // padding. The second reads the custom properties, so an authoring density narrows it with its
 // control.
-$annotation-type-column-width: 96px;
-$control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+$designer-annotation-type-column-width: 96px;
+$designer-control-cell-width: calc(var(--cedar-control-height-default) + 2 * var(--cedar-space-2));
+
+// Designer: the preview's toolbar, and the select and close button that sit in it.
+$designer-preview-bar-height: 40px;
+$designer-preview-control-size: 28px;
+// Designer: the toggle under a card that opens its settings.
+$designer-settings-toggle-height: 14px;
+// Designer: the header buttons that open and close the side panels.
+$designer-panel-toggle-size: 32px;
+// Designer: the count badge beside a group in the field library.
+$designer-library-badge-size: 22px;
+// Designer: the dot that marks a library item as draggable, and the grip on the divider between
+// the library's two sections.
+$designer-drag-indicator-size: 8px;
+$designer-divider-grip-height: 4px;
+// Designer: the scrollbars of its scrolling lists and dialogs.
+$designer-scrollbar-width: 6px;
+// Designer: the least height the designer element takes, whatever its host gives it.
+$designer-min-height: 500px;
+// Designer: two stacking positions between the shared layers. A card's settings toggle sits one
+// above the sticky layer, so that it clears the insertion area between cards. The field library
+// sits between the sticky and menu layers, so that canvas content scrolls under it and its menus
+// open over it.
+$designer-settings-toggle-layer: tokens.$layer-sticky + 1;
+$designer-library-layer: 30;
 
 // Editor: the ring between a single-choice marker's outline and its filled centre.
 $choice-marker-ring: 4px;

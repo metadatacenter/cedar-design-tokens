@@ -134,6 +134,17 @@ test('the secondary action keeps host control overrides and the shared hover', (
   const css = compile('button { @include controls.secondary-action; }');
   assert.match(css, /min-height: var\(--cedar-control-height, var\(--cedar-control-height-default\)\)/);
   assert.match(css, /border: 1px solid var\(--cedar-control-border, var\(--cedar-control-border-default\)\)/);
-  assert.match(css, /color: #0f7686/);
+  assert.match(css, /color: var\(--cedar-color-primary, #0f7686\)/);
   assert.match(css, /:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)/);
+});
+
+test("the button recipes follow a re-pointed colour role and fall back to CEDAR's", () => {
+  const css = compile('button { @include controls.secondary-action; @include controls.primary-action; }');
+  assert.match(css, /background: var\(--cedar-surface-raised, #ffffff\)/i);
+  assert.match(css, /background: var\(--cedar-color-primary, #0f7686\)/i);
+  assert.match(css, /color: var\(--cedar-color-on-primary, #ffffff\)/i);
+  assert.match(css, /background: var\(--cedar-color-primary-strong, #[0-9a-f]{6}\)/i);
+  assert.match(css, /background: var\(--cedar-surface-selected, #e4f1f1\)/i);
+  assert.match(css, /outline: 2px solid var\(--cedar-color-primary, #0f7686\)/i);
+  assert.doesNotMatch(css, /(?:background|color): #/);
 });

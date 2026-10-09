@@ -1,10 +1,12 @@
-// Opt-in recipes: callers own their selectors and component behavior.
+// Opt-in recipes: callers own their selectors and component behavior. Colours read the shared roles,
+// with CEDAR's values as the fallback, so a host boundary that re-points a role carries through. The
+// term picker points them at its `--cetp-*` contract.
 @use 'sass:map';
 @use 'tokens';
 @use 'spacing';
 @use '../dist/icon-masks';
 
-@mixin focus-ring($color: tokens.$color-primary) {
+@mixin focus-ring($color: var(--cedar-color-primary, #{tokens.$color-primary})) {
   outline: tokens.$focus-ring-width solid $color;
   outline-offset: tokens.$focus-ring-offset;
 }
@@ -12,7 +14,7 @@
 @mixin action-states {
   &:hover:not(:disabled):not([aria-disabled='true']),
   &:active:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$surface-selected;
+    background: var(--cedar-surface-selected, #{tokens.$surface-selected});
   }
   &:focus-visible {
     @include focus-ring;
@@ -32,8 +34,8 @@
   padding: 0 var(--cedar-space-3);
   border: 1px solid var(--cedar-control-border, var(--cedar-control-border-default));
   border-radius: var(--cedar-radius);
-  background: tokens.$surface-raised;
-  color: tokens.$color-primary;
+  background: var(--cedar-surface-raised, #{tokens.$surface-raised});
+  color: var(--cedar-color-primary, #{tokens.$color-primary});
   font: inherit;
   cursor: pointer;
   @include action-states;
@@ -41,11 +43,11 @@
 
 @mixin primary-action {
   --cedar-icon-color: var(--cedar-color-on-primary, #{tokens.$color-on-primary});
-  background: tokens.$color-primary;
-  color: tokens.$color-on-primary;
+  background: var(--cedar-color-primary, #{tokens.$color-primary});
+  color: var(--cedar-color-on-primary, #{tokens.$color-on-primary});
   &:hover:not(:disabled):not([aria-disabled='true']),
   &:active:not(:disabled):not([aria-disabled='true']) {
-    background: tokens.$color-primary-strong;
+    background: var(--cedar-color-primary-strong, #{tokens.$color-primary-strong});
   }
 }
 

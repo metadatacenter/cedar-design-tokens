@@ -9,7 +9,6 @@ import { readFileSync } from 'node:fs';
 const inventory = {
   typography: [
     'font-family',
-    'font-family-monospace',
     'font-weight-regular',
     'font-weight-medium',
     'font-size-small',
