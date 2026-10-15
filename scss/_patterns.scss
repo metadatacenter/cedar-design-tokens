@@ -235,21 +235,31 @@
 }
 
 // Shared collapsible validation notices for designer and metadata authoring.
+// A long list scrolls within the notice beneath its count, which stays in view so the notice can
+// still be closed. The count therefore carries the notice's top spacing and paints its own surface.
+// It cannot take that surface with `inherit`, because a summary inherits through the details
+// element's shadow slot, which has none. A custom property does pass through the slot, so each
+// tone sets the surface once, as `--_cedar-validation-surface`, for the notice and its count.
 @mixin validation-summary {
   --cedar-icon-color: var(--cedar-status-error-text);
+  --_cedar-validation-surface: var(--cedar-status-error-surface);
   color: var(--cedar-status-error-text);
-  background: var(--cedar-status-error-surface);
-  padding: var(--cedar-space-2) var(--cedar-space-4);
+  background: var(--_cedar-validation-surface);
+  padding: 0 var(--cedar-space-4);
   font-size: var(--cedar-font-size);
   line-height: var(--cedar-control-line-height-default);
   max-height: 25vh;
   overflow: auto;
   flex: none;
   summary {
+    position: sticky;
+    top: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: var(--cedar-space-2);
+    padding-block: var(--cedar-space-2);
+    background: var(--_cedar-validation-surface);
     cursor: pointer;
     list-style: none;
     text-align: center;
@@ -267,7 +277,8 @@
     width: fit-content;
     max-width: 100%;
     box-sizing: border-box;
-    margin: var(--cedar-space-2) auto 0;
+    margin: 0 auto;
+    padding-block-end: var(--cedar-space-2);
     padding-inline-start: var(--cedar-space-6);
     text-align: left;
     list-style: disc;
@@ -295,8 +306,8 @@
   }
   &.validation-summary--warning {
     --cedar-icon-color: var(--cedar-status-warning-text);
+    --_cedar-validation-surface: var(--cedar-status-warning-surface);
     color: var(--cedar-status-warning-text);
-    background: var(--cedar-status-warning-surface);
   }
 }
 

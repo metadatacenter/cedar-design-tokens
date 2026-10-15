@@ -174,6 +174,19 @@ test('summary issue lines take no hover fill over a host button rule', () => {
   assert.match(css, /\.summary button:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)[^{]*\{\s*background: none/);
 });
 
+test('a summary keeps its count in view over a long list, on its own tone', () => {
+  const css = patterns('.summary { @include patterns.validation-summary; }');
+  assert.match(
+    css,
+    /\.summary summary \{[^}]*position: sticky;[^}]*top: 0;[^}]*background: var\(--_cedar-validation-surface\)/,
+  );
+  assert.match(css, /\.summary \{[^}]*--_cedar-validation-surface: var\(--cedar-status-error-surface\)/);
+  assert.match(
+    css,
+    /\.summary\.validation-summary--warning \{[^}]*--_cedar-validation-surface: var\(--cedar-status-warning-surface\)/,
+  );
+});
+
 test('notices take a status pair or the information roles, and refuse other tones', () => {
   const css = patterns('.a { @include patterns.notice; } .b { @include patterns.notice(error, $boxed: true); }');
   assert.match(

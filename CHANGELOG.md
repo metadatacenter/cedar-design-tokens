@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `patterns.validation-summary` keeps its count line in view while a long list scrolls beneath it,
+  so an open notice can be closed without scrolling back to its top. The count now carries the
+  notice's top spacing and paints the notice's surface, which each tone sets once as
+  `--_cedar-validation-surface`. A host that gives the notice another surface sets that property,
+  so the count follows. The notice's size and spacing are unchanged.
 - The `go-to` icon, Lucide's `arrow-right`, marks a link that moves to another place in the same
   application. `external` remains the icon for a link that opens in a new tab.
 - The `spacing` recipes `element-narrow-inset` (4%) and `element-narrow-heading-inset` (8%) hold
