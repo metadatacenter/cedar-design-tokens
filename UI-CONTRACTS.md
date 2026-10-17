@@ -85,6 +85,17 @@ their role with shared disabled opacity. Icon-only buttons need accessible names
 Person and settings glyphs have no decorative shaded badges. Logos and authored
 imagery are separate; preserve selection fills, focus rings and surface shadows.
 
+A filter whose value is chosen in a popover is drawn as Workspace's listing filters
+are. `controls.filter-chip` is a pill holding the filter's value and a chevron, which
+opens the popover. Once the filter is on, `filter-chip-active` fills the pill with the
+selection surface and a second segment, `filter-chip-clear`, clears it. Both buttons
+take `filter-chip-segment`. `patterns.filter-popover` is the panel the chip opens,
+the menu surface as a column whose body scrolls, and `filter-popover-footer` holds
+Clear all and Cancel as `controls.plain-action` and Apply as `controls.primary-action`.
+The consumer places the panel and passes the room below the chip as
+`$available-height`. What the popover holds is a draft until Apply, and Cancel,
+Escape or a click outside discards it.
+
 Modern Workspace imports `native-choices.css` globally and places
 `cedar-native-choices` on its root. Preserve native checkbox/radio geometry,
 keyboard behavior and disabled semantics. Shared select chevrons and date/time

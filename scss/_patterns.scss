@@ -58,6 +58,28 @@
   text-align: left;
 }
 
+// The panel a filter chip opens: the shared menu surface as a column whose body scrolls, above a
+// footer of Clear all, Cancel and Apply. The consumer places the panel. `$available-height` is the
+// room between the chip and the bottom of the viewport, which the panel never overruns.
+@mixin filter-popover($available-height: 70vh) {
+  @include menu-surface;
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+  max-width: 100%;
+  max-height: min(70vh, #{$available-height});
+  overflow: hidden;
+}
+
+@mixin filter-popover-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--cedar-space-2);
+  padding: var(--cedar-space-3);
+  border-top: 1px solid var(--cedar-border-rule);
+}
+
 // Body-size forms opt in without overriding a recipe's typography afterwards.
 @mixin -form-text($size) {
   @if $size == small {

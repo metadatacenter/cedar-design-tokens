@@ -51,6 +51,60 @@
   }
 }
 
+// An action with no box: the theme colour on no fill, at the control height, with the shared hover
+// fill. Workspace draws its ordinary buttons this way, and a filter popover's Clear all and Cancel
+// sit beside its filled Apply in it. Every state is drawn here rather than left to a host's own
+// button rules, so a surface whose ordinary buttons are filled draws it the same.
+@mixin plain-action {
+  box-sizing: border-box;
+  min-height: var(--cedar-control-height-default);
+  padding: var(--cedar-space-2) var(--cedar-space-3);
+  border: 0;
+  border-radius: var(--cedar-radius);
+  background: transparent;
+  --cedar-icon-color: var(--cedar-color-primary, #{tokens.$color-primary});
+  color: var(--cedar-color-primary, #{tokens.$color-primary});
+  font: inherit;
+  font-size: var(--cedar-font-size, #{tokens.$font-size});
+  cursor: pointer;
+  @include action-states;
+}
+
+// A filter whose value is chosen in a popover, as Workspace's listing filters are: a pill holding
+// the filter's current value and a chevron, which opens the popover, and, once the filter is on, a
+// second segment that clears it. `filter-chip` is the pill, `filter-chip-active` its on state,
+// `filter-chip-segment` either button inside it and `filter-chip-clear` the clearing one.
+@mixin filter-chip {
+  display: inline-flex;
+  max-width: 100%;
+  border: 1px solid var(--cedar-control-border-default);
+  border-radius: var(--cedar-radius-pill);
+  overflow: hidden;
+}
+
+@mixin filter-chip-active {
+  background: var(--cedar-surface-selected, #{tokens.$surface-selected});
+  border-color: var(--cedar-color-primary, #{tokens.$color-primary});
+}
+
+// The value is text rather than an action, so it takes the body text colour; the chevron keeps
+// the theme colour every ordinary glyph has.
+@mixin filter-chip-segment {
+  @include plain-action;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cedar-space-3);
+  min-width: 0;
+  margin: 0;
+  border-radius: 0;
+  color: var(--cedar-text-primary, #{tokens.$text-primary});
+}
+
+@mixin filter-chip-clear {
+  border-left: 1px solid var(--cedar-border-rule);
+  padding-inline: var(--cedar-space-2);
+}
+
 @mixin input-states($focus: tokens.$color-primary, $error: tokens.$status-error-text) {
   &:focus-visible {
     @include focus-ring($focus);

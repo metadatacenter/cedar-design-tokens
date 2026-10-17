@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `controls.filter-chip`, `filter-chip-active`, `filter-chip-segment` and `filter-chip-clear` draw
+  the filter Workspace shows above a resource list: a pill holding the filter's value and a
+  chevron, and, once the filter is on, a segment that clears it. `patterns.filter-popover` and
+  `patterns.filter-popover-footer` draw the panel the chip opens. `controls.plain-action` draws an
+  action with no box, as Workspace draws its ordinary buttons, for the panel's Clear all and Cancel.
+  Each recipe draws every state itself, so the term picker, whose ordinary buttons are filled,
+  draws the same chip as Workspace.
 - `patterns.validation-summary` keeps its count line in view while a long list scrolls beneath it,
   so an open notice can be closed without scrolling back to its top. The count now carries the
   notice's top spacing and paints the notice's surface, which each tone sets once as
