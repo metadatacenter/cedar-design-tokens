@@ -41,6 +41,7 @@
     "./validation-summary.css": "./dist/validation-summary.css",
     "./icons.svg": "./dist/icons.svg",
     "./native-choices.css": "./dist/native-choices.css",
+    "./focus.css": "./dist/focus.css",
     "./authoring": {
       "sass": "./scss/_authoring.scss"
     },
@@ -73,6 +74,7 @@
     "dist/validation-summary.css",
     "dist/icons.svg",
     "dist/native-choices.css",
+    "dist/focus.css",
     "dist/icon-contract.css",
     "dist/save-state.css",
     "dist/tooltip.css",

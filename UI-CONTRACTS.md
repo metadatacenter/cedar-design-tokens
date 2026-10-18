@@ -15,6 +15,7 @@ preserve existing behavior unless a product change is explicitly approved.
 | Saves and conflicts | Prevent duplicate writes; show progress and outcome; retain edits on failure. Use conditional writes. Conflicts require explicit reload/reopen, never automatic overwrite or retry with a newer revision. |
 | Artifact commands   | Preserve labels, order and capability rules across all five artifact types. Support keyboard access and keep actions on screen.                                                                           |
 | Destructive actions | Name the target and consequences; ownership transfer names the new owner. Cancel sends no write.                                                                                                          |
+| Focus               | Every focused control shows the shared focus ring, or a focus state it draws itself; never the browser's own.                                                                                             |
 | Search and pickers  | Label inputs; support keyboard selection and clear/reset. Announce loading, no results and errors. Escape dismisses suggestions first.                                                                    |
 | Navigation          | Preserve folder, search, sort and page in the URL. Editor return and browser Back restore context.                                                                                                        |
 | Responsive layout   | Keep controls reachable at 375px and in narrow hosts. Wrap long labels or expose their full text. Tables may scroll within their own region.                                                              |
@@ -111,7 +112,8 @@ in their owning repository rather than duplicated in every host.
 
 The strict adoption check validates source styles and registry coverage. It rejects
 missing registrations, stale references and edited generated helpers. It also
-checks resizing, spellchecking, icon use and documented host properties. It runs
+checks resizing, spellchecking, icon use, documented host properties and the
+shared focus ring at every application and shadow root. It runs
 offline and does **not** run browser tests or verify deployed bundles.
 
 Registry-driven Playwright tests open real surfaces at 1440px and 375px, including
@@ -120,7 +122,8 @@ collapsed/expanded summaries. Expected values come from
 theme/shadow root with central Sass defaults as fallback. Contract-specific rules
 cover menus, dialogs, summaries, calendars, alerts and authoring controls. Every
 registered surface also receives a scale check for typography, loaded fonts,
-colors, paint and corners. A `page` contract uses that scale check without extra
+colors, paint and corners, and fails a focused element that shows the browser's own
+ring. A `page` contract uses that scale check without extra
 property rules. Generated text, placeholders and SVG text are included; embedded
 components, visually hidden text and glyph internals have targeted exclusions.
 

@@ -11,6 +11,17 @@
   outline-offset: tokens.$focus-ring-offset;
 }
 
+// The ring for everything focusable. Without it a browser draws its own on any focused element no
+// stylesheet styles, which Chrome on macOS paints in the system accent blue. Include it once, at the
+// top level of each root: an application's global stylesheet, and the stylesheet of every component
+// that renders into its own shadow root. Its zero specificity outranks only the browser's ring, so a
+// control or framework that draws its own focus state keeps it.
+@mixin focus-states($color: var(--cedar-control-focus, var(--cedar-color-primary, #{tokens.$color-primary}))) {
+  :where(:focus-visible) {
+    @include focus-ring($color);
+  }
+}
+
 @mixin action-states {
   &:hover:not(:disabled):not([aria-disabled='true']),
   &:active:not(:disabled):not([aria-disabled='true']) {

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "walk": 2,
+  "walk": 3,
   "contracts": {
     "menu": {
       "background-color": "--cedar-surface-raised",

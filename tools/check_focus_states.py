@@ -1,0 +1,113 @@
+"""Every CEDAR application and component draws the shared focus ring at each of its roots.
+
+A browser draws its own ring on any focused element that no stylesheet styles, and Chrome on macOS
+paints it in the system accent blue. `controls.focus-states`, or the compiled `focus.css`, replaces
+it. A stylesheet reaches only the document or shadow tree that loads it, so a component that renders
+into its own shadow root includes the recipe there, and an application includes it in a global
+build stylesheet. This is a static contract; the rendered surface walk reports any browser ring that
+remains.
+"""
+import hashlib
+import json
+import posixpath
+import re
+
+PACKAGE = '@org.metadatacenter/cedar-design-tokens'
+# The applications and components that share the tokens' focus ring. The legacy Template Editor
+# keeps Bootstrap's own.
+CONSUMERS = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-editor', 'cedar-template-designer',
+             'cedar-openview', 'cedar-embeddable-term-picker', 'cedar-monitoring', 'cedar-bridging')
+# A consumer that is neither an Angular application nor a shadow-rooted component names its root.
+STATIC_ROOTS = {'cedar-template-designer': ('app/styles/host.css',)}
+COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
+SHADOW = re.compile(r'encapsulation\s*:\s*ViewEncapsulation\.ShadowDom')
+STYLE_URLS = re.compile(r'styleUrls?\s*:\s*(\[[^\]]*\]|[\'"][^\'"]+[\'"])')
+QUOTED = re.compile(r'[\'"]([^\'"]+)[\'"]')
+LOADS = re.compile(r'@(use|forward|import)\s+[\'"]([^\'"]+)[\'"](?:\s+as\s+([\w-]+))?')
+
+
+def top_level(source, start):
+    prefix = source[:start]
+    return prefix.count('{') == prefix.count('}')
+
+
+def resolve(target, directory, names, base):
+    """A local Sass or CSS module, relative to its user or to the source root the build searches."""
+    for root in (directory, posixpath.join(base, 'src')):
+        stem = posixpath.normpath(posixpath.join(root, target))
+        head, tail = posixpath.split(stem)
+        for candidate in (stem, f'{stem}.scss', posixpath.join(head, f'_{tail}.scss'), f'{stem}.css',
+                          posixpath.join(stem, '_index.scss'), posixpath.join(stem, 'index.scss')):
+            if candidate in names:
+                return candidate
+    return None
+
+
+def includes(path, read, names, base, seen=frozenset()):
+    """True when the stylesheet emits the recipe at its top level, directly or through a local module."""
+    if path in seen or path not in names:
+        return False
+    source = COMMENT.sub('', read(path))
+    controls = set()
+    for match in LOADS.finditer(source):
+        if not top_level(source, match.start()):
+            continue
+        kind, target, alias = match.groups()
+        if target.endswith('focus.css') and kind == 'import' and (
+                target == f'{PACKAGE}/focus.css' or not target.startswith('@')):
+            return True
+        if kind == 'use' and target == f'{PACKAGE}/controls':
+            controls.add(alias or 'controls')
+        elif not target.startswith(('@', 'sass:', '~', 'http')) and kind in ('use', 'forward', 'import'):
+            local = resolve(target, posixpath.dirname(path), names, base)
+            if local and includes(local, read, names, base, seen | {path}):
+                return True
+    return any(top_level(source, match.start()) and match[1] in controls
+               for match in re.finditer(r'@include\s+([\w-]+)\.focus-states\b', source))
+
+
+def roots(read, names, base):
+    """Each root is a list of stylesheets, any one of which may carry the recipe."""
+    shadowed = []
+    for name in sorted(names):
+        if name.startswith(posixpath.join(base, 'src/')) and name.endswith('.ts') and '.spec.' not in name:
+            source = read(name)
+            if SHADOW.search(source):
+                urls = [url for group in STYLE_URLS.findall(source) for url in QUOTED.findall(group)]
+                shadowed.append((name, [posixpath.normpath(posixpath.join(posixpath.dirname(name), url)) for url in urls],
+                                 'This component renders into its own shadow root, so one of its stylesheets must include controls.focus-states.'))
+    # A shadow-rooted component's global styles belong to its demonstration page, not to the component.
+    if shadowed:
+        return shadowed
+    workspace = posixpath.join(base, 'angular.json')
+    projects = json.loads(read(workspace)).get('projects', {}) if workspace in names else {}
+    applications = []
+    for project, definition in projects.items():
+        options = definition.get('architect', {}).get('build', {}).get('options', {})
+        styles = [entry if isinstance(entry, str) else entry.get('input') if entry.get('inject', True) else None
+                  for entry in options.get('styles', [])]
+        applications.append((posixpath.join(base, 'angular.json'),
+                             [posixpath.join(base, style) for style in styles if style],
+                             f'A global build stylesheet of {project} must include controls.focus-states or import the shared focus.css.'))
+    return applications
+
+
+def findings(read, names):
+    names = set(names)
+    manifest = next((name for name in sorted(names) if name == 'package.json' or re.fullmatch(r'[^/]+-src/package\.json', name)), None)
+    if not manifest:
+        return
+    package = json.loads(read(manifest)).get('name')
+    if package not in CONSUMERS:
+        return
+    base = posixpath.dirname(manifest)
+    groups = roots(read, names, base) or [
+        (path, [path], f'{path} must import the shared focus.css.') for path in STATIC_ROOTS.get(package, ())]
+    errors = [(path, message) for path, styles, message in groups
+              if not any(includes(style, read, names, base) for style in styles)]
+    if not groups:
+        errors.append((manifest, 'No root stylesheet was found to carry the shared focus ring.'))
+    for path, message in errors:
+        yield {'id': hashlib.sha256(f'{path}|focus-coverage|{message}'.encode()).hexdigest()[:20],
+               'file': path, 'line': 1, 'rule': 'focus-coverage',
+               'property': 'focus ring', 'value': message, 'severity': 'gate'}

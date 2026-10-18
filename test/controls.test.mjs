@@ -122,6 +122,16 @@ test('the native-choices stylesheet themes selects and pickers beneath its root 
   assert.match(css, /\.cedar-native-choices input\[type=time\]::-webkit-calendar-picker-indicator/);
 });
 
+test('the root focus recipe replaces only the browser ring and keeps the host focus override', () => {
+  const css = compile('@include controls.focus-states;');
+  // Zero specificity: any rule a control or framework writes for its own focus state still wins.
+  assert.match(css, /^:where\(:focus-visible\) \{/m);
+  assert.match(css, /outline: 2px solid var\(--cedar-control-focus, var\(--cedar-color-primary, #0f7686\)\)/i);
+  assert.match(css, /outline-offset: 2px/);
+  assert.match(compile('@include controls.focus-states(var(--host-focus));'), /outline: 2px solid var\(--host-focus\)/);
+  assert.equal(readFileSync('dist/focus.css', 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/g, ''), css + '\n');
+});
+
 test('search fields clear with the registry close glyph in the icon role and keep the native button', () => {
   const css = compile('input { @include controls.search-clear-indicator; }');
   assert.match(css, /::-webkit-search-cancel-button/);

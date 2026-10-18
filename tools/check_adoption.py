@@ -13,6 +13,7 @@ from check_icons import scan as icon_findings
 from style_sources import sources, style_properties
 from check_spellcheck import findings as spellcheck_findings
 from check_native_choices import findings as native_choice_findings
+from check_focus_states import findings as focus_findings
 from check_surfaces import findings as surface_findings, sync as sync_surfaces, markdown as surface_markdown, load as load_surfaces
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
@@ -243,6 +244,9 @@ def scan_styles(repo, policy=1, ref=None):
     # A nested frontend has no package.json at the root; asking a revision for one is expected to fail quietly.
     yield from native_choice_findings(lambda name: subprocess.check_output(['git', '-C', str(repo), 'show', f'{ref}:{name}'], text=True, stderr=subprocess.DEVNULL)
                                       if ref else (repo / name).read_text())
+    tracked = (git(repo, 'ls-tree', '-r', '--name-only', ref) if ref else
+               git(repo, 'ls-files', '--cached', '--others', '--exclude-standard')).splitlines()
+    yield from focus_findings(lambda name: git(repo, 'show', f'{ref}:{name}') if ref else (repo / name).read_text(), tracked)
     known = known_css_properties()
     authored = []
     for path in source_files(repo, max(policy, 2), ref):

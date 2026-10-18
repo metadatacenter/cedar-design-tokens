@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- `controls.focus-states`, also compiled as `focus.css`, draws the shared focus ring on everything
+  focusable at a root that includes it. Its zero specificity replaces only the browser's own ring,
+  which Chrome on macOS paints in the system accent blue. Every application and shadow-rooted
+  component now includes it, and the adoption check fails a root that does not.
+- The rendered surface walk moves to walk 3: a focused element that shows the browser's own ring
+  (`outline-style: auto`) is reported as `outline-style` drift. Walk 2 skipped it.
 - `controls.filter-chip`, `filter-chip-active`, `filter-chip-segment` and `filter-chip-clear` draw
   the filter Workspace shows above a resource list: a pill holding the filter's value and a
   chevron, and, once the filter is on, a segment that clears it. `patterns.filter-popover` and

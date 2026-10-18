@@ -394,6 +394,11 @@ class AdoptionTest(unittest.TestCase):
         adapter.write_text('a { --cetp-color-primary: var(--cedar-color-primary); --cedar-color-primary: var(--cetp-color-primary); }')
         self.assertTrue(any(r['rule'] == 'token-override' for r in check.scan_styles(self.repo, 2)))
         (self.repo / 'package.json').write_text('{"name":"cedar-embeddable-term-picker"}')
+        # The picker renders into its own shadow root, which must carry the shared focus ring.
+        (self.repo / 'src/app/cedar-embeddable-term-picker.ts').write_text(
+            "@Component({ styleUrl: './focus.scss', encapsulation: ViewEncapsulation.ShadowDom })")
+        (self.repo / 'src/app/focus.scss').write_text(
+            "@use '@org.metadatacenter/cedar-design-tokens/controls';\n@include controls.focus-states;")
         self.assertEqual([], list(check.scan_styles(self.repo, 2)))
         # The derived type steps follow the host's base size, so headings scale with it.
         adapter.write_text('a { --cetp-font-size-large: calc(var(--cetp-font-size) + 4px); '
