@@ -60,7 +60,7 @@ jobs:
           path: consumer
       - uses: actions/setup-node@v4
         with:
-          node-version: 24.19.0
+          node-version: 24.22.0
       - name: Build and pack the candidate without publishing
         working-directory: tokens
         run: |
