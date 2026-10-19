@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- `controls.focus-states`, also compiled as `focus.css`, draws the shared focus ring on everything
+  focusable at a root that includes it. Its zero specificity replaces only the browser's own ring,
+  which Chrome on macOS paints in the system accent blue. Every application and shadow-rooted
+  component now includes it, and the adoption check fails a root that does not.
+- The rendered surface walk moves to walk 3: a focused element that shows the browser's own ring
+  (`outline-style: auto`) is reported as `outline-style` drift. Walk 2 skipped it.
+- `controls.filter-chip`, `filter-chip-active`, `filter-chip-segment` and `filter-chip-clear` draw
+  the filter Workspace shows above a resource list: a pill holding the filter's value and a
+  chevron, and, once the filter is on, a segment that clears it. `patterns.filter-popover` and
+  `patterns.filter-popover-footer` draw the panel the chip opens. `controls.plain-action` draws an
+  action with no box, as Workspace draws its ordinary buttons, for the panel's Clear all and Cancel.
+  Each recipe draws every state itself, so the term picker, whose ordinary buttons are filled,
+  draws the same chip as Workspace.
+- `patterns.validation-summary` keeps its count line in view while a long list scrolls beneath it,
+  so an open notice can be closed without scrolling back to its top. The count now carries the
+  notice's top spacing and paints the notice's surface, which each tone sets once as
+  `--_cedar-validation-surface`. A host that gives the notice another surface sets that property,
+  so the count follows. The notice's size and spacing are unchanged.
 - The `go-to` icon, Lucide's `arrow-right`, marks a link that moves to another place in the same
   application. `external` remains the icon for a link that opens in a new tab.
 - The `spacing` recipes `element-narrow-inset` (4%) and `element-narrow-heading-inset` (8%) hold

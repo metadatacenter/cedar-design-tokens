@@ -17,6 +17,8 @@ const names = [
   'menu-text',
   'menu-surface',
   'menu-item',
+  'filter-popover',
+  'filter-popover-footer',
   'field-label',
   'field-help',
   'field-error',
@@ -53,7 +55,8 @@ for (const name of names) {
     for (const role of css.matchAll(/var\((--cedar-[\w-]+)/g))
       assert.ok(roles.has(role[1]) || Object.hasOwn(hosts, role[1].slice(2)), `Unknown role: ${role[1]}`);
     assert.match(css, /^\.consumer/);
-    if (!name.startsWith('menu-')) assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(/i);
+    // The menu recipes, and the filter popover built on the menu surface, carry the menu text's fallbacks.
+    if (!name.startsWith('menu-') && name !== 'filter-popover') assert.doesNotMatch(css, /#(?:[\da-f]{3})\b|rgb\(/i);
   });
 }
 test('recipes emit nothing until used', () => {
@@ -172,6 +175,19 @@ test('a trail mutes its ancestors, links included, and colours the current locat
 test('summary issue lines take no hover fill over a host button rule', () => {
   const css = patterns('.summary { @include patterns.validation-summary; }');
   assert.match(css, /\.summary button:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)[^{]*\{\s*background: none/);
+});
+
+test('a summary keeps its count in view over a long list, on its own tone', () => {
+  const css = patterns('.summary { @include patterns.validation-summary; }');
+  assert.match(
+    css,
+    /\.summary summary \{[^}]*position: sticky;[^}]*top: 0;[^}]*background: var\(--_cedar-validation-surface\)/,
+  );
+  assert.match(css, /\.summary \{[^}]*--_cedar-validation-surface: var\(--cedar-status-error-surface\)/);
+  assert.match(
+    css,
+    /\.summary\.validation-summary--warning \{[^}]*--_cedar-validation-surface: var\(--cedar-status-warning-surface\)/,
+  );
 });
 
 test('notices take a status pair or the information roles, and refuse other tones', () => {

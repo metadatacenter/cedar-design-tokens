@@ -1,0 +1,4 @@
+@use '../scss/controls';
+
+// Plain-CSS roots import this once; Sass roots include controls.focus-states instead.
+@include controls.focus-states;

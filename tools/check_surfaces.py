@@ -23,8 +23,9 @@ KINDS = {'dialog': {'dialog', 'error-alert', 'page', 'calendar'}, 'menu': {'menu
 # the change that moves a consumer to a new walk may record those findings as scale debt, as a
 # policy upgrade records existing literals. Every later change is refused new debt.
 WALK = json.loads((HOME / 'surfaces/contracts.json').read_text())['walk']
-# A scale debt names the CSS property the walk reports; the paint roles cover four of them.
-SCALE_PROPERTIES = (set(SCALE) - {'paint', 'shadow'}) | {'letter-spacing', 'background-color', 'border-color', 'outline-color', 'box-shadow', 'font-face'}
+# A scale debt names the CSS property the walk reports; the paint roles cover four of them. Walk 3 adds
+# `outline-style`, which reports the browser's own focus ring.
+SCALE_PROPERTIES = (set(SCALE) - {'paint', 'shadow'}) | {'letter-spacing', 'background-color', 'border-color', 'outline-color', 'outline-style', 'box-shadow', 'font-face'}
 
 
 def browser_source():

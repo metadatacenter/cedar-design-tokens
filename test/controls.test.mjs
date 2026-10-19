@@ -122,6 +122,16 @@ test('the native-choices stylesheet themes selects and pickers beneath its root 
   assert.match(css, /\.cedar-native-choices input\[type=time\]::-webkit-calendar-picker-indicator/);
 });
 
+test('the root focus recipe replaces only the browser ring and keeps the host focus override', () => {
+  const css = compile('@include controls.focus-states;');
+  // Zero specificity: any rule a control or framework writes for its own focus state still wins.
+  assert.match(css, /^:where\(:focus-visible\) \{/m);
+  assert.match(css, /outline: 2px solid var\(--cedar-control-focus, var\(--cedar-color-primary, #0f7686\)\)/i);
+  assert.match(css, /outline-offset: 2px/);
+  assert.match(compile('@include controls.focus-states(var(--host-focus));'), /outline: 2px solid var\(--host-focus\)/);
+  assert.equal(readFileSync('dist/focus.css', 'utf8').replace(/\/\*[\s\S]*?\*\/\s*/g, ''), css + '\n');
+});
+
 test('search fields clear with the registry close glyph in the icon role and keep the native button', () => {
   const css = compile('input { @include controls.search-clear-indicator; }');
   assert.match(css, /::-webkit-search-cancel-button/);
@@ -147,4 +157,33 @@ test("the button recipes follow a re-pointed colour role and fall back to CEDAR'
   assert.match(css, /background: var\(--cedar-surface-selected, #e4f1f1\)/i);
   assert.match(css, /outline: 2px solid var\(--cedar-color-primary, #0f7686\)/i);
   assert.doesNotMatch(css, /(?:background|color): #/);
+});
+
+test('a plain action draws every state itself, so a host with filled buttons draws it the same', () => {
+  const css = compile('button { @include controls.plain-action; }');
+  assert.match(css, /border: 0/);
+  assert.match(css, /background: transparent/);
+  assert.match(css, /color: var\(--cedar-color-primary, #0f7686\)/i);
+  assert.match(css, /--cedar-icon-color: var\(--cedar-color-primary, #0f7686\)/i);
+  assert.match(css, /font-size: var\(--cedar-font-size, 14px\)/);
+  assert.match(css, /min-height: var\(--cedar-control-height-default\)/);
+  assert.match(css, /:hover:not\(:disabled\):not\(\[aria-disabled=true\]\)/);
+});
+
+test('a filter chip is a pill whose segments carry the value in body text and the on state in the selection fill', () => {
+  const css = compile(
+    '.chip { @include controls.filter-chip; } .chip.active { @include controls.filter-chip-active; } ' +
+      '.chip > button { @include controls.filter-chip-segment; } .chip > .clear { @include controls.filter-chip-clear; }',
+  );
+  assert.match(css, /border-radius: var\(--cedar-radius-pill\)/);
+  assert.match(css, /overflow: hidden/);
+  assert.match(css, /\.chip\.active \{[^}]*background: var\(--cedar-surface-selected, #e4f1f1\)/i);
+  assert.match(css, /\.chip\.active \{[^}]*border-color: var\(--cedar-color-primary, #0f7686\)/i);
+  // The nested hover rules split the segment's block in two, and the later block's values win.
+  const segment = [...css.matchAll(/\.chip > button \{([^}]*)\}/g)].map((block) => block[1]).join('');
+  const last = (property) => [...segment.matchAll(new RegExp(`(?:^|\\s)${property}: ([^;]+);`, 'g'))].at(-1)?.[1];
+  assert.equal(last('border-radius'), '0');
+  assert.match(last('color'), /^var\(--cedar-text-primary, /);
+  assert.match(segment, /--cedar-icon-color: var\(--cedar-color-primary, #0f7686\)/i);
+  assert.match(css, /\.chip > \.clear \{[^}]*border-left: 1px solid var\(--cedar-border-rule\)/);
 });

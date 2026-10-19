@@ -123,19 +123,29 @@ rows use `row-height-compact` as a minimum and grow for wrapped content.
 Sass recipes are opt-in: consumers choose selectors and retain behavior and layout
 constraints. Import each module through the package export, as in the token example.
 
-| Export                                      | Provides                                                                                                                                                                                 |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`patterns`](scss/_patterns.scss)           | Titles, menus, dialogs, forms, tabs, breadcrumbs, resource cards, validation summaries, read-only specifications, notices, tooltips, drag placeholders and selected and invalid outlines |
-| [`controls`](scss/_controls.scss)           | Focus, action/input states, choice rows and native control indicators                                                                                                                    |
-| [`authoring`](scss/_authoring.scss)         | Compact controls/tables, labels, entry rows and settings-dialog structure                                                                                                                |
-| [`spacing`](scss/_spacing.scss)             | Named measurements and derived insets, e.g. `spacing.apply(padding, compact-row)`                                                                                                        |
-| [`motion`](scss/_motion.scss)               | `reduced-motion`; also available as `motion.css`                                                                                                                                         |
-| [`icon-contract`](scss/_icon-contract.scss) | Shared icon foreground and state rules; also available as `icon-contract.css`                                                                                                            |
+| Export                                      | Provides                                                                                                                                                                                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`patterns`](scss/_patterns.scss)           | Titles, menus, filter popovers, dialogs, forms, tabs, breadcrumbs, resource cards, validation summaries, read-only specifications, notices, tooltips, drag placeholders and selected and invalid outlines |
+| [`controls`](scss/_controls.scss)           | Focus, action/input states, plain actions, filter chips, choice rows and native control indicators                                                                                                        |
+| [`authoring`](scss/_authoring.scss)         | Compact controls/tables, labels, entry rows and settings-dialog structure                                                                                                                                 |
+| [`spacing`](scss/_spacing.scss)             | Named measurements and derived insets, e.g. `spacing.apply(padding, compact-row)`                                                                                                                         |
+| [`motion`](scss/_motion.scss)               | `reduced-motion`; also available as `motion.css`                                                                                                                                                          |
+| [`icon-contract`](scss/_icon-contract.scss) | Shared icon foreground and state rules; also available as `icon-contract.css`                                                                                                                             |
 
 Plain CSS exports include `notice.css`, `tooltip.css`, `secondary-action.css`,
 `save-state.css`, `validation-summary.css` and `native-choices.css`. Their class
 names are defined in the corresponding [`css/`](css/) sources. Load
 `custom-properties.css` alongside them.
+
+Every application and component draws the shared focus ring at each of its roots.
+A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
+imports `focus.css`. An application's root is its global build stylesheet. A
+document's styles do not reach a shadow tree, so a component that renders into its
+own shadow root includes the recipe in that root's stylesheet. The recipe has zero
+specificity: it replaces only the browser's own ring, which Chrome on macOS paints in
+the system accent blue, and a control or framework that draws its own focus state
+keeps it. The adoption check fails a root without the recipe, and the rendered
+surface walk fails a focused element that still shows the browser's ring.
 
 Import `fonts` in an unencapsulated font registrar to embed Roboto 400 and 500.
 `fonts/regular` and `fonts/medium` emit individual weights. Font faces must be

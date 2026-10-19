@@ -10,6 +10,12 @@
 $header-action-slot: 40px;
 $property-slot: 18px;
 $form-toolbar-size: 30px;
+// Editor: the padding around an occurrence action's glyph, and how far the action's box reaches past
+// the property slot on each side when the two share a centre.
+$-occurrence-action-inset: tokens.$space-3 * 0.5;
+$-occurrence-action-overhang: math.div(tokens.$icon-size-default - $property-slot, 2) + $-occurrence-action-inset;
+// Editor: how much further an element's heading is inset than its body, on either side.
+$-element-heading-offset: calc(var(--_cee-element-heading-inset) - var(--_cee-element-body-inset));
 
 // An ordinary listing row: a default control with a `space-1` gutter above and below it.
 $table-row-height: tokens.$control-height-default + 2 * tokens.$space-1;
@@ -103,9 +109,7 @@ $-recipes: (
   form-action-alignment: (
     math.div($property-slot - tokens.$icon-size-small, 2) - math.div($form-toolbar-size - tokens.$icon-size-default, 2),
   ),
-  occurrence-action-inset: (
-    tokens.$space-3 * 0.5,
-  ),
+  occurrence-action-inset: ($-occurrence-action-inset),
   editable-occurrence-alignment: (
     calc(
       #{$header-action-slot} + #{tokens.$icon-size-small} + #{tokens.$space-1} +
@@ -118,9 +122,16 @@ $-recipes: (
         #{tokens.$space-1}
     )
   ),
-  narrow-occurrence-alignment: (
-    tokens.$space-2 0 tokens.$space-3 calc(var(--_cee-element-heading-inset) - var(--_cee-element-body-inset)),
+  narrow-read-only-occurrence-alignment: (
+    tokens.$space-2 $-element-heading-offset tokens.$space-3,
   ),
+  narrow-occurrence-alignment: (
+    tokens.$space-2 calc($-element-heading-offset - $-occurrence-action-overhang) tokens.$space-3
+      $-element-heading-offset,
+  ),
+  // Editor: the trailing margin of a field's occurrence pager once it takes a row of its own. It
+  // centres the last action's glyph under the property glyph that ends the field's heading.
+  narrow-field-occurrence-alignment: (calc(-1 * $-occurrence-action-overhang)),
   header-action-reserve: (
     $header-action-slot + tokens.$space-2,
   ),
