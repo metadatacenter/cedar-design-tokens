@@ -52,7 +52,7 @@ include `custom-properties.declare` on its shadow root's `:host`:
 
 ## Token reference
 
-The current inventory contains **55 CSS tokens**. Names below become Sass
+The current inventory contains **54 CSS tokens**. Names below become Sass
 variables (`$space-2`) and CSS properties (`--cedar-space-2`). The
 [inventory test](test/inventory.test.mjs) checks the emitted set.
 
@@ -117,6 +117,12 @@ Material M2 adapters.
 `authoring.density` selects authoring control defaults. Explicit host overrides
 still win. Ordinary table rows use `spacing.$table-row-height` (44px); compact
 rows use `row-height-compact` as a minimum and grow for wrapped content.
+
+The two control line heights also set the line height of text outside controls.
+`control-line-height-default` is the body line, which menus, tabs, notices,
+validation summaries and resource-card names use. `control-line-height-authoring`
+is the compact line, for dense text such as provenance, compact card names and
+authoring tables. Headings use `line-height-heading` instead.
 
 ## Recipes, fonts and icons
 
