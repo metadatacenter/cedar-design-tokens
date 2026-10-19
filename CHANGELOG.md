@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The focus-ring check covers a consumer without npm. Each page that links the vendored
+  stylesheets is a root, so it must link the vendored `focus.css` as well, and the copy must
+  include that file. The MCP session page is the one such page.
 - `controls.focus-states`, also compiled as `focus.css`, draws the shared focus ring on everything
   focusable at a root that includes it. Its zero specificity replaces only the browser's own ring,
   which Chrome on macOS paints in the system accent blue. Every application and shadow-rooted

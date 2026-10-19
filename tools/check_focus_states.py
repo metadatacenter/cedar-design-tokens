@@ -19,6 +19,11 @@ CONSUMERS = ('cedar-workspace', 'cedar-embeddable-designer', 'cedar-embeddable-e
              'cedar-openview', 'cedar-embeddable-term-picker', 'cedar-monitoring', 'cedar-bridging')
 # A consumer that is neither an Angular application nor a shadow-rooted component names its root.
 STATIC_ROOTS = {'cedar-template-designer': ('app/styles/host.css',)}
+# A consumer without npm vendors the compiled stylesheets beside this manifest, and each page that
+# links them is a root of its own.
+VENDORED = re.compile(r'(?:[^/]+/)*vendor/cedar-design-tokens/manifest\.json')
+LINK = re.compile(r'<link\b[^>]*\bhref\s*=\s*["\']([^"\']+)["\']', re.I)
+HTML_COMMENT = re.compile(r'<!--.*?-->', re.S)
 COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
 SHADOW = re.compile(r'encapsulation\s*:\s*ViewEncapsulation\.ShadowDom')
 STYLE_URLS = re.compile(r'styleUrls?\s*:\s*(\[[^\]]*\]|[\'"][^\'"]+[\'"])')
@@ -92,21 +97,43 @@ def roots(read, names, base):
     return applications
 
 
+def vendored_errors(read, names):
+    """Every page that links the vendored stylesheets links the vendored focus.css as well."""
+    manifest = next((name for name in sorted(names) if VENDORED.fullmatch(name)), None)
+    if not manifest:
+        return []
+    copy = posixpath.dirname(manifest)
+    pages = []
+    for name in sorted(names):
+        if name.endswith('.html'):
+            links = [href.split('?')[0] for href in LINK.findall(HTML_COMMENT.sub('', read(name)))]
+            if any('/cedar-design-tokens/' in href for href in links):
+                pages.append((name, links))
+    if not pages:
+        return [(manifest, 'No page links the vendored token stylesheets, so none carries the shared focus ring.')]
+    errors = [(page, f'{page} links the vendored token stylesheets, so it must link the vendored focus.css as well.')
+              for page, links in pages if not any(href.endswith('/cedar-design-tokens/focus.css') for href in links)]
+    if posixpath.join(copy, 'focus.css') not in names:
+        errors.append((manifest, 'The vendored copy must include focus.css, which every page that links it loads.'))
+    return errors
+
+
 def findings(read, names):
     names = set(names)
     manifest = next((name for name in sorted(names) if name == 'package.json' or re.fullmatch(r'[^/]+-src/package\.json', name)), None)
-    if not manifest:
-        return
-    package = json.loads(read(manifest)).get('name')
-    if package not in CONSUMERS:
-        return
-    base = posixpath.dirname(manifest)
-    groups = roots(read, names, base) or [
-        (path, [path], f'{path} must import the shared focus.css.') for path in STATIC_ROOTS.get(package, ())]
-    errors = [(path, message) for path, styles, message in groups
-              if not any(includes(style, read, names, base) for style in styles)]
-    if not groups:
-        errors.append((manifest, 'No root stylesheet was found to carry the shared focus ring.'))
+    if manifest:
+        package = json.loads(read(manifest)).get('name')
+        if package not in CONSUMERS:
+            return
+        base = posixpath.dirname(manifest)
+        groups = roots(read, names, base) or [
+            (path, [path], f'{path} must import the shared focus.css.') for path in STATIC_ROOTS.get(package, ())]
+        errors = [(path, message) for path, styles, message in groups
+                  if not any(includes(style, read, names, base) for style in styles)]
+        if not groups:
+            errors.append((manifest, 'No root stylesheet was found to carry the shared focus ring.'))
+    else:
+        errors = vendored_errors(read, names)
     for path, message in errors:
         yield {'id': hashlib.sha256(f'{path}|focus-coverage|{message}'.encode()).hexdigest()[:20],
                'file': path, 'line': 1, 'rule': 'focus-coverage',

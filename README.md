@@ -139,9 +139,11 @@ names are defined in the corresponding [`css/`](css/) sources. Load
 
 Every application and component draws the shared focus ring at each of its roots.
 A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
-imports `focus.css`. An application's root is its global build stylesheet. A
-document's styles do not reach a shadow tree, so a component that renders into its
-own shadow root includes the recipe in that root's stylesheet. The recipe has zero
+imports `focus.css`. An application's root is its global build stylesheet. A page
+that links vendored stylesheets, as the MCP session page does, is a root of its own
+and links the vendored `focus.css`. A document's styles do not reach a shadow tree,
+so a component that renders into its own shadow root includes the recipe in that
+root's stylesheet. The recipe has zero
 specificity: it replaces only the browser's own ring, which Chrome on macOS paints in
 the system accent blue, and a control or framework that draws its own focus state
 keeps it. The adoption check fails a root without the recipe, and the rendered
