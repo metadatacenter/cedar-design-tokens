@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The icon registry has a `drag` icon, Lucide's `grip-vertical`, for a handle that reorders by
+  dragging. The designer's handles drew `list`, the Workspace list-view icon.
 - `spacing.$target-size-minimum` is WCAG 2.2's 24px minimum target, for a control that its own
   content would make smaller. The designer's template description box is the first to use it. It
   is a Sass value only, so the compiled stylesheets do not change.

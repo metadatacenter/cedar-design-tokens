@@ -68,6 +68,11 @@ test('workspace view choices have distinct shared list and grid icons', () => {
   assert.notEqual(getIcon('list').body, getIcon('grid').body);
 });
 
+test('a drag handle shows a grip rather than the list view icon', () => {
+  assert.equal(manifest.drag, 'grip-vertical');
+  assert.notEqual(getIcon('drag').body, getIcon('list').body);
+});
+
 test('moving within an application and leaving it have distinct icons', () => {
   assert.equal(manifest['go-to'], 'arrow-right');
   assert.notEqual(getIcon('go-to').body, getIcon('external').body);
