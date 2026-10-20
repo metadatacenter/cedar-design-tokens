@@ -116,7 +116,9 @@ Material M2 adapters.
 
 `authoring.density` selects authoring control defaults. Explicit host overrides
 still win. Ordinary table rows use `spacing.$table-row-height` (44px); compact
-rows use `row-height-compact` as a minimum and grow for wrapped content.
+rows use `row-height-compact` as a minimum and grow for wrapped content. A control
+that its own content would make smaller than WCAG 2.2's 24px minimum target takes
+`spacing.$target-size-minimum` as its minimum height.
 
 The two control line heights also set the line height of text outside controls.
 `control-line-height-default` is the body line, which menus, tabs, notices,

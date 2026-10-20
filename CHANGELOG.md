@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `spacing.$target-size-minimum` is WCAG 2.2's 24px minimum target, for a control that its own
+  content would make smaller. The designer's template description box is the first to use it. It
+  is a Sass value only, so the compiled stylesheets do not change.
 - The focus-ring check covers a consumer without npm. Each page that links the vendored
   stylesheets is a root, so it must link the vendored `focus.css` as well, and the copy must
   include that file. The MCP session page is the one such page.
