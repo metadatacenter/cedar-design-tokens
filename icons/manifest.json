@@ -39,6 +39,7 @@
   "preview": "eye",
   "list": "list",
   "grid": "layout-grid",
+  "drag": "grip-vertical",
   "field-text": "type",
   "field-paragraph": "text-align-start",
   "field-number": "hash",

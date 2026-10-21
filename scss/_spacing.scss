@@ -24,6 +24,10 @@ $table-row-height: tokens.$control-height-default + 2 * tokens.$space-1;
 // `patterns.icon-button` recipe draws it.
 $icon-button-small: tokens.$icon-size-small + 2 * tokens.$space-1;
 
+// The smallest a pointer target may be, from WCAG 2.2's success criterion 2.5.8. A control that its
+// own content would make smaller takes this as its minimum.
+$target-size-minimum: 24px;
+
 // Sizes no role describes, named so that a consumer says what a size is for instead of borrowing a
 // token whose value happens to match. Each belongs to the component named in its comment.
 

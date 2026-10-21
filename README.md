@@ -52,7 +52,7 @@ include `custom-properties.declare` on its shadow root's `:host`:
 
 ## Token reference
 
-The current inventory contains **55 CSS tokens**. Names below become Sass
+The current inventory contains **54 CSS tokens**. Names below become Sass
 variables (`$space-2`) and CSS properties (`--cedar-space-2`). The
 [inventory test](test/inventory.test.mjs) checks the emitted set.
 
@@ -116,7 +116,15 @@ Material M2 adapters.
 
 `authoring.density` selects authoring control defaults. Explicit host overrides
 still win. Ordinary table rows use `spacing.$table-row-height` (44px); compact
-rows use `row-height-compact` as a minimum and grow for wrapped content.
+rows use `row-height-compact` as a minimum and grow for wrapped content. A control
+that its own content would make smaller than WCAG 2.2's 24px minimum target takes
+`spacing.$target-size-minimum` as its minimum height.
+
+The two control line heights also set the line height of text outside controls.
+`control-line-height-default` is the body line, which menus, tabs, notices,
+validation summaries and resource-card names use. `control-line-height-authoring`
+is the compact line, for dense text such as provenance, compact card names and
+authoring tables. Headings use `line-height-heading` instead.
 
 ## Recipes, fonts and icons
 
@@ -139,9 +147,11 @@ names are defined in the corresponding [`css/`](css/) sources. Load
 
 Every application and component draws the shared focus ring at each of its roots.
 A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
-imports `focus.css`. An application's root is its global build stylesheet. A
-document's styles do not reach a shadow tree, so a component that renders into its
-own shadow root includes the recipe in that root's stylesheet. The recipe has zero
+imports `focus.css`. An application's root is its global build stylesheet. A page
+that links vendored stylesheets, as the MCP session page does, is a root of its own
+and links the vendored `focus.css`. A document's styles do not reach a shadow tree,
+so a component that renders into its own shadow root includes the recipe in that
+root's stylesheet. The recipe has zero
 specificity: it replaces only the browser's own ring, which Chrome on macOS paints in
 the system accent blue, and a control or framework that draws its own focus state
 keeps it. The adoption check fails a root without the recipe, and the rendered

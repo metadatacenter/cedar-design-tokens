@@ -56,6 +56,22 @@ class FocusStatesTest(unittest.TestCase):
         self.files['app/styles/host.css'] += "\n@import '../components/focus.css';"
         self.assertEqual([], self.check())
 
+    def test_a_page_that_links_the_vendored_stylesheets_links_focus_css(self):
+        copy = 'src/main/resources/web/vendor/cedar-design-tokens'
+        page = 'src/main/resources/web/session.html'
+        link = '<link rel="stylesheet" href="/vendor/cedar-design-tokens/{}">'
+        self.files = {'pom.xml': '', f'{copy}/manifest.json': '{}', f'{copy}/custom-properties.css': '',
+                      f'{copy}/focus.css': '', page: link.format('custom-properties.css') + link.format('focus.css')}
+        self.assertEqual([], self.check())
+        self.files[page] = link.format('custom-properties.css') + '<!-- ' + link.format('focus.css') + ' -->'
+        self.assertEqual([page], self.check())
+        self.files[page] = link.format('custom-properties.css') + link.format('focus.css')
+        del self.files[f'{copy}/focus.css']
+        self.assertEqual([f'{copy}/manifest.json'], self.check())
+        # A copy no page links leaves no root to carry the ring.
+        self.files[page] = '<p>No tokens here.</p>'
+        self.assertEqual([f'{copy}/manifest.json'], self.check())
+
     def test_other_repositories_are_outside_the_contract(self):
         for files in [{'package.json': '{"name":"cedar-template-editor"}'}, {'pom.xml': ''}]:
             self.files = files
