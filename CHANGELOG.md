@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The contrast test checks control outlines, the focus ring, icons and state indicators on the
+  surfaces they are drawn on against WCAG 1.4.11's 3:1 threshold for non-text contrast.
+  `control-border-default` measures 2.68:1 on `surface-raised` and 2.65:1 on `surface-subtle`. The
+  test records both pairs as known failures, because a darker outline would change every
+  consumer's controls, and fails if either reaches 3:1. No value changes.
 - The icon registry has a `drag` icon, Lucide's `grip-vertical`, for a handle that reorders by
   dragging. The designer's handles drew `list`, the Workspace list-view icon.
 - `spacing.$target-size-minimum` is WCAG 2.2's 24px minimum target, for a control that its own
