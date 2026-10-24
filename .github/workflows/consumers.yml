@@ -38,10 +38,11 @@ jobs:
             command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
           - repo: cedar-monitoring
             directory: cedar-monitoring-src
-            command: npm run build
+            installArgs: --legacy-peer-deps
+            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
           - repo: cedar-bridging
             directory: cedar-bridging-src
-            command: npm run build
+            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
           - repo: cedar-template-designer
             directory: .
             command: npm run prepare:components && npm test && npm --prefix browser ci && ./browser/node_modules/.bin/playwright install --with-deps chromium && npm run test:browser
@@ -70,7 +71,7 @@ jobs:
       - name: Install candidate over the locked consumer dependencies
         working-directory: consumer/${{ matrix.directory }}
         run: |
-          npm ci
+          npm ci ${{ matrix.installArgs }}
           # Tokens have no runtime dependencies. Replace only that leaf package;
           # npm install would re-resolve unrelated Angular peers and registry aliases.
           node -e 'const p=require(process.env.GITHUB_WORKSPACE+"/tokens/package.json"); for(const k of ["dependencies","optionalDependencies","peerDependencies"]) if(Object.keys(p[k]||{}).length) throw Error("Candidate now needs dependency resolution: "+k)'

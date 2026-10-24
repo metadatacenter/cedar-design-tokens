@@ -687,9 +687,15 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     # change could reintroduce the literal under them.
     stale = sum(max(0, item['count'] - counts[key]) for key, item in current['findings'].items()) if not (initialize or prune) else 0
     surface_registry = load_surfaces(repo) if (repo / '.ui-surfaces.json').exists() else None
-    surface_counts = {'registered': len(surface_registry['surfaces']),
-                      'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
-                      'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
+    surface_counts = None
+    if surface_registry:
+        surfaces = surface_registry['surfaces']
+        contract_debt = sum(len(s.get('debt', {})) for s in surfaces)
+        scale_debt = sum(len(s.get('scaleDebt', [])) for s in surfaces)
+        surface_counts = {'registered': len(surfaces),
+                          'contracts': sum(bool(s.get('contract')) for s in surfaces),
+                          'debt': contract_debt + scale_debt,
+                          'contractDebt': contract_debt, 'scaleDebt': scale_debt}
     return {'surfaces': surface_counts, 'repo': repo.name, 'policy': policy, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
             'expected': expected, 'versionStatus': version_status, 'pinCommit': pin_commit,
@@ -763,7 +769,9 @@ def main(argv=None):
                 print(f"  compared with {result['base'][:12]}")
             if result.get('surfaces'):
                 coverage = result['surfaces']
-                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / {coverage['debt']} existing differences; browser execution is a separate gate")
+                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / "
+                      f"{coverage['debt']} existing differences ({coverage['contractDebt']} contract / "
+                      f"{coverage['scaleDebt']} scale); browser execution is a separate gate")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:

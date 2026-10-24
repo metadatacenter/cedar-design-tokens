@@ -203,7 +203,11 @@ The adoption check covers source styles, icons, host properties, dependency pins
 and surface registration. It rejects new drift and obsolete baseline allowances.
 CI compares allowances with the trusted base revision; expanding a baseline beside
 a styling change cannot hide it. Use `--all` for existing findings and `--json` for
-reports. A matching source pin does not prove a current served bundle; use
+reports. Rendered difference counts include both contract-property `debt` and
+per-surface `scaleDebt` allowances. JSON exposes their sum as `surfaces.debt`, with
+`contractDebt` and `scaleDebt` counts beside it; the text report shows the same
+breakdown. These are recorded allowances, not results of a browser run.
+A matching source pin does not prove a current served bundle; use
 `check components` for that.
 
 ### Maintained surface registry

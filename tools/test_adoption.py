@@ -29,6 +29,44 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_surface_report_counts_contract_and_scale_allowances_in_text_and_json(self):
+        self.assertIsNone(self.run_report()['surfaces'])
+        package = json.loads((self.repo / 'package.json').read_text())
+        package['name'] = 'consumer'
+        (self.repo / 'package.json').write_text(json.dumps(package))
+        (self.repo / 'src/view.html').write_text('<dialog aria-label="Rename"></dialog>')
+        (self.repo / 'browser').mkdir()
+        (self.repo / 'browser/surface.spec.mjs').write_text('surfaceCases(registry, scenarios); checkSurface(page);')
+        surface = {'id': 'consumer.rename', 'name': 'Rename', 'section': 'Resource Dialogs',
+                   'contract': 'dialog', 'selector': 'dialog', 'scenario': 'rename', 'states': ['open'],
+                   'source': [{'file': 'src/view.html', 'anchor': 'aria-label="Rename"'}],
+                   'test': 'browser/surface.spec.mjs'}
+        registry = {'schema': 1, 'repo': 'consumer',
+                    'browserHelper': 'browser/tests/surface-contracts.generated.mjs', 'surfaces': [surface]}
+        path = self.repo / '.ui-surfaces.json'
+        path.write_text(json.dumps(registry))
+        check.sync_surfaces(self.repo)
+        self.run_report(initialize=True)
+        contract = {'border-top-left-radius': {'actual': '6px', 'expected': '4px', 'reason': 'Existing radius'}}
+        scale = [{'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Existing category'},
+                 {'property': 'background-color', 'value': 'rgb(4, 5, 6)', 'reason': 'Existing tint'}]
+        for debt, scale_debt, total in [({}, [], 0), (contract, [], 1), ({}, scale, 2), (contract, scale, 3)]:
+            with self.subTest(total=total):
+                surface.update(debt=debt, scaleDebt=scale_debt)
+                path.write_text(json.dumps(registry))
+                args = ['--root', str(self.root), '--repo', 'consumer', '--strict']
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(0, check.main(args + ['--json']))
+                counts = json.loads(output.getvalue())['reports'][0]['surfaces']
+                self.assertEqual({'registered': 1, 'contracts': 1, 'debt': total,
+                                  'contractDebt': len(debt), 'scaleDebt': len(scale_debt)}, counts)
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(0, check.main(args))
+                self.assertIn(f'{total} existing differences ({len(debt)} contract / {len(scale_debt)} scale)',
+                              output.getvalue())
+
     def test_native_choice_resets_in_bound_styles_are_gated(self):
         (self.repo / 'src/control.html').write_text('<input spellcheck="false" [style.accent-color]="colour">')
         rows = list(check.scan_styles(self.repo, 2))
