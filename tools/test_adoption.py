@@ -594,6 +594,36 @@ class AdoptionTest(unittest.TestCase):
                 (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
                 self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
 
+    def test_reactor_uses_uncommitted_token_source_without_weakening_registry_or_style_checks(self):
+        tokens, (head,) = self.token_checkout(['space-2'])
+        # No new commit or published version: this is precisely the snapshot edit loop.
+        (tokens / 'scss/_tokens.scss').write_text('$space-2: 1px;\n$radius: 1px;\n')
+        self.pin('0.1.0-dev.20260101.' + head)
+        self.style.write_text('a { border-radius: var(--cedar-radius); padding: var(--cedar-space-2); }')
+        (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
+        args = ['--root', str(self.root), '--repo', 'consumer', '--strict', '--json']
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            for extra, expected in [([], 1), (['--source-consumer', 'consumer'], 0)]:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(expected, check.main(args + extra))
+                report = json.loads(output.getvalue())['reports'][0]
+                self.assertEqual(['radius'], report['pinMissingTokens'])
+                self.assertEqual('reactor' if extra else 'registry', report['dependencySource'])
+            for style in ['a { color: #123456; }', 'a { padding: var(--cedar-does-not-exist); }']:
+                self.style.write_text(style)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(1, check.main(args + ['--source-consumer', 'consumer']))
+            self.style.write_text('a { padding: var(--cedar-space-2); }')
+            (self.repo / 'package-lock.json').write_text('{}')
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(1, check.main(args + ['--source-consumer', 'consumer']))
+
+    def test_reactor_resolution_cannot_replace_vendored_byte_verification(self):
+        self.vendor('1.0.0', {'custom-properties.css': ':root { --cedar-space-2: 8px; }'})
+        with self.assertRaisesRegex(ValueError, 'vendored token copy'):
+            self.run_report(source_dependency=True)
+
     def test_a_token_needs_two_readers_counting_the_recipes_each_includes(self):
         tokens = self.root / 'tokens'
         for path, text in {
