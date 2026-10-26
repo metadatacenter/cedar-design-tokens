@@ -138,3 +138,14 @@ test('individual font exports provide exactly their declared weight', () => {
     assert.doesNotMatch(fonts, /url\(https?:/);
   }
 });
+
+test('the compiled fonts.css registers exactly the faces the fonts export embeds', () => {
+  const metadata = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const compiled = readFileSync(join(root, metadata.exports['./fonts.css']), 'utf8');
+  const faces = (stylesheet) => stylesheet.match(/@font-face\s*\{[^}]*\}/g) || [];
+  const embedded = faces(sass.compile(join(root, metadata.exports['./fonts'].sass)).css);
+  assert.equal(embedded.length, 14);
+  assert.deepEqual(faces(compiled), embedded);
+  assert.ok(metadata.files.includes('dist/fonts.css'), 'the compiled faces must ship');
+  assert.doesNotMatch(compiled, /url\(https?:/);
+});

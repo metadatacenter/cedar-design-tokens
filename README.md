@@ -167,7 +167,9 @@ surface walk fails a focused element that still shows the browser's ring.
 
 Import `fonts` in an unencapsulated font registrar to embed Roboto 400 and 500.
 `fonts/regular` and `fonts/medium` emit individual weights. Font faces must be
-registered outside shadow roots; the files contain no network URLs.
+registered outside shadow roots; the files contain no network URLs. A host without
+Sass links the compiled `fonts.css` instead. A page that registers the faces once
+this way can load each component's host-fonts bundle, which embeds no copy of them.
 
 Import `getIcon`, `iconSvg`, `iconStyle` and `IconName` from the `icons` export.
 [`icons/manifest.json`](icons/manifest.json) maps semantic names to a pinned Lucide

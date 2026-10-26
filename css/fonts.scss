@@ -1,0 +1,4 @@
+@use '../scss/fonts';
+
+// Plain-CSS hosts link this once to register CEDAR Roboto 400 and 500 for the whole document, and
+// can then load a component's host-fonts bundle, which embeds no copy of its own.
