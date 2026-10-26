@@ -29,6 +29,44 @@ class AdoptionTest(unittest.TestCase):
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 
+    def test_surface_report_counts_contract_and_scale_allowances_in_text_and_json(self):
+        self.assertIsNone(self.run_report()['surfaces'])
+        package = json.loads((self.repo / 'package.json').read_text())
+        package['name'] = 'consumer'
+        (self.repo / 'package.json').write_text(json.dumps(package))
+        (self.repo / 'src/view.html').write_text('<dialog aria-label="Rename"></dialog>')
+        (self.repo / 'browser').mkdir()
+        (self.repo / 'browser/surface.spec.mjs').write_text('surfaceCases(registry, scenarios); checkSurface(page);')
+        surface = {'id': 'consumer.rename', 'name': 'Rename', 'section': 'Resource Dialogs',
+                   'contract': 'dialog', 'selector': 'dialog', 'scenario': 'rename', 'states': ['open'],
+                   'source': [{'file': 'src/view.html', 'anchor': 'aria-label="Rename"'}],
+                   'test': 'browser/surface.spec.mjs'}
+        registry = {'schema': 1, 'repo': 'consumer',
+                    'browserHelper': 'browser/tests/surface-contracts.generated.mjs', 'surfaces': [surface]}
+        path = self.repo / '.ui-surfaces.json'
+        path.write_text(json.dumps(registry))
+        check.sync_surfaces(self.repo)
+        self.run_report(initialize=True)
+        contract = {'border-top-left-radius': {'actual': '6px', 'expected': '4px', 'reason': 'Existing radius'}}
+        scale = [{'property': 'color', 'value': 'rgb(1, 2, 3)', 'reason': 'Existing category'},
+                 {'property': 'background-color', 'value': 'rgb(4, 5, 6)', 'reason': 'Existing tint'}]
+        for debt, scale_debt, total in [({}, [], 0), (contract, [], 1), ({}, scale, 2), (contract, scale, 3)]:
+            with self.subTest(total=total):
+                surface.update(debt=debt, scaleDebt=scale_debt)
+                path.write_text(json.dumps(registry))
+                args = ['--root', str(self.root), '--repo', 'consumer', '--strict']
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(0, check.main(args + ['--json']))
+                counts = json.loads(output.getvalue())['reports'][0]['surfaces']
+                self.assertEqual({'registered': 1, 'contracts': 1, 'debt': total,
+                                  'contractDebt': len(debt), 'scaleDebt': len(scale_debt)}, counts)
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(0, check.main(args))
+                self.assertIn(f'{total} existing differences ({len(debt)} contract / {len(scale_debt)} scale)',
+                              output.getvalue())
+
     def test_native_choice_resets_in_bound_styles_are_gated(self):
         (self.repo / 'src/control.html').write_text('<input spellcheck="false" [style.accent-color]="colour">')
         rows = list(check.scan_styles(self.repo, 2))
@@ -555,6 +593,36 @@ class AdoptionTest(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()):
                 (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
                 self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
+
+    def test_reactor_uses_uncommitted_token_source_without_weakening_registry_or_style_checks(self):
+        tokens, (head,) = self.token_checkout(['space-2'])
+        # No new commit or published version: this is precisely the snapshot edit loop.
+        (tokens / 'scss/_tokens.scss').write_text('$space-2: 1px;\n$radius: 1px;\n')
+        self.pin('0.1.0-dev.20260101.' + head)
+        self.style.write_text('a { border-radius: var(--cedar-radius); padding: var(--cedar-space-2); }')
+        (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
+        args = ['--root', str(self.root), '--repo', 'consumer', '--strict', '--json']
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            for extra, expected in [([], 1), (['--source-consumer', 'consumer'], 0)]:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    self.assertEqual(expected, check.main(args + extra))
+                report = json.loads(output.getvalue())['reports'][0]
+                self.assertEqual(['radius'], report['pinMissingTokens'])
+                self.assertEqual('reactor' if extra else 'registry', report['dependencySource'])
+            for style in ['a { color: #123456; }', 'a { padding: var(--cedar-does-not-exist); }']:
+                self.style.write_text(style)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(1, check.main(args + ['--source-consumer', 'consumer']))
+            self.style.write_text('a { padding: var(--cedar-space-2); }')
+            (self.repo / 'package-lock.json').write_text('{}')
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(1, check.main(args + ['--source-consumer', 'consumer']))
+
+    def test_reactor_resolution_cannot_replace_vendored_byte_verification(self):
+        self.vendor('1.0.0', {'custom-properties.css': ':root { --cedar-space-2: 8px; }'})
+        with self.assertRaisesRegex(ValueError, 'vendored token copy'):
+            self.run_report(source_dependency=True)
 
     def test_a_token_needs_two_readers_counting_the_recipes_each_includes(self):
         tokens = self.root / 'tokens'

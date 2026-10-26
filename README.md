@@ -9,8 +9,11 @@ See [UI contracts](UI-CONTRACTS.md) for behavior, accessibility and visual revie
 
 ## Usage
 
-Install `@org.metadatacenter/cedar-design-tokens` through the CEDAR Nexus registry
-configured in `.npmrc`. Consumers pin an exact development version and lockfile.
+For local CEDAR development, `cedarcli build frontends` automatically supplies the current token
+source, including uncommitted edits, to every consumer. `cedarcli test frontends` performs the
+same build and checks without deployment. No publication, manual pin update or follow-up approval
+is required. Standalone installs use `@org.metadatacenter/cedar-design-tokens` through the CEDAR
+Nexus registry configured in `.npmrc`, with exact versions and lockfiles.
 The package is a build-time `devDependency` in published components; it must not
 become a runtime dependency of their public npm packages.
 
@@ -203,7 +206,16 @@ The adoption check covers source styles, icons, host properties, dependency pins
 and surface registration. It rejects new drift and obsolete baseline allowances.
 CI compares allowances with the trusted base revision; expanding a baseline beside
 a styling change cannot hide it. Use `--all` for existing findings and `--json` for
-reports. A matching source pin does not prove a current served bundle; use
+reports. Rendered difference counts include both contract-property `debt` and
+per-surface `scaleDebt` allowances. JSON exposes their sum as `surfaces.debt`, with
+`contractDebt` and `scaleDebt` counts beside it; the text report shows the same
+breakdown. These are recorded allowances, not results of a browser run.
+Local `cedarcli build frontends` and `cedarcli test frontends` apply the same style policy
+against the current token source for consumers in their build graph. An unpublished token can
+therefore be used immediately, without a registry pin update. The report keeps registry findings
+visible, while standalone checks and CI still validate the pinned package. Vendored copies retain
+their byte checks. The reactor subsequently builds and verifies the actual selected packages.
+A matching source pin does not prove a current served bundle; use
 `check components` for that.
 
 ### Maintained surface registry
@@ -246,8 +258,9 @@ cedarcli publish components --component tokens --apply
 ```
 
 Nexus versions follow `<base>-dev.<UTC-commit-date>.<8-character-head>`; the `dev`
-tag identifies the latest publication. Advance consumer pins and lockfiles, then
-rebuild to adopt it. Non-npm consumers vendor compiled assets with a version and
+tag identifies the latest publication. For registry delivery, advance consumer pins and lockfiles,
+then rebuild to adopt it; local SNAPSHOT builds already use current source automatically.
+Non-npm consumers vendor compiled assets with a version and
 SHA-256 manifest checked by the adoption gate. See the
 [frontend runbook](https://github.com/metadatacenter/cedar-development/blob/develop/ops/FRONTEND-RUNBOOK.md)
 for consumer build and deployment procedures.

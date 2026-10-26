@@ -620,7 +620,7 @@ def dependency(repo):
     return pin, locked
 
 
-def report(repo, expected, ref=None, initialize=False, prune=False):
+def report(repo, expected, ref=None, initialize=False, prune=False, source_dependency=False):
     baseline, exists = read_baseline(repo, ref)
     current, _ = read_baseline(repo)
     policy = current.get('policy', 1)
@@ -659,6 +659,8 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
                          'existing' if remaining[key] > 0 else 'new')
         remaining[key] -= 1
     pin, locked = dependency(repo)
+    if source_dependency and not ((repo / 'package.json').is_file() or list(repo.glob('*-src/package.json'))):
+        raise ValueError('A vendored token copy cannot resolve a reactor package; verify its recorded bytes')
     dependency_valid = bool(isinstance(pin, str) and EXACT_VERSION.fullmatch(pin) and pin == locked)
     # A pinned package that lacks a token this repository reads leaves a custom property unset, which
     # no build reports: the declaration silently falls back.
@@ -687,21 +689,38 @@ def report(repo, expected, ref=None, initialize=False, prune=False):
     # change could reintroduce the literal under them.
     stale = sum(max(0, item['count'] - counts[key]) for key, item in current['findings'].items()) if not (initialize or prune) else 0
     surface_registry = load_surfaces(repo) if (repo / '.ui-surfaces.json').exists() else None
-    surface_counts = {'registered': len(surface_registry['surfaces']),
-                      'contracts': sum(bool(s.get('contract')) for s in surface_registry['surfaces']),
-                      'debt': sum(len(s.get('debt', {})) for s in surface_registry['surfaces'])} if surface_registry else None
+    surface_counts = None
+    if surface_registry:
+        surfaces = surface_registry['surfaces']
+        contract_debt = sum(len(s.get('debt', {})) for s in surfaces)
+        scale_debt = sum(len(s.get('scaleDebt', [])) for s in surfaces)
+        surface_counts = {'registered': len(surfaces),
+                          'contracts': sum(bool(s.get('contract')) for s in surfaces),
+                          'debt': contract_debt + scale_debt,
+                          'contractDebt': contract_debt, 'scaleDebt': scale_debt}
     return {'surfaces': surface_counts, 'repo': repo.name, 'policy': policy, 'base': ref, 'baseline': exists, 'pin': pin, 'locked': locked,
             'dependencyValid': dependency_valid,
+            'dependencySource': 'reactor' if source_dependency else 'registry',
             'expected': expected, 'versionStatus': version_status, 'pinCommit': pin_commit,
             'pinMissingTokens': missing, 'pinUnknown': bool(pin_commit and pinned is None), 'staleAllowances': stale,
             'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 
+def dependency_failed(result):
+    # Declaration/lock consistency is still required. A source build gets the current vocabulary
+    # from the producer; unknown tokens remain style failures. Registry CI checks the old package.
+    return (not result['dependencyValid'] or
+            (result.get('dependencySource') != 'reactor' and
+             (bool(result['pinMissingTokens']) or result['pinUnknown'])))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument('--repo', action='append', help='Repository path under root, such as cedar-workspace or mcp/cedar-cee-mcp; repeatable')
+    parser.add_argument('--source-consumer', action='append', default=[],
+                        help='Reactor consumer supplied with the local token package; keeps style gates and reports registry pins separately')
     parser.add_argument('--sync-surfaces', action='store_true', help='Refresh generated browser contracts from the central implementation')
     parser.add_argument('--surface-inventory', type=Path, help='Generate the maintained Markdown surface hierarchy (requires all registered repositories)')
     parser.add_argument('--strict', action='store_true', help='Fail on new policy violations, missing baselines or invalid dependency pins')
@@ -733,7 +752,8 @@ def main(argv=None):
             ref = args.baseline_ref
             if ref is None and not (args.upgrade_policy or args.init_baseline or args.prune_baseline):
                 ref = upstream_ref(repo)
-            reports.append(report(repo, expected, ref, args.init_baseline, args.prune_baseline))
+            reports.append(report(repo, expected, ref, args.init_baseline, args.prune_baseline,
+                                  source_dependency=name in args.source_consumer))
         except (OSError, ValueError, subprocess.CalledProcessError) as error:
             errors.append(f'{name}: {error}')
     if not reports and not errors:
@@ -758,18 +778,26 @@ def main(argv=None):
             old = sum(r['status'] == 'existing' and r['severity'] == 'gate' for r in rows)
             advisory = sum(r['severity'] == 'advisory' for r in rows)
             print(f"{result['repo']} (policy {result['policy']}): {new} new / {old} existing gated; {advisory} advisory; {result['resolved']} resolved")
-            print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
+            if result['dependencySource'] == 'reactor':
+                print('  tokens: current local source supplied by reactor; package build and runtime checks follow')
+                print(f"  registry metadata: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
+            else:
+                print(f"  tokens: {result['pin'] or 'none'}; lock: {result['locked'] or 'none'}; {result['versionStatus']}")
             if result['base']:
                 print(f"  compared with {result['base'][:12]}")
             if result.get('surfaces'):
                 coverage = result['surfaces']
-                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / {coverage['debt']} existing differences; browser execution is a separate gate")
+                print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / "
+                      f"{coverage['debt']} existing differences ({coverage['contractDebt']} contract / "
+                      f"{coverage['scaleDebt']} scale); browser execution is a separate gate")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:
                 print('  INVALID token dependency; use an exact version with a matching lockfile')
             if result['pinMissingTokens']:
-                print(f"  PINNED package lacks {', '.join('--cedar-' + t for t in result['pinMissingTokens'])}; advance the pin")
+                remedy = ('local source supplies them for this build; update registry dependencies before standalone CI'
+                          if result['dependencySource'] == 'reactor' else 'advance the registry pin')
+                print(f"  REGISTRY package lacks {', '.join('--cedar-' + t for t in result['pinMissingTokens'])}; {remedy}")
             if result['staleAllowances']:
                 print(f"  {result['staleAllowances']} baseline allowances are no longer needed; run --prune-baseline")
             for row in rows:
@@ -784,7 +812,7 @@ def main(argv=None):
         for error in errors:
             print(error, file=sys.stderr)
     return 2 if errors else int(args.strict and (bool(unused) or bool(single) or any(
-        not r['baseline'] or not r['dependencyValid'] or r['pinMissingTokens'] or r['pinUnknown'] or r['staleAllowances']
+        not r['baseline'] or dependency_failed(r) or r['staleAllowances']
         or any(f['status'] == 'new' and f['severity'] == 'gate' for f in r['findings']) for r in reports)))
 
 
