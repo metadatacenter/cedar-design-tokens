@@ -253,3 +253,12 @@ test('the spinner turns its own keyframes and draws its arc in the theme colour'
   );
   assert.match(css, /^@keyframes cedar-spinner-turn \{/m);
 });
+
+test('a Material menu item takes the shared inline inset whichever stylesheet comes later', () => {
+  const css = sass.compileString(`@use 'patterns'; .item { @include patterns.menu-item; }`, {
+    loadPaths: ['scss'],
+  }).css;
+  for (const side of ['leading', 'trailing', 'with-icon-leading', 'with-icon-trailing'])
+    assert.match(css, new RegExp(`--mat-menu-item-${side}-spacing: var\\(--cedar-space-3\\)`));
+  assert.match(css, /padding: var\(--cedar-space-2\) var\(--cedar-space-3\)/);
+});

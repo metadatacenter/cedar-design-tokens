@@ -56,6 +56,15 @@
   min-height: var(--cedar-control-height-default);
   padding: var(--cedar-space-2) var(--cedar-space-3);
   text-align: left;
+  // Angular Material sets a menu item's inline padding from these properties, in a rule for items
+  // holding an icon that is as specific as the selector a consumer includes this in. Whichever
+  // stylesheet comes later wins such a tie, so the padding above alone gave Material items the
+  // shared inset in one application and Material's 16px in another. Set on the item itself, the
+  // properties give Material's own rule the shared inset too. Other menus ignore them.
+  --mat-menu-item-leading-spacing: var(--cedar-space-3);
+  --mat-menu-item-trailing-spacing: var(--cedar-space-3);
+  --mat-menu-item-with-icon-leading-spacing: var(--cedar-space-3);
+  --mat-menu-item-with-icon-trailing-spacing: var(--cedar-space-3);
 }
 
 // The panel a filter chip opens: the shared menu surface as a column whose body scrolls, above a
