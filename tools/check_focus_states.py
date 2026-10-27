@@ -4,8 +4,10 @@ A browser draws its own ring on any focused element that no stylesheet styles, a
 paints it in the system accent blue. `controls.focus-states`, or the compiled `focus.css`, replaces
 it. A stylesheet reaches only the document or shadow tree that loads it, so a component that renders
 into its own shadow root includes the recipe there, and an application includes it in a global
-build stylesheet. This is a static contract; the rendered surface walk reports any browser ring that
-remains.
+build stylesheet. A component whose shadow root takes a stylesheet from a host directive, rather than
+from its own `styleUrls`, counts that stylesheet as its own: the directive names it with a
+`@stylesheet` tag, relative to the directive's file. This is a static contract; the rendered surface
+walk reports any browser ring that remains.
 """
 import hashlib
 import json
@@ -28,6 +30,10 @@ COMMENT = re.compile(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', re.S)
 SHADOW = re.compile(r'encapsulation\s*:\s*ViewEncapsulation\.ShadowDom')
 STYLE_URLS = re.compile(r'styleUrls?\s*:\s*(\[[^\]]*\]|[\'"][^\'"]+[\'"])')
 QUOTED = re.compile(r'[\'"]([^\'"]+)[\'"]')
+HOST_DIRECTIVES = re.compile(r'hostDirectives\s*:\s*\[([^\]]*)\]')
+DIRECTIVE = re.compile(r'(?:directive\s*:\s*)?\b([A-Z]\w*)\b')
+NAMED_IMPORT = re.compile(r'import\s*\{([^}]*)\}\s*from\s*[\'"](\.[^\'"]+)[\'"]')
+STYLESHEET_TAG = re.compile(r'@stylesheet\s+(\S+)')
 LOADS = re.compile(r'@(use|forward|import)\s+[\'"]([^\'"]+)[\'"](?:\s+as\s+([\w-]+))?')
 
 
@@ -71,6 +77,22 @@ def includes(path, read, names, base, seen=frozenset()):
                for match in re.finditer(r'@include\s+([\w-]+)\.focus-states\b', source))
 
 
+def inserted(source, component, read, names):
+    """The stylesheets a component's host directives insert into its shadow root, each named by a tag."""
+    imports = {name.strip().split(' as ')[-1].strip(): target for group, target in NAMED_IMPORT.findall(source)
+               for name in group.split(',') if name.strip()}
+    sheets = []
+    for group in HOST_DIRECTIVES.findall(source):
+        for name in DIRECTIVE.findall(group):
+            if name not in imports:
+                continue
+            directive = posixpath.normpath(posixpath.join(posixpath.dirname(component), imports[name])) + '.ts'
+            if directive in names:
+                sheets += [posixpath.normpath(posixpath.join(posixpath.dirname(directive), sheet))
+                           for sheet in STYLESHEET_TAG.findall(read(directive))]
+    return sheets
+
+
 def roots(read, names, base):
     """Each root is a list of stylesheets, any one of which may carry the recipe."""
     shadowed = []
@@ -79,7 +101,8 @@ def roots(read, names, base):
             source = read(name)
             if SHADOW.search(source):
                 urls = [url for group in STYLE_URLS.findall(source) for url in QUOTED.findall(group)]
-                shadowed.append((name, [posixpath.normpath(posixpath.join(posixpath.dirname(name), url)) for url in urls],
+                sheets = [posixpath.normpath(posixpath.join(posixpath.dirname(name), url)) for url in urls]
+                shadowed.append((name, sheets + inserted(source, name, read, names),
                                  'This component renders into its own shadow root, so one of its stylesheets must include controls.focus-states.'))
     # A shadow-rooted component's global styles belong to its demonstration page, not to the component.
     if shadowed:

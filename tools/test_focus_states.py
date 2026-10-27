@@ -47,6 +47,26 @@ class FocusStatesTest(unittest.TestCase):
         self.files['src/_focus.scss'] = ''
         self.assertEqual(['src/app/element/x.element.ts'], self.check())
 
+    def test_a_stylesheet_a_host_directive_inserts_is_the_shadow_roots_own(self):
+        component = """import { RootStyles } from '../directives/root-styles.directive';
+@Component({
+  selector: 'cedar-x',
+  encapsulation: ViewEncapsulation.ShadowDom,
+  hostDirectives: [RootStyles],
+})"""
+        directive = "/**\n * Inserts the root stylesheet.\n *\n * @stylesheet ./root.scss\n */\nexport class RootStyles {}"
+        self.files.update({'package.json': '{"name":"cedar-embeddable-editor"}', 'src/app/element/x.component.ts': component,
+                           'src/app/directives/root-styles.directive.ts': directive,
+                           'src/app/directives/root.scss': self.files.pop('src/styles.scss')})
+        self.assertEqual([], self.check())
+        recipe = self.files['src/app/directives/root.scss']
+        self.files['src/app/directives/root.scss'] = ''
+        self.assertEqual(['src/app/element/x.component.ts'], self.check())
+        # A directive that names no stylesheet inserts none the check can see.
+        self.files['src/app/directives/root.scss'] = recipe
+        self.files['src/app/directives/root-styles.directive.ts'] = 'export class RootStyles {}'
+        self.assertEqual(['src/app/element/x.component.ts'], self.check())
+
     def test_nested_frontend_and_static_host(self):
         self.files = {f'cedar-bridging-src/{name}': source for name, source in self.files.items()}
         self.files['cedar-bridging-src/package.json'] = '{"name":"cedar-bridging"}'

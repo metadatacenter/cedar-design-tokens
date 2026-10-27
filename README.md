@@ -165,9 +165,16 @@ the system accent blue, and a control or framework that draws its own focus stat
 keeps it. The adoption check fails a root without the recipe, and the rendered
 surface walk fails a focused element that still shows the browser's ring.
 
-Import `fonts` in an unencapsulated font registrar to embed Roboto 400 and 500.
-`fonts/regular` and `fonts/medium` emit individual weights. Font faces must be
-registered outside shadow roots; the files contain no network URLs.
+A component registers Roboto 400 and 500 by calling `registerFontFaces(document, nonce)`
+from the `font-faces` export. Browsers register a face only from the document, never
+from a shadow root, so the call puts the faces into the document's head, once for a page
+however many components make it. As the styles of an unencapsulated component, they
+would also reach every shadow root on the page, where nothing reads them. The Sass
+`fonts` export emits the same faces for a stylesheet of the host's own, and
+`fonts/regular` and `fonts/medium` emit one weight each. The faces contain no network
+URLs. A host without Sass links the compiled `fonts.css` instead. A page that registers
+the faces once this way can load each component's host-fonts bundle, which embeds no
+copy of them.
 
 Import `getIcon`, `iconSvg`, `iconStyle` and `IconName` from the `icons` export.
 [`icons/manifest.json`](icons/manifest.json) maps semantic names to a pinned Lucide
