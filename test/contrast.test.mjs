@@ -77,14 +77,9 @@ const nonTextPairs = [
   ['status-success-text', 'surface-raised'],
   ['status-success-text', 'surface-subtle'],
 ];
-// These pairs fall short of 3:1 today, and each carries the reason its value stays. A recorded pair
-// must still fail, so changing an approved value means removing its record.
-const outlineReason =
-  "A darker control outline would change every consumer's controls, and that visual change awaits a design decision.";
-const knownNonTextFailures = new Map([
-  ['control-border-default on surface-raised', outlineReason],
-  ['control-border-default on surface-subtle', outlineReason],
-]);
+// A pair that falls short of 3:1 is recorded here with the reason its value stays. A recorded pair
+// must still fail, so changing an approved value means removing its record. None is recorded now.
+const knownNonTextFailures = new Map();
 for (const [part, surface] of nonTextPairs) {
   const pair = `${part} on ${surface}`;
   const reason = knownNonTextFailures.get(pair);

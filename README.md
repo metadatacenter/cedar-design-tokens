@@ -85,7 +85,7 @@ text. Titles scale with the nearest eligible query container, with a 20–26px r
 | `text-muted`                                    | `#555555`             | Secondary text and placeholders            |
 | `text-title`                                    | `#173f3e`             | Titles                                     |
 | `border-rule`                                   | `#d7e0df`             | Dividers and surface outlines              |
-| `control-border-default`                        | `rgba(0, 0, 0, 0.38)` | Editable control outlines                  |
+| `control-border-default`                        | `rgba(0, 0, 0, 0.44)` | Editable control outlines                  |
 | `surface-raised`                                | `#ffffff`             | Pages, cards, menus, dialogs and controls  |
 | `surface-subtle`                                | `#f4f6f6`             | Panels, read-only values and hovered rows  |
 | `surface-selected`                              | `#e4f1f1`             | Selection and hovered actions              |
@@ -98,9 +98,6 @@ Use roles for their meaning, not because their current values match. Status colo
 need a label or icon; their foreground/background pairs are contrast-tested.
 Control outlines, the focus ring, icons and state indicators are tested on the
 surfaces they are drawn on against WCAG's 3:1 threshold for non-text contrast.
-`control-border-default` falls short at about 2.7:1. The
-[contrast test](test/contrast.test.mjs) records it as a known failure, because a
-darker outline would change every consumer's controls.
 Palette maps `brand-primary` and `brand-accent`, plus `font-family-string`, are
 Sass-only adapter inputs. They are not CSS tokens; the accent map serves legacy
 Material M2 adapters.
