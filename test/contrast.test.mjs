@@ -18,9 +18,11 @@ function luminance(channels) {
     return sum + [0.2126, 0.7152, 0.0722][i] * (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
   }, 0);
 }
-function contrast(foreground, surface) {
-  const under = rgb(tokens.get(surface));
-  const values = [luminance(rgb(tokens.get(foreground), under)), luminance(under)];
+// A translucent part is composited over what it is drawn on, which is its surface unless a third
+// role names the fill beneath it, and measured against the surface around it.
+function contrast(foreground, surface, drawnOver = surface) {
+  const around = rgb(tokens.get(surface));
+  const values = [luminance(rgb(tokens.get(foreground), rgb(tokens.get(drawnOver)))), luminance(around)];
   return (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05);
 }
 // Every text role on every surface it is drawn on reaches normal-text AA contrast.
@@ -51,9 +53,11 @@ for (const [text, surface] of pairs) {
 // backdrop is absent because a scrim is neither a boundary nor an indicator.
 const nonTextPairs = [
   // Control outlines frame what a person can edit. Controls sit on the raised surface of a page,
-  // card, menu or dialog, and on the subtle surface of a panel.
+  // card, menu or dialog, and on the subtle surface of a panel. A control filled white keeps its
+  // fill under its border, so on a panel its outline is drawn over white and seen against the panel.
   ['control-border-default', 'surface-raised'],
   ['control-border-default', 'surface-subtle'],
+  ['control-border-default', 'surface-subtle', 'surface-raised'],
   // The focus ring, icons and selection marks take the theme colour on every surface. An active
   // filter chip's outline and chevron lie on the selection surface, as does a hovered action's icon.
   ['color-primary', 'surface-raised'],
@@ -80,24 +84,25 @@ const nonTextPairs = [
 // A pair that falls short of 3:1 is recorded here with the reason its value stays. A recorded pair
 // must still fail, so changing an approved value means removing its record. None is recorded now.
 const knownNonTextFailures = new Map();
-for (const [part, surface] of nonTextPairs) {
-  const pair = `${part} on ${surface}`;
+const named = ([part, surface, drawnOver]) => `${part}${drawnOver ? ` over ${drawnOver}` : ''} on ${surface}`;
+for (const [part, surface, drawnOver] of nonTextPairs) {
+  const pair = named([part, surface, drawnOver]);
   const reason = knownNonTextFailures.get(pair);
   if (reason) {
     test(`${pair} remains a recorded non-text contrast failure`, (t) => {
       t.diagnostic(reason);
-      const ratio = contrast(part, surface);
+      const ratio = contrast(part, surface, drawnOver);
       assert.ok(ratio < 3, `${pair} now reaches ${ratio.toFixed(2)}. Remove its record.`);
     });
   } else {
     test(`${pair} meets non-text contrast`, () => {
-      const ratio = contrast(part, surface);
+      const ratio = contrast(part, surface, drawnOver);
       assert.ok(ratio >= 3, `${pair}: ${ratio.toFixed(2)}`);
     });
   }
 }
 test('every recorded non-text failure is a checked pair', () => {
-  const checked = new Set(nonTextPairs.map(([part, surface]) => `${part} on ${surface}`));
+  const checked = new Set(nonTextPairs.map(named));
   assert.deepEqual(
     [...knownNonTextFailures.keys()].filter((pair) => !checked.has(pair)),
     [],

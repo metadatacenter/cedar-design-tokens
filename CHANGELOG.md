@@ -2,11 +2,13 @@
 
 ## Unreleased
 
-- `control-border-default` is `rgba(0, 0, 0, 0.44)`, up from 0.38. It measures 3.24:1 on
-  `surface-raised` and 3.20:1 on `surface-subtle`, so control outlines meet WCAG 1.4.11's 3:1
-  threshold. At 0.38 they measured 2.68:1 and 2.65:1. Every consumer's text inputs and outlined
-  controls draw a darker outline, and the contrast test no longer records the two pairs as known
-  failures.
+- `control-border-default` is `rgba(0, 0, 0, 0.45)`, up from 0.38. It measures 3.35:1 on
+  `surface-raised` and 3.31:1 on `surface-subtle`, and 3.09:1 where a white control sits on a
+  `surface-subtle` panel, so control outlines meet WCAG 1.4.11's 3:1 threshold. At 0.38 they
+  measured 2.68:1 and 2.65:1. Every consumer's text inputs and outlined controls draw a darker
+  outline, and the contrast test no longer records the two pairs as known failures. A first step
+  to 0.44 reached 3:1 on both surfaces but measured 2.99:1 for a white control on a panel, which
+  the browser components' rendered boundary checks found and the contrast test now measures.
 - The contrast test checks control outlines, the focus ring, icons and state indicators on the
   surfaces they are drawn on against WCAG 1.4.11's 3:1 threshold for non-text contrast.
 - The icon registry has a `drag` icon, Lucide's `grip-vertical`, for a handle that reorders by
