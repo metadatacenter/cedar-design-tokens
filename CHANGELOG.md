@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- `patterns.selected-outline` and `patterns.selected-frame` take an optional colour, which defaults
+  to `var(--cedar-color-primary)` as before. A consumer whose root never declares the tokens passes
+  the colour with its fallback, as CEE's current page chip does; without one the line resolves to
+  nothing there.
 - `control-border-default` is `rgba(0, 0, 0, 0.45)`, up from 0.38. It measures 3.35:1 on
   `surface-raised` and 3.31:1 on `surface-subtle`, and 3.09:1 where a white control sits on a
   `surface-subtle` panel, so control outlines meet WCAG 1.4.11's 3:1 threshold. At 0.38 they
