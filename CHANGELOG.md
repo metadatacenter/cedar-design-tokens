@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The icon registry draws from lucide-static 1.63.0, up from 1.47.0. None of the 95 Lucide icons
+  it uses changed between the two releases, so every icon renders as before. Only the header of
+  each generated file names the new version.
 - `patterns.selected-outline` and `patterns.selected-frame` take an optional colour, which defaults
   to `var(--cedar-color-primary)` as before. A consumer whose root never declares the tokens passes
   the colour with its fallback, as CEE's current page chip does; without one the line resolves to
