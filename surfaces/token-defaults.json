@@ -26,7 +26,9 @@
   "--cedar-dialog-backdrop": "rgba(0, 0, 0, 0.4)",
   "--cedar-control-line-height-default": "21px",
   "--cedar-control-line-height-authoring": "18px",
+  "--cedar-control-disabled-opacity": "0.45",
   "--cedar-radius": "4px",
   "--cedar-radius-pill": "9999px",
-  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)"
+  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)",
+  "--cedar-motion-ease-standard": "cubic-bezier(0.2, 0, 0, 1)"
 }

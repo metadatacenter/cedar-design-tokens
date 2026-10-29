@@ -25,6 +25,7 @@ export async function checkSurface(page, surface, state, expect, testInfo) {
   const target = page.locator(surface.selector);
   await expect(target, surface.id).toHaveCount(1);
   await expect(target, surface.id).toBeVisible();
+  if (surface.contract === 'disabled-control') await expect(target, surface.id).toBeDisabled();
   await page.evaluate(() => document.fonts.ready);
   if (state === 'collapsed') await expect(target).not.toHaveAttribute('open', '');
   if (state === 'expanded') {
