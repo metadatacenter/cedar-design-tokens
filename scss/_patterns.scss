@@ -427,12 +427,22 @@ $-save-state-dot-size: 8px;
   }
 }
 
-// The selected item in a list of cards: a primary outline drawn just inside the item's border, so
-// the item keeps its size. The designer's overview marks its selected template, element or field
-// with it.
-@mixin selected-outline {
-  outline: 1px solid var(--cedar-color-primary);
+// The selected item in a list of cards or rows: a primary outline drawn just inside the item's
+// border, so the item keeps its size. The designer's overview marks its selected template, element
+// or field with it, and Workspace its selected listing row. A selection tint is too faint to mark a
+// selection alone, so a tinted selection carries this line or `selected-frame` as well. A consumer
+// whose root never declares the tokens, such as CEE's shadow root, passes the colour with its
+// fallback, as it does to `controls.focus-ring`.
+@mixin selected-outline($color: var(--cedar-color-primary)) {
+  outline: 1px solid $color;
   outline-offset: -1px;
+}
+
+// The same line on a control that takes the focus ring, drawn as an inset shadow because the ring
+// is an outline: the two then show together. Workspace's pressed view switch, the term picker's
+// current release and picked term, and CEE's current page chip carry it.
+@mixin selected-frame($color: var(--cedar-color-primary)) {
+  box-shadow: inset 0 0 0 1px $color;
 }
 
 // A card whose content is invalid: an error outline just outside its border. A host's control

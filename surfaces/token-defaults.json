@@ -13,7 +13,7 @@
   "--cedar-text-muted": "#555",
   "--cedar-text-title": "#173f3e",
   "--cedar-border-rule": "#d7e0df",
-  "--cedar-control-border-default": "rgba(0, 0, 0, 0.38)",
+  "--cedar-control-border-default": "rgba(0, 0, 0, 0.45)",
   "--cedar-surface-raised": "#ffffff",
   "--cedar-surface-subtle": "#f4f6f6",
   "--cedar-surface-selected": "#e4f1f1",
@@ -26,7 +26,9 @@
   "--cedar-dialog-backdrop": "rgba(0, 0, 0, 0.4)",
   "--cedar-control-line-height-default": "21px",
   "--cedar-control-line-height-authoring": "18px",
+  "--cedar-control-disabled-opacity": "0.45",
   "--cedar-radius": "4px",
   "--cedar-radius-pill": "9999px",
-  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)"
+  "--cedar-shadow-overlay": "0 4px 18px rgba(0, 0, 0, 0.13)",
+  "--cedar-motion-ease-standard": "cubic-bezier(0.2, 0, 0, 1)"
 }

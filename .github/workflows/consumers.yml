@@ -29,7 +29,7 @@ jobs:
             command: npm test && npm run dist && npm run test:visual
           - repo: cedar-embeddable-term-picker
             directory: .
-            command: npm test && npm run build:production && npm run test:visual
+            command: npm test && npm run dist && npm run test:visual
           - repo: cedar-workspace
             directory: .
             command: npm test && npm run build && npm run test:visual

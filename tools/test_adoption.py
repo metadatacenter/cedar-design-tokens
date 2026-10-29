@@ -26,6 +26,14 @@ class AdoptionTest(unittest.TestCase):
         self.style = self.repo / 'src/style.scss'
         self.style.write_text('.a { color: #fff; font-size: 14px; padding: 8px; }')
 
+    def test_deleted_tracked_source_is_absent_from_working_tree_scan(self):
+        deleted = self.repo / 'src/removed.ts'
+        deleted.write_text('export const removed = true;')
+        subprocess.run(['git', '-C', str(self.repo), 'add', 'src/removed.ts'], check=True)
+        deleted.unlink()
+        self.style.write_text('')
+        self.assertEqual([], list(check.scan_styles(self.repo, 4)))
+
     def run_report(self, **kwargs):
         return check.report(self.repo, '1.0.0', **kwargs)
 

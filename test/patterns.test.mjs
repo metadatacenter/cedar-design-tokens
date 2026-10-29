@@ -45,6 +45,7 @@ const names = [
   'spinner',
   'drag-placeholder',
   'selected-outline',
+  'selected-frame',
   'invalid-outline',
 ];
 for (const name of names) {
@@ -224,6 +225,20 @@ test('a selected item is outlined inside its border and an invalid card just out
   assert.equal(
     patterns('a { @include patterns.selected-outline; }').trim(),
     'a {\n  outline: 1px solid var(--cedar-color-primary);\n  outline-offset: -1px;\n}',
+  );
+  // A focusable control draws the same line as a shadow, leaving the outline to the focus ring.
+  assert.equal(
+    patterns('a { @include patterns.selected-frame; }').trim(),
+    'a {\n  box-shadow: inset 0 0 0 1px var(--cedar-color-primary);\n}',
+  );
+  // A root that never declares the tokens passes the colour with its fallback.
+  assert.equal(
+    patterns('a { @include patterns.selected-frame(var(--cedar-color-primary, #0f7686)); }').trim(),
+    'a {\n  box-shadow: inset 0 0 0 1px var(--cedar-color-primary, #0f7686);\n}',
+  );
+  assert.equal(
+    patterns('a { @include patterns.selected-outline(var(--cedar-color-primary, #0f7686)); }').trim(),
+    'a {\n  outline: 1px solid var(--cedar-color-primary, #0f7686);\n  outline-offset: -1px;\n}',
   );
   assert.equal(
     patterns('a { @include patterns.invalid-outline; }').trim(),

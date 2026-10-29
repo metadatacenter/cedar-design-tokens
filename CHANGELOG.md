@@ -2,11 +2,22 @@
 
 ## Unreleased
 
+- The icon registry draws from lucide-static 1.64.0, up from 1.47.0. None of the 95 Lucide icons
+  it uses changed across those releases, so every icon renders as before. Only the header of each
+  generated file names the new version.
+- `patterns.selected-outline` and `patterns.selected-frame` take an optional colour, which defaults
+  to `var(--cedar-color-primary)` as before. A consumer whose root never declares the tokens passes
+  the colour with its fallback, as CEE's current page chip does; without one the line resolves to
+  nothing there.
+- `control-border-default` is `rgba(0, 0, 0, 0.45)`, up from 0.38. It measures 3.35:1 on
+  `surface-raised` and 3.31:1 on `surface-subtle`, and 3.09:1 where a white control sits on a
+  `surface-subtle` panel, so control outlines meet WCAG 1.4.11's 3:1 threshold. At 0.38 they
+  measured 2.68:1 and 2.65:1. Every consumer's text inputs and outlined controls draw a darker
+  outline, and the contrast test no longer records the two pairs as known failures. A first step
+  to 0.44 reached 3:1 on both surfaces but measured 2.99:1 for a white control on a panel, which
+  the browser components' rendered boundary checks found and the contrast test now measures.
 - The contrast test checks control outlines, the focus ring, icons and state indicators on the
   surfaces they are drawn on against WCAG 1.4.11's 3:1 threshold for non-text contrast.
-  `control-border-default` measures 2.68:1 on `surface-raised` and 2.65:1 on `surface-subtle`. The
-  test records both pairs as known failures, because a darker outline would change every
-  consumer's controls, and fails if either reaches 3:1. No value changes.
 - The icon registry has a `drag` icon, Lucide's `grip-vertical`, for a handle that reorders by
   dragging. The designer's handles drew `list`, the Workspace list-view icon.
 - `spacing.$target-size-minimum` is WCAG 2.2's 24px minimum target, for a control that its own

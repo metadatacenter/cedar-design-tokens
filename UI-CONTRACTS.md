@@ -127,6 +127,16 @@ ring. A `page` contract uses that scale check without extra
 property rules. Generated text, placeholders and SVG text are included; embedded
 components, visually hidden text and glyph internals have targeted exclusions.
 
+Register focused `body-text` and `authoring-table-cell` surfaces for default and
+compact line heights. A `disabled-control` surface must be disabled and use the
+shared disabled opacity; its fixture must enter the real loading or unavailable
+state. Also check the enabled state and recovery in the owning journey test.
+The `motion` contract checks animation and transition curves; the owning test
+still verifies reduced motion. These contracts resolve the token in the target's
+root, including shadow roots, and compare the rendered property rather than just
+checking that the token exists. They complement the general scale walk without
+changing component-specific line heights or framework disabled treatments.
+
 These style checks complement consumer keyboard, geometry, accessibility, failure
 and save-flow suites. A registered surface is not proof that every state works.
 Keep the relevant CEE, CED, CETP and Workspace browser/visual tests, plus live-stack

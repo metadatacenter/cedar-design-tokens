@@ -246,6 +246,8 @@ def scan_styles(repo, policy=1, ref=None):
                                       if ref else (repo / name).read_text())
     tracked = (git(repo, 'ls-tree', '-r', '--name-only', ref) if ref else
                git(repo, 'ls-files', '--cached', '--others', '--exclude-standard')).splitlines()
+    if not ref:
+        tracked = [name for name in tracked if (repo / name).is_file()]
     yield from focus_findings(lambda name: git(repo, 'show', f'{ref}:{name}') if ref else (repo / name).read_text(), tracked)
     known = known_css_properties()
     authored = []
