@@ -18,6 +18,13 @@ class NativeChoicesTest(unittest.TestCase):
     def test_loaded_global_theme_and_opted_in_root(self):
         self.assertEqual([], self.check())
 
+    def test_package_assets_do_not_require_an_existing_install_or_replace_adoption(self):
+        self.files['angular.json'] = self.files['angular.json'].replace(
+            '["src/styles.scss"]', '["node_modules/@org.metadatacenter/cedar-design-tokens/dist/fonts-hosted.css", "src/styles.scss"]')
+        self.assertEqual([], self.check())
+        self.files['src/styles.scss'] = ''
+        self.assertEqual(['angular.json'], [row['file'] for row in self.check()])
+
     def test_missing_root_class_or_loaded_stylesheet_fails(self):
         self.files['src/index.html'] = '<cedar-workspace></cedar-workspace>'
         self.assertEqual(['src/index.html'], [r['file'] for r in self.check()])

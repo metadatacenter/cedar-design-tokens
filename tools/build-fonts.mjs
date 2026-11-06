@@ -5,7 +5,7 @@
 // and also into every shadow root on the page, where nothing reads them. A component calls this
 // module instead, so a page that holds several CEDAR components registers each set of faces once.
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as sass from 'sass';
 
@@ -15,6 +15,19 @@ const { css } = sass.compile(fileURLToPath(new URL('css/fonts.scss', root)), { s
 const set = createHash('sha256').update(css).digest('hex').slice(0, 16);
 
 await mkdir(new URL('dist/', root), { recursive: true });
+// Hosted applications let the browser request only the unicode subsets in use. Keep the
+// embedded exports below unchanged for standalone components and offline single-file use.
+await rm(new URL('dist/fonts/', root), { recursive: true, force: true });
+await mkdir(new URL('dist/fonts/', root), { recursive: true });
+const fonts = new Map();
+const hosted = css.replace(/url\(data:font\/woff2;base64,([^)]+)\)/g, (_, base64) => {
+  const bytes = Buffer.from(base64, 'base64');
+  const name = createHash('sha256').update(bytes).digest('hex') + '.woff2';
+  fonts.set(name, bytes);
+  return `url('./fonts/${name}')`;
+});
+for (const [name, bytes] of fonts) await writeFile(new URL(`dist/fonts/${name}`, root), bytes);
+await writeFile(new URL('dist/fonts-hosted.css', root), hosted + '\n');
 await writeFile(
   new URL('dist/font-faces.js', root),
   '// Generated from scss/_fonts.scss by tools/build-fonts.mjs.\n' +

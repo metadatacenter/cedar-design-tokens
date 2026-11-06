@@ -173,6 +173,12 @@ URLs. A host without Sass links the compiled `fonts.css` instead. A page that re
 the faces once this way can load each component's host-fonts bundle, which embeds no
 copy of them.
 
+Hosted applications can instead import `fonts-hosted.css`. It declares the same faces and
+unicode ranges, with content-hashed WOFF2 files under `dist/fonts/`, so the browser downloads
+only the subsets used by the page. A bundler resolves those relative URLs; a static host must
+copy the `fonts/` directory beside the stylesheet. The embedded exports above remain suitable
+for standalone components that must work without additional font requests.
+
 Import `getIcon`, `iconSvg`, `iconStyle` and `IconName` from the `icons` export.
 [`icons/manifest.json`](icons/manifest.json) maps semantic names to a pinned Lucide
 version. Use this registry rather than local SVG geometry, icon fonts or direct
