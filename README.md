@@ -254,6 +254,9 @@ Checker changes also require `python3 -m unittest discover -s tools -p 'test_*.p
 [Consumer CI](.github/workflows/consumers.yml) tests a candidate tarball against
 locked consumer dependencies, including the configured browser and screenshot
 suites. It neither publishes nor updates visual baselines.
+CEE and Workspace split their full browser suites across four shards. Every shard installs
+the same candidate tokens over its consumer's locked dependencies and runs the normal build
+and unit checks; all four shards must pass. Other consumers retain one job each.
 
 Publish a pushed `develop` head through:
 
