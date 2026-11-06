@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+# Dependency install scripts are reviewed and version-pinned in each owning package.json,
+# and npm refuses a locked package with an install script that policy does not cover.
+env:
+  NPM_CONFIG_STRICT_ALLOW_SCRIPTS: "true"
+
 jobs:
   consumer:
     name: ${{ matrix.repo }}

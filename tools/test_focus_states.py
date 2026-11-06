@@ -92,6 +92,20 @@ class FocusStatesTest(unittest.TestCase):
         self.files[page] = '<p>No tokens here.</p>'
         self.assertEqual([f'{copy}/manifest.json'], self.check())
 
+    def test_script_only_integration_build_keeps_the_static_hosts_focus_contract(self):
+        self.files = {
+            'package.json': '{"name":"cedar-template-designer"}',
+            'angular.json': json.dumps({'projects': {'integration': {'architect': {'build': {
+                'options': {'index': False, 'browser': 'src/editors.ts', 'styles': []}}}}}}),
+            'app/styles/host.css': "@import '../components/focus.css';",
+        }
+        self.assertEqual([], self.check())
+        self.files['app/styles/host.css'] = ''
+        self.assertEqual(['app/styles/host.css'], self.check())
+        # With no declared static root, a script build cannot stand in for a styled application.
+        self.files['package.json'] = '{"name":"cedar-workspace"}'
+        self.assertEqual(['package.json'], self.check())
+
     def test_other_repositories_are_outside_the_contract(self):
         for files in [{'package.json': '{"name":"cedar-template-editor"}'}, {'pom.xml': ''}]:
             self.files = files

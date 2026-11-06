@@ -114,6 +114,11 @@ def roots(read, names, base):
         options = definition.get('architect', {}).get('build', {}).get('options', {})
         styles = [entry if isinstance(entry, str) else entry.get('input') if entry.get('inject', True) else None
                   for entry in options.get('styles', [])]
+        # A JavaScript-only integration build owns no document stylesheet. The host's static
+        # root below still has to carry the focus recipe; merely adding Angular tooling must
+        # not replace that root with an empty list of build stylesheets.
+        if options.get('index') is False and not styles:
+            continue
         applications.append((posixpath.join(base, 'angular.json'),
                              [posixpath.join(base, style) for style in styles if style],
                              f'A global build stylesheet of {project} must include controls.focus-states or import the shared focus.css.'))
