@@ -37,7 +37,10 @@ def findings(read):
         build = project.get('architect', {}).get('build', {}).get('options', {})
         for entry in build.get('styles', []):
             name = entry if isinstance(entry, str) else entry.get('input') if entry.get('inject', True) else None
-            if not name:
+            # The preflight inspects application source before reactor dependencies are
+            # installed. Vendor assets cannot establish the application's explicit theme
+            # adoption and may not exist in its older node_modules checkout.
+            if not name or name.startswith('node_modules/'):
                 continue
             source = re.sub(r'/\*.*?\*/|(?m:^[ \t]*//[^\n]*)', '', read(name), flags=re.S)
             # Require a top-level import in a stylesheet actually included in the build.

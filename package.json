@@ -25,6 +25,7 @@
       "sass": "./scss/fonts/_roboto-500.scss"
     },
     "./fonts.css": "./dist/fonts.css",
+    "./fonts-hosted.css": "./dist/fonts-hosted.css",
     "./font-faces": {
       "types": "./dist/font-faces.d.ts",
       "default": "./dist/font-faces.js"
@@ -86,6 +87,8 @@
     "dist/notice.css",
     "dist/secondary-action.css",
     "dist/fonts.css",
+    "dist/fonts-hosted.css",
+    "dist/fonts/",
     "dist/font-faces.js",
     "dist/font-faces.d.ts"
   ],

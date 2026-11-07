@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { fontFaces, fontFaceSet, registerFontFaces } from '../dist/font-faces.js';
 
 /** A document as far as registration touches one: a head that holds style elements. */
@@ -31,6 +32,19 @@ function documentStub() {
 }
 
 const faces = (css) => [...css.matchAll(/url\(data:font\/woff2;base64,([^)]+)\)/g)].map((match) => match[1]);
+
+test('hosted faces preserve every embedded byte and all font descriptors', async () => {
+  const hosted = await readFile(new URL('../dist/fonts-hosted.css', import.meta.url), 'utf8');
+  const urls = [...hosted.matchAll(/url\('\.\/fonts\/([a-f0-9]{64})\.woff2'\)/g)];
+  assert.equal(urls.length, 14);
+  let embedded = hosted.trim();
+  for (const [url, digest] of urls) {
+    const bytes = await readFile(new URL(`../dist/fonts/${digest}.woff2`, import.meta.url));
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), digest);
+    embedded = embedded.replace(url, `url(data:font/woff2;base64,${bytes.toString('base64')})`);
+  }
+  assert.equal(embedded, fontFaces);
+});
 
 test('the module carries the faces fonts.css registers, and nothing else', async () => {
   const linked = await readFile(new URL('../dist/fonts.css', import.meta.url), 'utf8');

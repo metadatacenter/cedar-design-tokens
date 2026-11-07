@@ -173,6 +173,12 @@ URLs. A host without Sass links the compiled `fonts.css` instead. A page that re
 the faces once this way can load each component's host-fonts bundle, which embeds no
 copy of them.
 
+Hosted applications can instead import `fonts-hosted.css`. It declares the same faces and
+unicode ranges, with content-hashed WOFF2 files under `dist/fonts/`, so the browser downloads
+only the subsets used by the page. A bundler resolves those relative URLs; a static host must
+copy the `fonts/` directory beside the stylesheet. The embedded exports above remain suitable
+for standalone components that must work without additional font requests.
+
 Import `getIcon`, `iconSvg`, `iconStyle` and `IconName` from the `icons` export.
 [`icons/manifest.json`](icons/manifest.json) maps semantic names to a pinned Lucide
 version. Use this registry rather than local SVG geometry, icon fonts or direct
@@ -254,6 +260,9 @@ Checker changes also require `python3 -m unittest discover -s tools -p 'test_*.p
 [Consumer CI](.github/workflows/consumers.yml) tests a candidate tarball against
 locked consumer dependencies, including the configured browser and screenshot
 suites. It neither publishes nor updates visual baselines.
+CEE and Workspace split their full browser suites across four shards. Every shard installs
+the same candidate tokens over its consumer's locked dependencies and runs the normal build
+and unit checks; all four shards must pass. Other consumers retain one job each.
 
 Publish a pushed `develop` head through:
 
