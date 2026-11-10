@@ -23,6 +23,12 @@
   @return color-mix(in srgb, #{$primary} 12%, #{tokens.$surface-raised});
 }
 
+// A drag-selection rectangle overlays content that must remain readable beneath it.
+// This translucent role is independent of the opaque selected-surface recipes above.
+@function drag-selection-tint($primary: var(--cedar-color-primary)) {
+  @return color-mix(in srgb, #{$primary} 13%, transparent);
+}
+
 @mixin artifact-title {
   font-size: var(--cedar-font-size-artifact-title);
   color: var(--cedar-text-title);

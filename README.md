@@ -166,6 +166,12 @@ recipes, not aliases for selection. Each defaults to `var(--cedar-color-primary)
 an embedding boundary may pass its public primary-color variable. Existing users
 of the fixed selection surface keep their current contract.
 
+`patterns.drag-selection-tint($primary)` preserves Workspace's drag rectangle:
+13% of the host primary over transparency, so the content underneath stays visible.
+It defaults to `var(--cedar-color-primary)` and owns the overlay tint independently
+of opaque selected surfaces. The consumer retains the rectangle's border, geometry
+and pointer interaction.
+
 Every application and component draws the shared focus ring at each of its roots.
 A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
 imports `focus.css`. An application's root is its global build stylesheet. A page
