@@ -27,5 +27,10 @@
   "cedar-monitor-trace-cypher-bar": "Monitoring cypher trace bar; independent of HTTP method, action and status colors",
   "cedar-monitor-masked-secret-text": "Monitoring masked secret values; independent of method and trace categories",
   "cedar-monitor-copy-toast-surface": "Monitoring transient copy-confirmation surface; independent of primary actions and status surfaces",
-  "cedar-monitor-copy-toast-text": "Monitoring copy-confirmation text on its dedicated dark surface"
+  "cedar-monitor-copy-toast-text": "Monitoring copy-confirmation text on its dedicated dark surface",
+  "cedar-monitor-filter-remove-opacity": "Monitoring filter-remove emphasis; independent of disabled controls and other informational states",
+  "cedar-monitor-service-unreachable-opacity": "Monitoring service-unreachable emphasis; independent of disabled controls and other informational states",
+  "cedar-monitor-build-unavailable-opacity": "Monitoring build-unavailable emphasis; independent of disabled controls and other informational states",
+  "cedar-monitor-empty-value-opacity": "Monitoring empty-value emphasis; independent of disabled controls and other informational states",
+  "cedar-monitor-count-note-opacity": "Monitoring count-note emphasis; independent of disabled controls and other informational states"
 }

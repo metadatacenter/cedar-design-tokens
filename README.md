@@ -118,6 +118,11 @@ surface and white text through `--cedar-monitor-copy-toast-surface` and
 `--cedar-monitor-copy-toast-text`. The consumer owns when it appears and dismisses;
 the colors are independent of primary actions and status messages.
 
+`monitoring.state-opacity(filter-remove|service-unreachable|build-unavailable|empty-value|count-note)`
+preserves informational emphasis and the active filter-remove action. Each state
+has its own `--cedar-monitor-<state>-opacity` override. None aliases disabled-control
+opacity; the filter-remove action still reaches full opacity on hover.
+
 ### Controls, spacing and effects
 
 | Token                                                                         | Default                          |

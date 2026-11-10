@@ -48,3 +48,20 @@ $-trace-bar: (
   background: var(--cedar-monitor-copy-toast-surface, #21303f);
   color: var(--cedar-monitor-copy-toast-text, #ffffff);
 }
+
+// These are informational emphasis and active-action treatments, not disabled controls.
+// Missing build data and an unreachable service remain independent even at equal defaults.
+$-state-opacity: (
+  filter-remove: 0.55,
+  service-unreachable: 0.6,
+  build-unavailable: 0.6,
+  empty-value: 0.6,
+  count-note: 0.75,
+);
+
+@function state-opacity($state) {
+  @if not map.has-key($-state-opacity, $state) {
+    @error 'Unknown Monitoring emphasis state: #{$state}.';
+  }
+  @return var(--cedar-monitor-#{$state}-opacity, #{map.get($-state-opacity, $state)});
+}
