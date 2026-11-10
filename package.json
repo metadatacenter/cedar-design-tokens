@@ -64,7 +64,10 @@
     "./save-state.css": "./dist/save-state.css",
     "./tooltip.css": "./dist/tooltip.css",
     "./notice.css": "./dist/notice.css",
-    "./secondary-action.css": "./dist/secondary-action.css"
+    "./secondary-action.css": "./dist/secondary-action.css",
+    "./monitoring": {
+      "sass": "./scss/_monitoring.scss"
+    }
   },
   "files": [
     "scss/",

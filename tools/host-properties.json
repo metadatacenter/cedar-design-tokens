@@ -15,5 +15,15 @@
   "cedar-specification-link-underline": "CEE/CEF embedding contract: read-only specification link underline colour (default text-muted)",
   "cedar-specification-padding-block": "CEE/CEF embedding contract: read-only specification box block padding (default 6px)",
   "cedar-specification-padding-inline": "CEE/CEF embedding contract: read-only specification box inline padding (default 14px)",
-  "cedar-specification-line-height": "CEE/CEF embedding contract: read-only specification line height (default 1.5)"
+  "cedar-specification-line-height": "CEE/CEF embedding contract: read-only specification line height (default 1.5)",
+  "cedar-monitor-http-get-text": "Monitoring GET method category; independent of status, action and other method colors",
+  "cedar-monitor-http-post-text": "Monitoring POST method category; independent of status, action and other method colors",
+  "cedar-monitor-http-put-text": "Monitoring PUT method category; independent of status, action and other method colors",
+  "cedar-monitor-http-patch-text": "Monitoring PATCH method category; independent of status, action and other method colors",
+  "cedar-monitor-http-delete-text": "Monitoring DELETE method category; independent of status, action and other method colors",
+  "cedar-monitor-trace-request-text": "Monitoring request trace text; independent of HTTP method, action and status colors",
+  "cedar-monitor-trace-request-bar": "Monitoring request trace bar; independent of HTTP method, action and status colors",
+  "cedar-monitor-trace-cypher-text": "Monitoring cypher trace text; independent of HTTP method, action and status colors",
+  "cedar-monitor-trace-cypher-bar": "Monitoring cypher trace bar; independent of HTTP method, action and status colors",
+  "cedar-monitor-masked-secret-text": "Monitoring masked secret values; independent of method and trace categories"
 }

@@ -1,0 +1,44 @@
+@use 'sass:map';
+
+// Opt-in Monitoring roles. Equal defaults are intentional, independent values:
+// a method, a trace category and a masked secret must not inherit status/action colors.
+$-http-method-text: (
+  get: #0f7686,
+  post: #6b4fc4,
+  put: #b45309,
+  patch: #b45309,
+  delete: #b42318,
+);
+$-trace-text: (
+  request: #0f7686,
+  cypher: #6b4fc4,
+);
+$-trace-bar: (
+  request: #0f7686,
+  cypher: #8c74d8,
+);
+
+@function http-method-text($method) {
+  @if not map.has-key($-http-method-text, $method) {
+    @error 'Unknown HTTP method color: #{$method}.';
+  }
+  @return var(--cedar-monitor-http-#{$method}-text, #{map.get($-http-method-text, $method)});
+}
+
+@function trace-text($kind) {
+  @if not map.has-key($-trace-text, $kind) {
+    @error 'Unknown trace text kind: #{$kind}.';
+  }
+  @return var(--cedar-monitor-trace-#{$kind}-text, #{map.get($-trace-text, $kind)});
+}
+
+@function trace-bar($kind) {
+  @if not map.has-key($-trace-bar, $kind) {
+    @error 'Unknown trace bar kind: #{$kind}.';
+  }
+  @return var(--cedar-monitor-trace-#{$kind}-bar, #{map.get($-trace-bar, $kind)});
+}
+
+@function masked-secret-text() {
+  @return var(--cedar-monitor-masked-secret-text, #6941c6);
+}

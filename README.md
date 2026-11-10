@@ -102,6 +102,17 @@ Palette maps `brand-primary` and `brand-accent`, plus `font-family-string`, are
 Sass-only adapter inputs. They are not CSS tokens; the accent map serves legacy
 Material M2 adapters.
 
+### Monitoring categories
+
+The opt-in `monitoring` Sass export owns administrative categories separately
+from action and status colors. It declares no global styles or core tokens.
+`http-method-text(get|post|put|patch|delete)` preserves the method palette;
+`trace-text(request|cypher)` and `trace-bar(request|cypher)` own trace labels and
+bars independently; `masked-secret-text()` owns masked values. These functions
+accept independent `--cedar-monitor-http-<method>-text`,
+`--cedar-monitor-trace-<kind>-text`, `--cedar-monitor-trace-<kind>-bar` and
+`--cedar-monitor-masked-secret-text` overrides. Equal defaults do not alias roles.
+
 ### Controls, spacing and effects
 
 | Token                                                                         | Default                          |
