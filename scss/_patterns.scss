@@ -3,6 +3,26 @@
 @use 'tokens';
 // Framework-neutral visual contracts. Consumers own their DOM and application state.
 // CSS roles deliberately remain overridable at a host boundary.
+
+// Host-derived surfaces preserve the existing 12% blend over the raised white surface.
+// Each function owns a distinct meaning. Their equal values are intentional, not aliases:
+// changing a selection must not also change a search match, hover or release-history panel.
+@function selection-tint($primary: var(--cedar-color-primary)) {
+  @return color-mix(in srgb, #{$primary} 12%, #{tokens.$surface-raised});
+}
+
+@function search-match-tint($primary: var(--cedar-color-primary)) {
+  @return color-mix(in srgb, #{$primary} 12%, #{tokens.$surface-raised});
+}
+
+@function action-hover-tint($primary: var(--cedar-color-primary)) {
+  @return color-mix(in srgb, #{$primary} 12%, #{tokens.$surface-raised});
+}
+
+@function term-picker-release-panel-tint($primary: var(--cedar-color-primary)) {
+  @return color-mix(in srgb, #{$primary} 12%, #{tokens.$surface-raised});
+}
+
 @mixin artifact-title {
   font-size: var(--cedar-font-size-artifact-title);
   color: var(--cedar-text-title);

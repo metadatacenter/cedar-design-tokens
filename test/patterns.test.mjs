@@ -65,6 +65,16 @@ test('recipes emit nothing until used', () => {
   assert.equal(sass.compileString("@use 'patterns';", { loadPaths: ['scss'] }).css, '');
 });
 
+test('host-derived tint recipes retain distinct semantic entry points and the existing blend', () => {
+  for (const name of ['selection-tint', 'search-match-tint', 'action-hover-tint', 'term-picker-release-panel-tint']) {
+    const compile = (argument) =>
+      sass.compileString(`@use 'patterns'; a { background: patterns.${name}(${argument}); }`, { loadPaths: ['scss'] })
+        .css;
+    assert.match(compile(''), /color-mix\(in srgb, var\(--cedar-color-primary\) 12%, #ffffff\)/);
+    assert.match(compile('var(--host-primary)'), /color-mix\(in srgb, var\(--host-primary\) 12%, #ffffff\)/);
+  }
+});
+
 test('relative lines preserve inherited type scaling and reserve only an explicitly requested line', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; a { @include patterns.relative-text-line(${args}); }`, {

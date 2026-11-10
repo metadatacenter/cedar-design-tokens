@@ -157,6 +157,15 @@ scale with an inherited font size; `$single: true` also reserves one line in `em
 changing its dimensions. `patterns.selected-outline($style: dashed)` marks a
 possible selection, such as a drop destination, with the same inset as a selected row.
 
+The opt-in `patterns.selection-tint($primary)` function derives a selected surface
+from 12% of the host primary over the raised white surface. It preserves CETP's
+existing tint, which is close to but not exactly the fixed `surface-selected`.
+`search-match-tint`, `action-hover-tint` and `term-picker-release-panel-tint` own
+separate meanings and currently retain the same blend. They are independent
+recipes, not aliases for selection. Each defaults to `var(--cedar-color-primary)`;
+an embedding boundary may pass its public primary-color variable. Existing users
+of the fixed selection surface keep their current contract.
+
 Every application and component draws the shared focus ring at each of its roots.
 A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
 imports `focus.css`. An application's root is its global build stylesheet. A page
