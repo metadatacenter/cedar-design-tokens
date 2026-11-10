@@ -25,5 +25,7 @@
   "cedar-monitor-trace-request-bar": "Monitoring request trace bar; independent of HTTP method, action and status colors",
   "cedar-monitor-trace-cypher-text": "Monitoring cypher trace text; independent of HTTP method, action and status colors",
   "cedar-monitor-trace-cypher-bar": "Monitoring cypher trace bar; independent of HTTP method, action and status colors",
-  "cedar-monitor-masked-secret-text": "Monitoring masked secret values; independent of method and trace categories"
+  "cedar-monitor-masked-secret-text": "Monitoring masked secret values; independent of method and trace categories",
+  "cedar-monitor-copy-toast-surface": "Monitoring transient copy-confirmation surface; independent of primary actions and status surfaces",
+  "cedar-monitor-copy-toast-text": "Monitoring copy-confirmation text on its dedicated dark surface"
 }

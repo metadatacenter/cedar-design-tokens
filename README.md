@@ -113,6 +113,11 @@ accept independent `--cedar-monitor-http-<method>-text`,
 `--cedar-monitor-trace-<kind>-text`, `--cedar-monitor-trace-<kind>-bar` and
 `--cedar-monitor-masked-secret-text` overrides. Equal defaults do not alias roles.
 
+`monitoring.copy-toast-colors` preserves the transient copy confirmation's dark
+surface and white text through `--cedar-monitor-copy-toast-surface` and
+`--cedar-monitor-copy-toast-text`. The consumer owns when it appears and dismisses;
+the colors are independent of primary actions and status messages.
+
 ### Controls, spacing and effects
 
 | Token                                                                         | Default                          |
