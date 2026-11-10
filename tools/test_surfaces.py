@@ -114,6 +114,19 @@ class SurfaceCoverageTest(unittest.TestCase):
         self.save()
         self.assertTrue(any('cannot add scale debt' in f['value'] for f in findings(self.repo, 'HEAD')))
 
+    def test_scoped_roles_must_name_central_recipes_and_nonempty_selectors(self):
+        surface = self.registry['surfaces'][0]
+        surface['scaleRoles'] = [{'selector': '.toast', 'role': 'monitor-copy-toast'}]
+        self.save()
+        self.assertEqual(validate(self.repo), [])
+        for roles in ([{'selector': '', 'role': 'monitor-copy-toast'}],
+                      [{'selector': '.toast', 'role': 'local-color'}],
+                      [{'selector': '.toast', 'role': 'monitor-copy-toast', 'value': 'red'}],
+                      [surface['scaleRoles'][0], surface['scaleRoles'][0]]):
+            surface['scaleRoles'] = roles
+            self.save()
+            self.assertTrue(any('scoped scale role' in error for error in validate(self.repo)))
+
     def test_moving_to_a_new_walk_may_record_existing_findings_once(self):
         helper = self.repo / self.registry['browserHelper']
         current = helper.read_text()

@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { surfaceRoles } from '../tools/surface-roles.mjs';
 const root = new URL('../', import.meta.url);
+test('offline opt-in role expectations match their owning Sass recipes', () => {
+  assert.deepEqual(JSON.parse(readFileSync(new URL('surfaces/role-values.json', root), 'utf8')), surfaceRoles());
+});
 test('offline surface defaults match the evaluated central tokens exactly', () => {
   const { contracts, scale } = JSON.parse(readFileSync(new URL('surfaces/contracts.json', root), 'utf8'));
   const needed = new Set([

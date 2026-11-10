@@ -154,7 +154,13 @@ Source baselines record exact existing findings by file, declaration and count.
 Rendered differences use exact per-surface `debt` or `scaleDebt` records with a
 reason. CI compares both against the trusted base revision; feature changes cannot
 increase allowances. Remove resolved debt and use `--prune-baseline` for obsolete
-source findings. Never delete and regenerate a baseline to pass CI. Unknown shared
+source findings. The browser walk also rejects unused literal scale allowances.
+Opt-in recipe colors are regular contracts: register `scaleRoles` entries with
+`selector` and `role`, whose expected CSS comes from the owning Sass recipe via
+`surfaces/roles.scss`. Each selector must match a visible element in the fixture;
+that element must use its expected role, and unrelated elements gain no allowance.
+Verify supported host overrides and wrong-role rejection in the consumer suite.
+Never delete and regenerate a baseline to pass CI. Unknown shared
 properties, icon violations, forbidden resizing and spellcheck violations cannot
 be waived. Policy upgrades use `--upgrade-policy` from a clean committed checkout;
 CI derives allowances from the base under the new policy.

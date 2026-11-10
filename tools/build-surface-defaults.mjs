@@ -1,6 +1,7 @@
 // Generated Sass defaults let the Python adoption check stay build-free in consumer CI.
 import { readFileSync, writeFileSync } from 'node:fs';
 import * as sass from 'sass';
+import { surfaceRoles } from './surface-roles.mjs';
 const root = new URL('../', import.meta.url);
 const { contracts, scale } = JSON.parse(readFileSync(new URL('surfaces/contracts.json', root), 'utf8'));
 const needed = new Set([
@@ -15,3 +16,4 @@ const defaults = Object.fromEntries(
 );
 if (Object.keys(defaults).length !== needed.size) throw new Error('Surface contract references an unknown token');
 writeFileSync(new URL('surfaces/token-defaults.json', root), JSON.stringify(defaults, null, 2) + '\n');
+writeFileSync(new URL('surfaces/role-values.json', root), JSON.stringify(surfaceRoles(), null, 2) + '\n');

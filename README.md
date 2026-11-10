@@ -250,6 +250,7 @@ From the CEDAR workspace:
 
 ```bash
 cedarcli check design-tokens --strict
+cedarcli check design-tokens --runtime --strict  # selected local reactor source/artifact freshness
 cedarcli check design-tokens --repo cedar-embeddable-designer --strict
 cedarcli check design-tokens --repo <repo> --prune-baseline
 cedarcli check components
@@ -268,8 +269,20 @@ against the current token source for consumers in their build graph. An unpublis
 therefore be used immediately, without a registry pin update. The report keeps registry findings
 visible, while standalone checks and CI still validate the pinned package. Vendored copies retain
 their byte checks. The reactor subsequently builds and verifies the actual selected packages.
-A matching source pin does not prove a current served bundle; use
-`check components` for that.
+A matching source pin does not prove a current local build. `--runtime` adds a
+read-only comparison with the selected reactor's source fingerprints and artifact
+hashes, including uncommitted source inputs. With `--strict`, stale, missing or
+invalid runtime evidence fails. It is optional so source-only CI needs no local
+runtime; it cannot be combined with options that write baselines or helpers.
+This comparison does not inspect HTTP-served bytes. The frontend build verifies
+deployment and runs smoke; `check components` separately checks registry delivery.
+
+Opt-in colors use `scaleRoles` registrations: a CSS selector and a central recipe
+name, checked against values compiled from `surfaces/roles.scss`. Every registration
+must match a visible element in its scenario. Its property must match the recipe
+even when a different shared color would pass the general scale check. These roles
+honor host overrides and do not permit their colors on unrelated elements.
+Literal `scaleDebt` remains for actual reviewed differences and fails when unused.
 
 ### Maintained surface registry
 

@@ -1,0 +1,24 @@
+{
+  "selection-tint": {
+    "background-color": "color-mix(in srgb, var(--cedar-color-primary) 12%, #ffffff)"
+  },
+  "search-match-tint": {
+    "background-color": "color-mix(in srgb, var(--cedar-color-primary) 12%, #ffffff)"
+  },
+  "monitor-http-post-text": {
+    "color": "var(--cedar-monitor-http-post-text, #6b4fc4)"
+  },
+  "monitor-trace-cypher-text": {
+    "color": "var(--cedar-monitor-trace-cypher-text, #6b4fc4)"
+  },
+  "monitor-trace-cypher-bar": {
+    "background-color": "var(--cedar-monitor-trace-cypher-bar, #8c74d8)"
+  },
+  "monitor-masked-secret-text": {
+    "color": "var(--cedar-monitor-masked-secret-text, #6941c6)"
+  },
+  "monitor-copy-toast": {
+    "background-color": "var(--cedar-monitor-copy-toast-surface, #21303f)",
+    "color": "var(--cedar-monitor-copy-toast-text, #ffffff)"
+  }
+}

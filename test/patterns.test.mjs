@@ -75,6 +75,18 @@ test('host-derived tint recipes retain distinct semantic entry points and the ex
   }
 });
 
+test('drag selection remains a translucent overlay and accepts a host primary', () => {
+  for (const primary of ['', 'var(--host-primary)']) {
+    const css = sass.compileString(`@use 'patterns'; .drag { background: patterns.drag-selection-tint(${primary}); }`, {
+      loadPaths: ['scss'],
+    }).css;
+    assert.equal(
+      css,
+      `.drag {\n  background: color-mix(in srgb, ${primary || 'var(--cedar-color-primary)'} 13%, transparent);\n}`,
+    );
+  }
+});
+
 test('relative lines preserve inherited type scaling and reserve only an explicitly requested line', () => {
   const compile = (args) =>
     sass.compileString(`@use 'patterns'; a { @include patterns.relative-text-line(${args}); }`, {

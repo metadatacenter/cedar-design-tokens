@@ -1,0 +1,26 @@
+// Browser expectations for opt-in recipes. Values are compiled from their owners,
+// never copied into a consumer's allowance or added to the global token scale.
+@use '../scss/patterns';
+@use '../scss/monitoring';
+
+.selection-tint {
+  background-color: patterns.selection-tint();
+}
+.search-match-tint {
+  background-color: patterns.search-match-tint();
+}
+.monitor-http-post-text {
+  color: monitoring.http-method-text(post);
+}
+.monitor-trace-cypher-text {
+  color: monitoring.trace-text(cypher);
+}
+.monitor-trace-cypher-bar {
+  background-color: monitoring.trace-bar(cypher);
+}
+.monitor-masked-secret-text {
+  color: monitoring.masked-secret-text();
+}
+.monitor-copy-toast {
+  @include monitoring.copy-toast-colors;
+}

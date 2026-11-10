@@ -14,6 +14,7 @@ SECTIONS = ('Management', 'Menus', 'Resource Dialogs', 'Confirmation / Warning /
 ROUTED = ('cedar-openview', 'cedar-monitoring', 'cedar-bridging')
 CONTRACTS = json.loads((HOME / 'surfaces/contracts.json').read_text())['contracts']
 SCALE = json.loads((HOME / 'surfaces/contracts.json').read_text())['scale']
+ROLE_VALUES = json.loads((HOME / 'surfaces/role-values.json').read_text())
 # The contracts that may check each kind of element the parser finds. A page contract walks a whole
 # frame, so it may hold any of them; a registered menu or summary needs its own rules or a page.
 KINDS = {'dialog': {'dialog', 'error-alert', 'page', 'calendar'}, 'menu': {'menu', 'page'},
@@ -33,6 +34,7 @@ def browser_source():
         f'// Walk {WALK}.\n' + \
         'const CONTRACTS = ' + json.dumps(CONTRACTS, indent=2) + ';\n' + \
         'const SCALE = ' + json.dumps(SCALE, indent=2) + ';\n' + \
+        'const ROLE_VALUES = ' + json.dumps(ROLE_VALUES, indent=2) + ';\n' + \
         'const TOKEN_DEFAULTS = ' + json.dumps(json.loads((HOME / 'surfaces/token-defaults.json').read_text()), indent=2) + ';\n' + (HOME / 'surfaces/browser.mjs').read_text()
 
 
@@ -145,6 +147,15 @@ def validate(repo):
             errors.append(f'{sid}: invalid scale debt')
         elif len({(item['property'], item['value']) for item in scale_debt}) != len(scale_debt):
             errors.append(f'{sid}: duplicate scale debt')
+        roles = surface.get('scaleRoles', [])
+        if not isinstance(roles, list) or any(
+                not isinstance(item, dict) or set(item) != {'selector', 'role'}
+                or not isinstance(item['selector'], str) or not item['selector'].strip()
+                or not isinstance(item['role'], str) or item['role'] not in ROLE_VALUES
+                for item in roles):
+            errors.append(f'{sid}: invalid scoped scale role')
+        elif len({(item['selector'], item['role']) for item in roles}) != len(roles):
+            errors.append(f'{sid}: duplicate scoped scale role')
         for source in surface.get('source', []):
             path = safe_file(repo, source['file'])
             if not path.is_file() or not source.get('anchor') or source['anchor'] not in path.read_text():
