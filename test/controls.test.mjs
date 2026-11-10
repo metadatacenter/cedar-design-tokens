@@ -23,6 +23,12 @@ test('input recipes preserve host focus and error overrides and avoid premature 
   assert.doesNotMatch(css, /:invalid\b/);
 });
 
+test('segmented focus frames preserve the host color and do not change control geometry', () => {
+  const css = compile('.clock:focus-within { @include controls.focus-frame(var(--host-focus)); }');
+  assert.match(css, /box-shadow: inset 0 0 0 1px var\(--host-focus\)/);
+  assert.doesNotMatch(css, /(?:border|outline|padding|height|width):/);
+});
+
 test('table density keeps compact action rows at 28px and ordinary controls unclipped', () => {
   const css = sass.compileString(
     `@use 'sass:math'; @use 'tokens'; @use 'spacing'; a { default-row: spacing.$table-row-height; authoring-row: tokens.$row-height-compact; default-control: tokens.$control-height-default; authoring-control: tokens.$control-height-authoring; default-padding: tokens.$space-1; authoring-padding: math.div(tokens.$space-1, 2); }`,

@@ -1,3 +1,4 @@
+@use 'sass:math';
 @use 'spacing';
 @use 'tokens';
 // Framework-neutral visual contracts. Consumers own their DOM and application state.
@@ -7,6 +8,24 @@
   color: var(--cedar-text-title);
   line-height: var(--cedar-line-height-heading);
   font-weight: var(--cedar-font-weight-medium);
+}
+
+// Text whose line box scales with its inherited or host-supplied font size. Keep the ratio
+// of the corresponding shared text and line roles rather than pinning the rendered line to px.
+// A single-line slot uses the same ratio for its height, even under a host font-size override.
+@mixin relative-text-line($size: body, $single: false) {
+  $ratio: null;
+  @if $size == body {
+    $ratio: math.div(tokens.$control-line-height-default, tokens.$font-size);
+  } @else if $size == small {
+    $ratio: math.div(tokens.$control-line-height-authoring, tokens.$font-size-small);
+  } @else {
+    @error 'Relative text size must be small or body; got #{$size}.';
+  }
+  line-height: $ratio;
+  @if $single {
+    height: $ratio * 1em;
+  }
 }
 
 @mixin dialog-surface($padding: var(--cedar-space-6)) {
@@ -433,8 +452,12 @@ $-save-state-dot-size: 8px;
 // selection alone, so a tinted selection carries this line or `selected-frame` as well. A consumer
 // whose root never declares the tokens, such as CEE's shadow root, passes the colour with its
 // fallback, as it does to `controls.focus-ring`.
-@mixin selected-outline($color: var(--cedar-color-primary)) {
-  outline: 1px solid $color;
+@mixin selected-outline($color: var(--cedar-color-primary), $style: solid) {
+  // A dashed frame marks a possible drop target before it becomes the selected destination.
+  @if $style != solid and $style != dashed {
+    @error 'Selected outline style must be solid or dashed; got #{$style}.';
+  }
+  outline: 1px $style $color;
   outline-offset: -1px;
 }
 

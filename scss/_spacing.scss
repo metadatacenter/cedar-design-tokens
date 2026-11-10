@@ -13,6 +13,7 @@ $form-toolbar-size: 30px;
 // Editor: the padding around an occurrence action's glyph, and how far the action's box reaches past
 // the property slot on each side when the two share a centre.
 $-occurrence-action-inset: tokens.$space-3 * 0.5;
+$occurrence-action-size: tokens.$icon-size-default + 2 * $-occurrence-action-inset;
 $-occurrence-action-overhang: math.div(tokens.$icon-size-default - $property-slot, 2) + $-occurrence-action-inset;
 // Editor: how much further an element's heading is inset than its body, on either side.
 $-element-heading-offset: calc(var(--_cee-element-heading-inset) - var(--_cee-element-body-inset));
@@ -104,6 +105,11 @@ $-recipes: (
   ),
   control-content-inset: (calc((var(--_cedar-height) - var(--_cedar-line-height)) / 2)),
   control-icon-inset: (calc((var(--_cedar-height) - #{tokens.$icon-size-large}) / 2)),
+  // CEE's read-only suffix action, before a compact/authoring host overrides its box.
+  default-control-icon-inset: (math.div(tokens.$control-height-default - tokens.$icon-size-large, 2)),
+  // CETP's hierarchy retains its existing rem-based indentation. The component supplies depth,
+  // not a computed padding; root font size and arbitrarily deep trees remain supported.
+  term-picker-tree-inset: (calc(var(--_cetp-tree-depth, 0) * 0.9rem)),
   outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
   element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
   // Editor: an element's body, content and heading insets once its component is narrow, in

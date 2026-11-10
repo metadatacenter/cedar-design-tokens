@@ -47,6 +47,7 @@ const names = [
   'selected-outline',
   'selected-frame',
   'invalid-outline',
+  'relative-text-line',
 ];
 for (const name of names) {
   test(`${name} uses registered shared roles and stays opt-in`, () => {
@@ -62,6 +63,29 @@ for (const name of names) {
 }
 test('recipes emit nothing until used', () => {
   assert.equal(sass.compileString("@use 'patterns';", { loadPaths: ['scss'] }).css, '');
+});
+
+test('relative lines preserve inherited type scaling and reserve only an explicitly requested line', () => {
+  const compile = (args) =>
+    sass.compileString(`@use 'patterns'; a { @include patterns.relative-text-line(${args}); }`, {
+      loadPaths: ['scss'],
+    }).css;
+  for (const size of ['body', 'small']) {
+    assert.match(compile(`$size: ${size}`), /line-height: 1.5;/);
+    assert.doesNotMatch(compile(`$size: ${size}`), /(?:^|[;{}])\s*height:/);
+    assert.match(compile(`$size: ${size}, $single: true`), /height: 1.5em;/);
+  }
+  assert.throws(() => compile('$size: large'), /Relative text size must be small or body/);
+});
+
+test('a possible selection keeps the selected outline geometry and host color', () => {
+  const compile = (args) =>
+    sass.compileString(`@use 'patterns'; a { @include patterns.selected-outline(${args}); }`, {
+      loadPaths: ['scss'],
+    }).css;
+  assert.equal(compile('$style: dashed'), compile('').replace('1px solid', '1px dashed'));
+  assert.match(compile('$color: var(--host-color), $style: dashed'), /1px dashed var\(--host-color\)/);
+  assert.throws(() => compile('$style: double'), /Selected outline style must be solid or dashed/);
 });
 
 for (const name of ['field-label', 'field-help', 'field-error']) {

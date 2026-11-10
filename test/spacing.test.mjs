@@ -54,3 +54,12 @@ test('named measurements say what a size is for and follow density where a contr
     /padding-top: var\(--cedar-control-height-default\)/,
   );
 });
+
+test('occurrence hit areas retain the glyph and inset relationship', () => {
+  const css = compile(
+    'a { width: spacing.$occurrence-action-size; @include spacing.apply(padding, occurrence-action-inset); }',
+  );
+  assert.match(css, /width: 32px/);
+  assert.match(css, /padding: 6px/);
+  assert.match(compile('a { @include spacing.apply(padding, default-control-icon-inset); }'), /padding: 6px/);
+});

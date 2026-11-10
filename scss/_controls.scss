@@ -11,6 +11,12 @@
   outline-offset: tokens.$focus-ring-offset;
 }
 
+// Segmented inputs reinforce their existing border on focus without changing the box's size.
+// The caller selects the focus state and passes its public host override when it has one.
+@mixin focus-frame($color: var(--cedar-color-primary, #{tokens.$color-primary})) {
+  box-shadow: inset 0 0 0 1px $color;
+}
+
 // The ring for everything focusable. Without it a browser draws its own on any focused element no
 // stylesheet styles, which Chrome on macOS paints in the system accent blue. Include it once, at the
 // top level of each root: an application's global stylesheet, and the stylesheet of every component

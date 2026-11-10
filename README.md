@@ -150,6 +150,13 @@ Plain CSS exports include `notice.css`, `tooltip.css`, `secondary-action.css`,
 names are defined in the corresponding [`css/`](css/) sources. Load
 `custom-properties.css` alongside them.
 
+`patterns.relative-text-line($size: body|small, $single: false)` derives a unitless
+line height from the matching text and line roles. Use it where line spacing must
+scale with an inherited font size; `$single: true` also reserves one line in `em`.
+`controls.focus-frame($color)` reinforces a segmented input's border without
+changing its dimensions. `patterns.selected-outline($style: dashed)` marks a
+possible selection, such as a drop destination, with the same inset as a selected row.
+
 Every application and component draws the shared focus ring at each of its roots.
 A Sass root includes `controls.focus-states` at its top level, and a plain-CSS root
 imports `focus.css`. An application's root is its global build stylesheet. A page
