@@ -135,13 +135,20 @@ def exceptions(repo, ref=None):
 
 
 def findings(repo, ref=None):
-    """Adoption-report rows for the exceptions `ref` does not record. Without `ref` none are new."""
+    """Adoption-report rows for the exceptions `ref` does not record. Without `ref` none are new.
+
+    A suite the revision does not have may record the failures it finds on its first commit. Its
+    exceptions excuse only its own checks, so they cannot hide a finding an existing suite reports,
+    and adding the suite widens what is measured.
+    """
     repo = Path(repo)
     base = Counter(key for key, *_ in exceptions(repo, ref)) if ref else None
+    base_files = set(files(repo, ref)) if ref else set()
     seen = Counter()
     for key, name, line, kind, text in exceptions(repo):
         seen[key] += 1
-        status = 'new' if base is not None and seen[key] > base[key] else 'existing'
+        first_commit = kind != 'template lint off' and name not in base_files
+        status = 'new' if base is not None and seen[key] > base[key] and not first_commit else 'existing'
         yield {'id': f'accessibility:{key}', 'file': name, 'line': line, 'rule': 'accessibility-exception',
                'property': kind, 'value': text if len(text) <= 100 else text[:97] + '...',
                'severity': 'gate', 'status': status}

@@ -56,6 +56,8 @@ class AccessibilityExceptionTest(unittest.TestCase):
         self.assertEqual(self.new(), [])
 
     def test_a_list_under_another_recognised_name_is_read(self):
+        self.write('visual/tests/accessibility.spec.ts', 'const KNOWN_VIOLATIONS = [];\n')
+        self.base = self.commit()
         self.write('visual/tests/accessibility.spec.ts', "const KNOWN_VIOLATIONS = [{ rule: 'target-size' }];\n")
         self.assertEqual([row['property'] for row in self.new()], ['KNOWN_VIOLATIONS'])
 
@@ -79,6 +81,10 @@ class AccessibilityExceptionTest(unittest.TestCase):
 
     def test_switching_an_axe_rule_off_is_new_only_where_axe_runs(self):
         self.write('browser/tests/accessibility.spec.ts',
+                   "import AxeBuilder from '@axe-core/playwright';\nnew AxeBuilder({ page });\n")
+        self.write('browser/tests/flags.spec.ts', 'const flags = {};\n')
+        self.base = self.commit()
+        self.write('browser/tests/accessibility.spec.ts',
                    "import AxeBuilder from '@axe-core/playwright';\nnew AxeBuilder({ page }).disableRules(['target-size']);\n")
         self.write('browser/tests/flags.spec.ts', 'const flags = { preview: { enabled: false } };\n')
         [row] = self.new()
@@ -88,6 +94,15 @@ class AccessibilityExceptionTest(unittest.TestCase):
         self.write('src/app/thing.spec.ts', "const EXCEPTIONS = [{ rule: 'x' }];\n")
         self.write('browser/node_modules/pkg/tests/a.spec.ts', "const EXCEPTIONS = [{ rule: 'x' }];\n")
         self.assertEqual(self.new(), [])
+
+    def test_a_new_suite_may_record_the_failures_it_finds(self):
+        self.write('browser/tests/new-suite.spec.ts', "const EXCEPTIONS = [{ check: 'reflow', selector: '.wide' }];\n")
+        self.assertEqual(self.new(), [])
+
+    def test_a_template_disable_counts_even_beside_a_new_suite(self):
+        self.write('src/app/new.component.html', '<!-- eslint-disable-next-line @angular-eslint/template/alt-text -->\n<img src="x">\n')
+        [row] = self.new()
+        self.assertEqual(row['value'], 'alt-text')
 
     def test_without_a_revision_nothing_is_new(self):
         self.write(SPEC, "const EXCEPTIONS = [{ check: 'resize' }];\n")
