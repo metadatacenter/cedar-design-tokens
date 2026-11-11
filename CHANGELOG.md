@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- `patterns.resource-card` sets its three control rows as a minimum height, where it had fixed the
+  height, and `patterns.resource-card-meta` wraps a closing line too long for the card, where it
+  had cut the line with an ellipsis. A card whose line fits renders as before. A card whose line
+  was cut, as under WCAG's text spacing, grows by the lines it needs, and the cards beside it in
+  the row grow with it. Workspace's grid view and OpenView's folders use both recipes.
 - The icon registry draws from lucide-static 1.69.0, up from 1.47.0. None of the 95 Lucide icons
   it uses changed across those releases, so every icon renders as before. Only the header of each
   generated file names the new version.

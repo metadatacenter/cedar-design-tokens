@@ -213,6 +213,19 @@ test('resource cards share one minimum width and clamp names to two lines', () =
 
 const patterns = (source) => sass.compileString(`@use 'patterns'; ${source}`, { loadPaths: ['scss'] }).css;
 
+test('a resource card has a minimum height and grows with a closing line that wraps', () => {
+  const card = patterns('li { @include patterns.resource-card; }');
+  assert.match(card, /min-height: calc\(3 \* var\(--cedar-control-height-default\) - var\(--cedar-space-1\) \/ 2\)/);
+  // A fixed height would cut a wrapped line. A card that aligned itself would stay short beside a
+  // grown neighbour, where a row is meant to take the height of its tallest card.
+  assert.doesNotMatch(card, /(?<!min-)height:/);
+  assert.doesNotMatch(card, /align-self/);
+  const meta = patterns('span { @include patterns.resource-card-meta; }');
+  assert.match(meta, /white-space: normal/);
+  assert.match(meta, /overflow-wrap: anywhere/);
+  assert.doesNotMatch(meta, /text-overflow|overflow: hidden/);
+});
+
 test('a trail mutes its ancestors, links included, and colours the current location', () => {
   const css = patterns('.trail { @include patterns.breadcrumbs; }');
   assert.match(css, /\.trail a:not\(\[aria-current\]\) \{\s*color: var\(--cedar-text-muted\)/);
