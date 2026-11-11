@@ -162,7 +162,9 @@ that element must use its expected role, and unrelated elements gain no allowanc
 Verify supported host overrides and wrong-role rejection in the consumer suite.
 Never delete and regenerate a baseline to pass CI. Unknown shared
 properties, icon violations, forbidden resizing and spellcheck violations cannot
-be waived. Policy upgrades use `--upgrade-policy` from a clean committed checkout;
+be waived. Accessibility exceptions are held the same way: a consumer's browser
+suites may lose a recorded exception, a disabled axe rule or a disabled template
+accessibility lint rule, but CI refuses a new one. Policy upgrades use `--upgrade-policy` from a clean committed checkout;
 CI derives allowances from the base under the new policy.
 
 Add registrations and fixture scenarios with new surfaces; remove both when a

@@ -15,6 +15,7 @@ from check_spellcheck import findings as spellcheck_findings
 from check_native_choices import findings as native_choice_findings
 from check_focus_states import findings as focus_findings
 from check_surfaces import findings as surface_findings, sync as sync_surfaces, markdown as surface_markdown, load as load_surfaces
+from check_accessibility_exceptions import findings as accessibility_findings
 
 PACKAGE = '@org.metadatacenter/cedar-design-tokens'
 BASELINE = '.design-tokens-baseline.json'
@@ -705,7 +706,8 @@ def report(repo, expected, ref=None, initialize=False, prune=False, source_depen
             'dependencySource': 'reactor' if source_dependency else 'registry',
             'expected': expected, 'versionStatus': version_status, 'pinCommit': pin_commit,
             'pinMissingTokens': missing, 'pinUnknown': bool(pin_commit and pinned is None), 'staleAllowances': stale,
-            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref)),
+            'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref))
+            + list(accessibility_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
 
 
@@ -792,6 +794,10 @@ def main(argv=None):
                 print(f"  surfaces: {coverage['registered']} inventory entries / {coverage['contracts']} rendered contracts / "
                       f"{coverage['debt']} existing differences ({coverage['contractDebt']} contract / "
                       f"{coverage['scaleDebt']} scale); browser execution is a separate gate")
+            recorded = [row for row in rows if row['rule'] == 'accessibility-exception']
+            if recorded:
+                added = sum(row['status'] == 'new' for row in recorded)
+                print(f"  accessibility exceptions: {len(recorded)} recorded, {added} new; a new one fails --strict")
             if not result['baseline']:
                 print('  MISSING baseline; review findings before --init-baseline')
             if not result['dependencyValid']:

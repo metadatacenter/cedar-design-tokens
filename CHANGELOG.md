@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The adoption check counts each consumer's recorded accessibility exceptions: entries in a
+  browser suite's exception lists, axe rules switched off, and template accessibility lint rules
+  disabled. `--strict` fails on any the base revision does not record, so an exception can be
+  removed but not added.
 - `patterns.resource-card` sets its three control rows as a minimum height, where it had fixed the
   height, and `patterns.resource-card-meta` wraps a closing line too long for the card, where it
   had cut the line with an ellipsis. A card whose line fits renders as before. A card whose line

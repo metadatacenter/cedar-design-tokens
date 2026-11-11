@@ -264,6 +264,12 @@ reports. Rendered difference counts include both contract-property `debt` and
 per-surface `scaleDebt` allowances. JSON exposes their sum as `surfaces.debt`, with
 `contractDebt` and `scaleDebt` counts beside it; the text report shows the same
 breakdown. These are recorded allowances, not results of a browser run.
+
+The same check counts each consumer's recorded accessibility exceptions: an entry in a browser
+suite's exception list (`EXCEPTIONS`, `PENDING`, `KNOWN_VIOLATIONS` and similar names), an axe rule
+switched off, and an accessibility rule of `@angular-eslint/template` disabled in a template. A
+change may remove an exception but not add one, so `--strict` fails on any exception the base
+revision does not record. Fix the finding the exception would excuse rather than recording it.
 Local `cedarcli build frontends` and `cedarcli test frontends` apply the same style policy
 against the current token source for consumers in their build graph. An unpublished token can
 therefore be used immediately, without a registry pin update. The report keeps registry findings
