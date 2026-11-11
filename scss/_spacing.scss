@@ -82,9 +82,9 @@ $designer-scrollbar-width: 6px;
 // Designer: the least height the designer element takes, whatever its host gives it.
 $designer-min-height: 500px;
 // Designer: two stacking positions between the shared layers. A card's settings toggle sits one
-// above the sticky layer, so that it clears the insertion area between cards. The field library
-// sits between the sticky and menu layers, so that canvas content scrolls under it and its menus
-// open over it.
+// above the sticky layer, so that it clears the insertion area between cards. A panel drawn over
+// the canvas sits between the sticky and menu layers, so that canvas content scrolls under it and
+// its menus open over it. The field library is one, and so is the Overview on a narrow host.
 $designer-settings-toggle-layer: tokens.$layer-sticky + 1;
 $designer-library-layer: 30;
 

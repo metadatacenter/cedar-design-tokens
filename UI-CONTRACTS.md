@@ -93,8 +93,8 @@ selection surface and a second segment, `filter-chip-clear`, clears it. Both but
 take `filter-chip-segment`. `patterns.filter-popover` is the panel the chip opens,
 the menu surface as a column whose body scrolls, and `filter-popover-footer` holds
 Clear all and Cancel as `controls.plain-action` and Apply as `controls.primary-action`.
-The consumer places the panel and passes the room below the chip as
-`$available-height`. What the popover holds is a draft until Apply, and Cancel,
+The consumer places the panel below the chip, or above it where more room is
+there, and passes the room on that side as `$available-height`. What the popover holds is a draft until Apply, and Cancel,
 Escape or a click outside discards it.
 
 Modern Workspace imports `native-choices.css` globally and places
