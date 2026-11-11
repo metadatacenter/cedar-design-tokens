@@ -104,6 +104,11 @@ class AccessibilityExceptionTest(unittest.TestCase):
         [row] = self.new()
         self.assertEqual(row['value'], 'alt-text')
 
+    def test_a_region_declared_to_scroll_in_place_is_not_an_exception(self):
+        self.write(SPEC, "const EXCEPTIONS: readonly Exception[] = [\n  { check: 'reflow', selector: '.history' },\n];\n"
+                         "const SCROLLS_IN_PLACE = [{ selector: '.trace', why: 'a table of spans' }];\n")
+        self.assertEqual(self.new(), [])
+
     def test_without_a_revision_nothing_is_new(self):
         self.write(SPEC, "const EXCEPTIONS = [{ check: 'resize' }];\n")
         self.assertTrue(all(row['status'] == 'existing' for row in findings(self.repo)))

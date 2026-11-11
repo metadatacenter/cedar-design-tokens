@@ -23,11 +23,12 @@ EXCLUDED = {'node_modules', 'bower_components', 'vendor', 'dist', 'dist-bundle',
 TEST_SOURCE = re.compile(r'(?:^|/)tests/[^\n]*\.(?:ts|mts|js|mjs)$')
 # Application sources whose templates the accessibility lint rules read.
 APP_SOURCE = re.compile(r'^(?:[\w.-]+-src/)?(?:src|app)/[^\n]*\.(?:html|ts)$')
-# A declared list of findings a suite lets pass. `SCROLLS_IN_PLACE` names the regions 1.4.10 lets
-# scroll in two dimensions, which a change could also use to excuse a page that scrolls sideways.
+# A declared list of findings a suite lets pass. A region declared to scroll in place is not one:
+# the shared layout checker accepts it only when it holds a table, which is the two-dimensional
+# content WCAG 1.4.10 lets scroll, so the checker rather than this count holds it to that.
 LIST = re.compile(r'^\s*(?:export\s+)?(?:const|let|var)\s+'
-                  r'([A-Za-z_]*(?:EXCEPTIONS?|Exceptions?|exceptions?|PENDING|KNOWN_VIOLATIONS|WAIVERS?|'
-                  r'SCROLLS_IN_PLACE)[A-Za-z_]*)\b[^=\n]*=\s*\[', re.M)
+                  r'([A-Za-z_]*(?:EXCEPTIONS?|Exceptions?|exceptions?|PENDING|KNOWN_VIOLATIONS|WAIVERS?)'
+                  r'[A-Za-z_]*)\b[^=\n]*=\s*\[', re.M)
 # Switching an axe rule off, by name or through its options.
 AXE_OFF = re.compile(r'\.disableRules\s*\(|\benabled\s*:\s*false\b')
 # The template rules angular-eslint groups as accessibility rules.
