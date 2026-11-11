@@ -304,6 +304,31 @@ Sync copies the central browser helpers into consumer test directories. Never ed
 those generated copies. [UI contracts](UI-CONTRACTS.md#verification) explains what
 the source gate and rendered tests verify.
 
+### Shared Layout Checks
+
+CED, CEE, the term picker and Workspace check their layouts and what identifies their
+controls in the same way. [`surfaces/layout-resilience.mjs`](surfaces/layout-resilience.mjs)
+is the one implementation. It measures reflow at 320 CSS px, a 640 by 400 viewport for
+200% zoom, WCAG text spacing at 1280 CSS px, the contrast of every placeholder, and the
+contrast of every field boundary, icon, focus indicator and selection mark against what
+it is drawn on. A repository adopts it by naming the generated copy in its registry,
+beside `browserHelper`:
+
+```json
+"layoutHelper": "browser/tests/layout-resilience.generated.mjs"
+```
+
+Sync writes the copy and its `.d.mts` declaration, and the adoption check refuses a copy
+whose bytes differ from the central one. A repository that names no copy is unaffected by
+a change to the checks.
+
+A component's spec keeps what is its own: how to reach each state, the scope and the
+hosts it leaves out, its selected-item selectors, and its recorded `EXCEPTIONS` and
+`SCROLLS_IN_PLACE`. Each test sets the viewport the check measures in, from `VIEWPORTS`,
+reaches its state and calls `check(page, expect, request)`. A finding fails unless a
+recorded exception names it, and an exception that matches nothing in its state fails
+too. A region that scrolls in place must hold a table.
+
 ## Development and publishing
 
 Use the Node version in `.nvmrc`. After loading the CEDAR develop profile:
@@ -317,6 +342,9 @@ npm run format:check
 `npm test` builds the CSS and icons, then runs package tests. After changing token
 values, run `npm run surfaces:defaults` to refresh the offline browser defaults.
 Checker changes also require `python3 -m unittest discover -s tools -p 'test_*.py'`.
+A change to the layout checks also requires `npm run test:browser`, which runs them in
+Chromium against fixture pages, each built to produce one finding or none. Install the
+browser once with `npx playwright install chromium`.
 
 [Consumer CI](.github/workflows/consumers.yml) tests a candidate tarball against
 locked consumer dependencies, including the configured browser and screenshot

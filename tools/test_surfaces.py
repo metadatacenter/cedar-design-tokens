@@ -227,6 +227,33 @@ class SurfaceCoverageTest(unittest.TestCase):
         (nested / 'src/app-routing.module.ts').write_text('const routes = [];')
         self.assertTrue(any('stale source' in e for e in validate(self.repo)))
 
+    def test_layout_checks_are_opt_in(self):
+        self.assertEqual(validate(self.repo), [])
+        self.assertFalse((self.repo / 'browser/tests/layout-resilience.generated.mjs').exists())
+
+    def test_declared_layout_checks_are_generated_and_cannot_be_weakened_locally(self):
+        import check_surfaces
+        self.registry['layoutHelper'] = 'browser/tests/layout-resilience.generated.mjs'
+        self.save()
+        self.assertIn('Layout checks are stale; run --sync-surfaces', validate(self.repo))
+        sync(self.repo)
+        generated = self.repo / 'browser/tests/layout-resilience.generated.mjs'
+        self.assertEqual(generated.read_text(), check_surfaces.layout_source())
+        self.assertTrue(generated.read_text().endswith((check_surfaces.HOME / 'surfaces/layout-resilience.mjs').read_text()))
+        self.assertEqual(validate(self.repo), [])
+        generated.write_text(generated.read_text().replace('ratio < 3', 'ratio < 2'))
+        self.assertIn('Layout checks are stale; run --sync-surfaces', validate(self.repo))
+        generated.with_suffix('.d.mts').unlink()
+        self.assertIn('Layout check types are stale; run --sync-surfaces', validate(self.repo))
+
+    def test_layout_checks_sit_beside_the_browser_helper(self):
+        for path in ('visual/tests/layout-resilience.generated.mjs', 'browser/tests/layout.generated.mjs',
+                     '../layout-resilience.generated.mjs', 7):
+            self.registry['layoutHelper'] = path
+            self.save()
+            with self.assertRaises(ValueError, msg=path):
+                validate(self.repo)
+
     def test_rendered_contract_cannot_omit_helper(self):
         del self.registry['browserHelper']
         self.save()

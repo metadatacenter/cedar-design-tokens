@@ -51,3 +51,10 @@ jobs:
 
       - name: Run the tests
         run: npm test
+
+      - name: Install Chromium
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+
+      # The shared layout checks against fixture pages, each built to produce one finding or none.
+      - name: Test the layout checks in a browser
+        run: npm run test:browser

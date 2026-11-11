@@ -137,6 +137,18 @@ root, including shadow roots, and compare the rendered property rather than just
 checking that the token exists. They complement the general scale walk without
 changing component-specific line heights or framework disabled treatments.
 
+The shared layout checks in
+[`surfaces/layout-resilience.mjs`](surfaces/layout-resilience.mjs) measure what the
+browser draws in each state a component's spec reaches. At 320 CSS px nothing scrolls
+sideways except a data table in its own region. At 320 CSS px, at 200% zoom (a 640 by
+400 viewport) and under WCAG text spacing, no text is cut off or drawn over other text.
+At the first two, every control can be scrolled to and is not covered. Placeholders
+measure 4.5:1, and field boundaries, icons, focus indicators and selection marks measure
+3:1 against what they are drawn on. A component records each finding that waits on a
+visible change, and a record that matches nothing fails. Fixture pages in this package
+prove that each check fails on what it must catch. Components adopt the checks through
+`layoutHelper` in `.ui-surfaces.json`, and the adoption check refuses an edited copy.
+
 These style checks complement consumer keyboard, geometry, accessibility, failure
 and save-flow suites. A registered surface is not proof that every state works.
 Keep the relevant CEE, CED, CETP and Workspace browser/visual tests, plus live-stack

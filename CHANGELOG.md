@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- `surfaces/layout-resilience.mjs` is one implementation of the layout checks that CED, CEE,
+  the term picker and Workspace each carried a copy of: reflow at 320 CSS px, a 640 by 400
+  viewport for 200% zoom, WCAG text spacing, placeholder contrast, and the contrast of field
+  boundaries, icons, focus indicators and selection marks. Where the copies differed it takes
+  the strictest behaviour. Every colour resolves through a canvas, so a `color(srgb ...)` tint
+  measures as the light colour it is, and reflow looks for text cut off as well as text drawn
+  over other text. A repository adopts it with `layoutHelper` in `.ui-surfaces.json`.
+  `--sync-surfaces` writes the copy, and the adoption check refuses one whose bytes differ.
+  `npm run test:browser` runs the checks against fixture pages, and CI runs it after the
+  package tests.
 - The adoption check counts each consumer's recorded accessibility exceptions: entries in a
   browser suite's exception lists, axe rules switched off, and template accessibility lint rules
   disabled. `--strict` fails on any the base revision does not record, so an exception can be

@@ -99,11 +99,13 @@
     "build": "node tools/build-icons.mjs && sass --no-source-map --style=expanded css:dist && node tools/build-fonts.mjs",
     "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
+    "test:browser": "playwright test",
     "format": "prettier --write \"**/*.{scss,css,json,md,mjs}\"",
     "format:check": "prettier --check \"**/*.{scss,css,json,md,mjs}\"",
     "surfaces:defaults": "node tools/build-surface-defaults.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "lucide-static": "1.69.0",
     "prettier": "^3.6.2",
     "sass": "^1.93.2"
