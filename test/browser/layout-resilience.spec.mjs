@@ -636,6 +636,81 @@ test.describe('focus drawn in a field wrapper', () => {
   });
 });
 
+test.describe('focus drawn in a field that holds a clear button', () => {
+  // A filled field 68px wider than its textarea, because a clear button sits beside it, with the line
+  // drawn three levels above the textarea. Once with Material's names, once with names of its own.
+  const markups = {
+    Material: {
+      outer: 'mat-mdc-form-field',
+      field: 'mdc-text-field',
+      flex: 'mat-mdc-form-field-flex',
+      infix: 'mat-mdc-form-field-infix',
+      suffix: 'mat-mdc-form-field-icon-suffix',
+      ripple: 'mdc-line-ripple',
+    },
+    plain: { outer: 'entry', field: 'field', flex: 'row', infix: 'infix', suffix: 'suffix', ripple: 'ripple' },
+  };
+  const field = (names, css) => [
+    `<div class="${names.outer}" style="display: inline-block">` +
+      `<div class="${names.field}" style="position: relative; padding: 8px; background: #f4f6f6">` +
+      `<div class="${names.flex}" style="display: flex; align-items: center; gap: 12px">` +
+      `<div class="${names.infix}"><textarea class="input" aria-label="Resource id" rows="2" ` +
+      'style="display: block; width: 200px; margin: 0; border: 0; padding: 0; background: transparent; resize: none">' +
+      `</textarea></div><div class="${names.suffix}"><button class="clear" aria-label="Clear" ` +
+      'style="display: block; width: 40px; height: 40px; border: 1px solid #767676; background: #ffffff">x</button>' +
+      `</div></div><div class="${names.ripple}" style="position: absolute; left: 0; right: 0; bottom: 0"></div>` +
+      '</div></div>',
+    `.input:focus-visible { outline: none; } .clear:focus-visible { outline: 2px solid #0f7686; outline-offset: 2px; } ` +
+      `.${names.ripple}::after { content: ''; display: block; border-bottom: 2px solid #0f7686; opacity: 0; ` +
+      `transform: scaleX(0); transition: opacity 150ms; } ${css}`,
+  ];
+
+  for (const [which, names] of Object.entries(markups)) {
+    test(`passes a line drawn when the field is focused, with ${which} names`, async ({ page }) => {
+      await open(
+        page,
+        'indicators',
+        ...field(names, `.${names.field}:focus-within .${names.ripple}::after { opacity: 1; transform: scaleX(1); }`),
+      );
+      const widths = await page.evaluate(
+        (selector) => [selector, 'textarea'].map((one) => document.querySelector(one).getBoundingClientRect().width),
+        `.${names.field}`,
+      );
+      expect(widths[0] - widths[1]).toBe(68);
+      const report = await measure(page, { check: 'indicators', state: STATE });
+      expect(report.failures).toEqual([]);
+      expect(report.measured.focus).toBe(2);
+    });
+
+    test(`fails the same field when focus changes nothing, with ${which} names`, async ({ page }) => {
+      await open(page, 'indicators', ...field(names, ''));
+      const report = await measure(page, { check: 'indicators', state: STATE });
+      expect(report.failures).toEqual([
+        `focus: div.${names.flex} > div.${names.infix} > textarea.input "Resource id" ` +
+          '(changes no outline, border or shadow when focused)',
+      ]);
+    });
+  }
+});
+
+test('a line drawn by a box around other controls is no focus indicator', async ({ page }) => {
+  await open(
+    page,
+    'indicators',
+    '<form class="panel" style="padding: 8px; background: #f4f6f6">' +
+      '<div class="field"><input class="name" aria-label="Name" style="border: 0; background: transparent"></div>' +
+      '<div class="field"><input class="email" aria-label="Email" style="border: 0; background: transparent"></div>' +
+      '<div class="rule"></div></form>',
+    'input:focus-visible { outline: none; } .email:focus-visible { outline: 2px solid #0f7686; outline-offset: 2px; } ' +
+      ".rule::after { content: ''; display: block; border-bottom: 2px solid #0f7686; opacity: 0; } " +
+      '.panel:focus-within .rule::after { opacity: 1; }',
+  );
+  const report = await measure(page, { check: 'indicators', state: STATE });
+  expect(report.failures).toEqual([
+    'focus: form.panel > div.field > input.name "Name" (changes no outline, border or shadow when focused)',
+  ]);
+});
+
 test('a selection is compared with an item of its kind whatever its first class', async ({ page }) => {
   await open(
     page,
