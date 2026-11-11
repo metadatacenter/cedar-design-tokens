@@ -28,12 +28,8 @@ test('each Monitoring category retains its own override and approved default', (
   assert.equal(new Set(cases.map(([, role]) => role)).size, cases.length);
 });
 
-test('informational emphasis exposes five independent overrides without disabled-control coupling', () => {
+test('informational emphasis exposes its override without disabled-control coupling', () => {
   for (const [state, value] of Object.entries({
-    'filter-remove': 0.55,
-    'service-unreachable': 0.6,
-    'build-unavailable': 0.6,
-    'empty-value': 0.6,
     'count-note': 0.75,
   })) {
     assert.equal(
@@ -51,7 +47,13 @@ test('copy feedback has independent surface and text overrides', () => {
 });
 
 test('unknown Monitoring categories and states fail compilation', () => {
-  for (const call of ['http-method-text(head)', 'trace-text(other)', 'trace-bar(other)', 'state-opacity(disabled)']) {
+  for (const call of [
+    'http-method-text(head)',
+    'trace-text(other)',
+    'trace-bar(other)',
+    'state-opacity(disabled)',
+    'state-opacity(empty-value)',
+  ]) {
     assert.throws(() => compile(`.consumer { color: monitoring.${call}; }`), /Unknown/);
   }
 });

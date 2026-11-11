@@ -49,13 +49,9 @@ $-trace-bar: (
   color: var(--cedar-monitor-copy-toast-text, #ffffff);
 }
 
-// These are informational emphasis and active-action treatments, not disabled controls.
-// Missing build data and an unreachable service remain independent even at equal defaults.
+// These are informational emphasis and active-action treatments, not disabled controls. Text that
+// must stay readable, such as an unreachable service's row, takes the muted text colour instead.
 $-state-opacity: (
-  filter-remove: 0.55,
-  service-unreachable: 0.6,
-  build-unavailable: 0.6,
-  empty-value: 0.6,
   count-note: 0.75,
 );
 
