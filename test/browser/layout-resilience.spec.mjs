@@ -18,6 +18,35 @@ async function open(page, which, body, css = '') {
 /** The findings no exception or region excuses. */
 const unexcused = (report) => report.findings.filter((finding) => !finding.excused);
 
+test('reaches native inputs across a scrolling shadow root', async ({ page }) => {
+  await open(page, 'resize', '<div id="host"></div>');
+  await page.locator('#host').evaluate((host) => {
+    host.attachShadow({ mode: 'open' }).innerHTML = Array.from(
+      { length: 8 },
+      (_, i) => `<div style="height: 300px"><input aria-label="Field ${i}"></div>`,
+    ).join('');
+  });
+  const report = await measure(page, { check: 'resize', state: STATE });
+  expect(report.measured.controls).toBe(8);
+  expect(report.failures).toEqual([]);
+});
+
+test('still rejects a shadow input covered inside or outside its root', async ({ page }) => {
+  for (const inside of [true, false]) {
+    await open(page, 'resize', '<div id="host" style="position: relative"></div>');
+    await page.locator('#host').evaluate((host, inside) => {
+      const root = host.attachShadow({ mode: 'open' });
+      root.innerHTML = '<input aria-label="Covered">';
+      const cover = document.createElement('div');
+      cover.className = 'cover';
+      cover.style.cssText = 'position: absolute; inset: 0; background: white';
+      (inside ? root : host.parentElement).appendChild(cover);
+    }, inside);
+    const report = await measure(page, { check: 'resize', state: STATE });
+    expect(report.failures).toEqual([expect.stringMatching(/^unreachable: .*Covered.*div.cover/)]);
+  }
+});
+
 test.describe('reflow at 320 CSS px', () => {
   test('fails a page that scrolls sideways', async ({ page }) => {
     await open(page, 'reflow', '<div style="width: 400px">Content wider than the window</div>');

@@ -90,6 +90,8 @@ $designer-library-layer: 30;
 
 // Editor: the ring between a single-choice marker's outline and its filled centre.
 $choice-marker-ring: 4px;
+// Editor: the space on either side of a clock segment, outside its content-sized input.
+$time-segment-spacing: 1px;
 
 $-recipes: (
   split-column-gutter: (1%),

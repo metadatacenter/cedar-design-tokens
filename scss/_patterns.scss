@@ -110,6 +110,9 @@
   --mat-menu-item-trailing-spacing: var(--cedar-space-3);
   --mat-menu-item-with-icon-leading-spacing: var(--cedar-space-3);
   --mat-menu-item-with-icon-trailing-spacing: var(--cedar-space-3);
+  // Material's dark focus tint reduces primary-colored text to 4.17:1. Keep the shared
+  // subtle surface under keyboard focus; the consumer's focus ring identifies the focused row.
+  --mat-menu-item-focus-state-layer-color: var(--cedar-surface-subtle);
 }
 
 // The panel a filter chip opens: the shared menu surface as a column whose body scrolls, above a

@@ -32,6 +32,7 @@ const pairs = [
   ['status-success-text', 'status-success-surface'],
   ['color-primary-strong', 'surface-selected'],
   ['color-primary', 'surface-raised'],
+  ['color-primary', 'surface-subtle'],
   ['color-on-primary', 'color-primary'],
   ['color-on-primary', 'color-primary-strong'],
   ['text-primary', 'surface-subtle'],

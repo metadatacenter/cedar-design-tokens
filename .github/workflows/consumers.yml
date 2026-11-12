@@ -66,17 +66,17 @@ jobs:
             command: npm test && npm run build && npm run test:visual
           - repo: cedar-openview
             directory: cedar-openview-src
-            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
+            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium firefox webkit && npm --prefix ../browser test
           - repo: cedar-monitoring
             directory: cedar-monitoring-src
             installArgs: --legacy-peer-deps
-            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
+            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium firefox webkit && npm --prefix ../browser test
           - repo: cedar-bridging
             directory: cedar-bridging-src
-            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium && npm --prefix ../browser test
+            command: npm run build && npm --prefix ../browser ci && ../browser/node_modules/.bin/playwright install --with-deps chromium firefox webkit && npm --prefix ../browser test
           - repo: cedar-template-designer
             directory: .
-            command: npm run prepare:components && npm test && npm --prefix browser ci && ./browser/node_modules/.bin/playwright install --with-deps chromium && npm run test:browser
+            command: npm run prepare:components && npm test && npm --prefix browser ci && ./browser/node_modules/.bin/playwright install --with-deps chromium firefox webkit && npm run test:browser
     steps:
       # Full history: the adoption check reads the token set at the commit the consumer's pin names.
       - name: Check out candidate tokens
