@@ -48,6 +48,8 @@ $designer-library-width: 288px;
 $designer-library-rail-width: 48px;
 // Designer: the name and build beside the CEDAR mark in the header.
 $designer-identity-width: 72px;
+// Two unclipped text lines and their compact gap remain inside the mark.
+$designer-identity-line-height: math.div($brand-mark-size - tokens.$space-1, 2);
 // Designer: the chevron that collapses an element in the outline, smaller than a small icon.
 $designer-outline-chevron-size: 12px;
 // Designer: the template header's icon tile, as tall as the name control beside it.
