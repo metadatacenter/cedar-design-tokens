@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './test/browser',
   fullyParallel: true,
+  // A build that runs several suites at once grants each a share of its workers.
+  workers: process.env.CEDAR_TEST_WORKERS ? Number(process.env.CEDAR_TEST_WORKERS) : undefined,
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? 'line' : 'list',
   projects: [
