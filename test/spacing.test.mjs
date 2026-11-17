@@ -25,11 +25,11 @@ test('control alignment retains the existing geometry without local arithmetic',
   assert.match(compile('a { @include spacing.apply(padding, preview-select); }'), /space-2\) \* 3.75/);
   assert.match(
     compile('a { @include spacing.apply(--_cee-element-body-inset, element-narrow-inset); }'),
-    /--_cee-element-body-inset: 4%/,
+    /--_cee-element-body-inset: 4cqi/,
   );
   assert.match(
     compile('a { @include spacing.apply(--_cee-element-heading-inset, element-narrow-heading-inset); }'),
-    /--_cee-element-heading-inset: 8%/,
+    /--_cee-element-heading-inset: 8cqi/,
   );
 });
 

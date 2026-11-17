@@ -117,9 +117,10 @@ $-recipes: (
   outlined-content-inset: (calc(var(--_cedar-padding) - 1px)),
   element-heading-inset: (calc(#{tokens.$space-6} + #{tokens.$space-4})),
   // Editor: an element's body, content and heading insets once its component is narrow, in
-  // proportion to its width so that several nested levels still leave room for their fields.
-  element-narrow-inset: (4%),
-  element-narrow-heading-inset: (8%),
+  // proportion to its query container so heading, body, content and pager resolve against
+  // one width. Percentages resolve against different containing blocks and misalign them.
+  element-narrow-inset: (4cqi),
+  element-narrow-heading-inset: (8cqi),
   form-action-alignment: (
     math.div($property-slot - tokens.$icon-size-small, 2) - math.div($form-toolbar-size - tokens.$icon-size-default, 2),
   ),

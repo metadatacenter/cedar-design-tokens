@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The editor's proportional element insets use the element query container's inline size.
+  Headings, nested content and occurrence controls therefore share one alignment instead
+  of resolving percentage insets against progressively narrower containing blocks.
 - `surfaces/layout-resilience.mjs` is one implementation of the layout checks that CED, CEE,
   the term picker and Workspace each carried a copy of: reflow at 320 CSS px, a 640 by 400
   viewport for 200% zoom, WCAG text spacing, placeholder contrast, and the contrast of field
