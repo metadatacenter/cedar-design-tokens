@@ -584,6 +584,18 @@ def pinned_tokens(pin):
     return match[1], None
 
 
+# The package sources a consumer compiles. A change to one alters the CSS a build makes from the
+# package even when every token keeps its name: a value can change, or a map entry a mixin reads.
+STYLE_SOURCES = ('scss', 'css')
+
+
+def pinned_style_changes(pin_commit):
+    """The style sources that changed between the commit a pin names and the checkout's head."""
+    changed = subprocess.run(['git', '-C', str(PACKAGE_ROOT), 'diff', '--name-only', pin_commit, 'HEAD', '--',
+                              *STYLE_SOURCES], capture_output=True, text=True)
+    return sorted(filter(None, changed.stdout.splitlines())) if not changed.returncode else []
+
+
 def dependency(repo):
     """The token version a consumer pins and the version its lock records. An npm consumer pins in
     package.json and locks in package-lock.json. A consumer without npm pins in its vendored copy's
@@ -674,6 +686,9 @@ def report(repo, expected, ref=None, initialize=False, prune=False, source_depen
         used.update(re.findall(r'var\(\s*--cedar-([\w-]+)', text))
         used.update(re.findall(r'\btokens\.\$([\w-]+)', text))
     missing = sorted((used & shared_tokens()) - pinned) if pinned is not None else []
+    # A pin behind the checkout builds the styles its own commit held. Local builds compile the
+    # checkout instead, so a consumer that depends on a later value passes them and fails only in CI.
+    stale_styles = pinned_style_changes(pin_commit) if pin_commit and pinned is not None and pin != expected else []
     if not pin:
         version_status = 'not adopted'
     elif pin != locked:
@@ -705,7 +720,8 @@ def report(repo, expected, ref=None, initialize=False, prune=False, source_depen
             'dependencyValid': dependency_valid,
             'dependencySource': 'reactor' if source_dependency else 'registry',
             'expected': expected, 'versionStatus': version_status, 'pinCommit': pin_commit,
-            'pinMissingTokens': missing, 'pinUnknown': bool(pin_commit and pinned is None), 'staleAllowances': stale,
+            'pinMissingTokens': missing, 'pinStaleStyles': stale_styles,
+            'pinUnknown': bool(pin_commit and pinned is None), 'staleAllowances': stale,
             'files': len(list(source_files(repo, policy))), 'findings': rows + list(icon_findings(repo)) + list(surface_findings(repo, ref))
             + list(accessibility_findings(repo, ref)),
             'resolved': sum(max(0, item['count'] - counts[key]) for key, item in baseline['findings'].items())}
@@ -716,7 +732,7 @@ def dependency_failed(result):
     # from the producer; unknown tokens remain style failures. Registry CI checks the old package.
     return (not result['dependencyValid'] or
             (result.get('dependencySource') != 'reactor' and
-             (bool(result['pinMissingTokens']) or result['pinUnknown'])))
+             (bool(result['pinMissingTokens']) or bool(result.get('pinStaleStyles')) or result['pinUnknown'])))
 
 
 def main(argv=None):
@@ -806,6 +822,10 @@ def main(argv=None):
                 remedy = ('local source supplies them for this build; update registry dependencies before standalone CI'
                           if result['dependencySource'] == 'reactor' else 'advance the registry pin')
                 print(f"  REGISTRY package lacks {', '.join('--cedar-' + t for t in result['pinMissingTokens'])}; {remedy}")
+            if result.get('pinStaleStyles'):
+                remedy = ('local source supplies them for this build; update registry dependencies before standalone CI'
+                          if result['dependencySource'] == 'reactor' else 'advance the registry pin')
+                print(f"  REGISTRY package predates style changes in {', '.join(result['pinStaleStyles'])}; {remedy}")
             if result['staleAllowances']:
                 print(f"  {result['staleAllowances']} baseline allowances are no longer needed; run --prune-baseline")
             for row in rows:

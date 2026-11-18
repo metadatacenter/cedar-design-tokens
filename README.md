@@ -272,7 +272,10 @@ revision does not record. Fix the finding the exception would excuse rather than
 Local `cedarcli build frontends` and `cedarcli test frontends` apply the same style policy
 against the current token source for consumers in their build graph. An unpublished token can
 therefore be used immediately, without a registry pin update. The report keeps registry findings
-visible, while standalone checks and CI still validate the pinned package. Vendored copies retain
+visible, while standalone checks and CI still validate the pinned package. That validation
+includes the pin's age: `--strict` fails a registry pin that lags the token checkout when `scss/` or
+`css/` changed after the commit it names, because the pinned package then compiles different styles
+from the ones local builds use, although every token keeps its name. Vendored copies retain
 their byte checks. The reactor subsequently builds and verifies the actual selected packages.
 A matching source pin does not prove a current local build. `--runtime` adds a
 read-only comparison with the selected reactor's source fingerprints and artifact

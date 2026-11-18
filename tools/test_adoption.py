@@ -602,6 +602,32 @@ class AdoptionTest(unittest.TestCase):
                 (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
                 self.assertEqual(1, check.main(['--root', str(self.root), '--repo', 'consumer', '--strict']))
 
+    def test_a_pin_that_predates_a_style_change_fails_strict_though_every_token_name_remains(self):
+        # CEE once compiled 4% insets from its pin while local builds compiled 4cqi from the checkout:
+        # the names matched, so only CI saw the difference.
+        tokens, (old,) = self.token_checkout(['space-2'])
+        (tokens / 'scss/_spacing.scss').write_text('$insets: (narrow: (4cqi));\n')
+        subprocess.run(['git', '-C', str(tokens), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(tokens), '-c', 'user.name=Test', '-c', 'user.email=test@example.org',
+                        'commit', '-qm', 'insets'], check=True)
+        head = subprocess.run(['git', '-C', str(tokens), 'rev-parse', '--short=8', 'HEAD'],
+                              capture_output=True, text=True, check=True).stdout.strip()
+        self.style.write_text('a { padding: var(--cedar-space-2); }')
+        (self.repo / check.BASELINE).write_text(json.dumps({'schema': 1, 'policy': 2, 'findings': {}}))
+        args = ['--root', str(self.root), '--repo', 'consumer', '--strict']
+        with patch.object(check, 'PACKAGE_ROOT', tokens):
+            expected = check.published_version()
+            self.pin('0.1.0-dev.20260101.' + old)
+            result = check.report(self.repo, expected)
+            self.assertEqual(([], ['scss/_spacing.scss']), (result['pinMissingTokens'], result['pinStaleStyles']))
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(1, check.main(args))
+                self.assertEqual(0, check.main(args + ['--source-consumer', 'consumer']))
+            self.pin(expected)
+            self.assertEqual([], check.report(self.repo, expected)['pinStaleStyles'])
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0, check.main(args))
+
     def test_reactor_uses_uncommitted_token_source_without_weakening_registry_or_style_checks(self):
         tokens, (head,) = self.token_checkout(['space-2'])
         # No new commit or published version: this is precisely the snapshot edit loop.
